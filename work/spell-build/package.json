@@ -1,0 +1,9 @@
+{
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "dictionary-ru": "latest",
+    "esbuild": "latest",
+    "nspell": "latest"
+  }
+}

@@ -1,0 +1,62 @@
+{
+  "stage": "prototype_requires_editorial_validation",
+  "pilotEligible": false,
+  "regression": {
+    "publishedUnchanged": 30,
+    "publishedTotal": 30,
+    "seededDetected": 8,
+    "seededTotal": 8,
+    "silentMisses": 0
+  },
+  "editorialGold": {
+    "cases": 0,
+    "exact": 0,
+    "detected": 0,
+    "falseChanges": 0,
+    "silentMisses": [],
+    "byCategory": {
+      "spelling": {
+        "cases": 0,
+        "exact": 0,
+        "detected": 0,
+        "falseChanges": 0
+      },
+      "punctuation": {
+        "cases": 0,
+        "exact": 0,
+        "detected": 0,
+        "falseChanges": 0
+      },
+      "typography": {
+        "cases": 0,
+        "exact": 0,
+        "detected": 0,
+        "falseChanges": 0
+      },
+      "grammar": {
+        "cases": 0,
+        "exact": 0,
+        "detected": 0,
+        "falseChanges": 0
+      },
+      "mixed": {
+        "cases": 0,
+        "exact": 0,
+        "detected": 0,
+        "falseChanges": 0
+      },
+      "clean": {
+        "cases": 0,
+        "exact": 0,
+        "detected": 0,
+        "falseChanges": 0
+      }
+    }
+  },
+  "criteria": [
+    "Ни одной ложной автоматической правки в регрессионных фрагментах.",
+    "Все намеренно внесённые ошибки исправлены или отмечены.",
+    "Не менее 100 проверенных редактором черновиков, без ложных правок и незамеченных ошибок."
+  ],
+  "note": "Прохождение этого ограниченного набора не гарантирует 100% правильность любого нового текста."
+}

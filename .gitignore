@@ -1,0 +1,60 @@
+# Environment files and local secrets
+.env
+.env.*
+!.env.example
+!.env.sample
+.envrc
+.npmrc
+.pypirc
+.netrc
+.aws/credentials
+.ssh/
+.kube/config
+*.token
+*.secret
+*.pem
+*.key
+*.p12
+*.pfx
+*.jks
+*.keystore
+id_rsa
+id_ed25519
+credentials.json
+service-account*.json
+secrets*.json
+
+# Dependencies
+node_modules/
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+
+# Locally bundled JDK and LanguageTool runtime (large, downloadable binaries)
+/work/typograf-service/runtime/
+
+# Build output and test reports
+dist/
+build/
+out/
+coverage/
+playwright-report/
+test-results/
+
+# Tool caches
+.vite/
+.cache/
+.eslintcache
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+
+# OS and editor files
+.DS_Store
+.idea/

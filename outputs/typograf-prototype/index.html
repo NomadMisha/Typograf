@@ -1,0 +1,1410 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f5f3ef">
+  <meta name="description" content="Интерактивный прототип помощника редактора: орфография, пунктуация и неразрывные пробелы после предлогов.">
+  <title>Типограф — помощник редактора</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='15' fill='%231e2925'/%3E%3Cpath d='M15 20h34M32 20v28M23 48h18' stroke='%23d9f46c' stroke-width='6' stroke-linecap='round'/%3E%3C/svg%3E">
+  <style>
+    :root { color-scheme: light; --paper:#f5f3ef; --panel:#fffefa; --ink:#202a27; --muted:#68716d; --line:#dedfd7; --accent:#d9f46c; --accent-deep:#405220; --rose:#f9e9e2; --blue:#e8f0ef; --shadow:0 20px 60px rgba(30,41,37,.07); --serif:"Baskerville", "Iowan Old Style", "Palatino Linotype", Georgia, serif; font-family:Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif; font-kerning:normal; text-rendering:optimizeLegibility; }
+    * { box-sizing:border-box; }
+    html { scroll-behavior:smooth; }
+    body { margin:0; min-height:100vh; background:var(--paper); color:var(--ink); }
+    button, textarea { font:inherit; }
+    button { cursor:pointer; }
+    button:focus-visible, textarea:focus-visible { outline:3px solid #8dbb3a; outline-offset:3px; }
+    .shell { max-width:1250px; margin:auto; padding:0 42px 52px; }
+    .topbar { height:92px; display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid var(--line); }
+    .brand { display:inline-flex; align-items:center; gap:13px; color:var(--ink); text-decoration:none; }
+    .brand:focus-visible { outline:3px solid #8dbb3a; outline-offset:5px; border-radius:9px; }
+    .brand:hover .brand-name { color:#496333; }
+    .brand-name { font-family:var(--serif); font-size:29px; font-weight:600; line-height:1; letter-spacing:-.035em; transition:color .2s; }
+    .mark { width:37px; height:37px; display:grid; place-items:center; border-radius:11px; background:var(--ink); color:var(--accent); font-size:26px; font-family:var(--serif); font-weight:700; line-height:1; padding-bottom:3px; }
+    .topmeta { display:flex; align-items:center; gap:12px; font-size:13px; color:var(--muted); }
+    .topmeta strong { color:var(--ink); font-weight:600; }
+    .dot { width:6px; height:6px; border-radius:50%; background:#9aaf59; }
+    .intro { display:flex; align-items:flex-end; justify-content:space-between; gap:30px; padding:55px 0 33px; }
+    .eyebrow { margin:0 0 12px; color:#61704f; font-size:15px; font-weight:650; letter-spacing:0; }
+    h1 { margin:0; max-width:770px; font-size:clamp(38px,4.8vw,63px); line-height:1.08; letter-spacing:-.045em; font-weight:660; font-feature-settings:"kern" 1; text-wrap:balance; }
+    .intro p:last-child { margin:0 2px 5px; max-width:300px; line-height:1.6; color:var(--muted); font-size:16px; }
+    .workspace { background:var(--panel); border:1px solid #e1e1da; border-radius:22px; box-shadow:var(--shadow); overflow:hidden; }
+    .panel-head { min-height:72px; display:flex; align-items:center; justify-content:space-between; gap:18px; padding:17px 25px; border-bottom:1px solid #e8e9e2; }
+    .panel-title { display:flex; align-items:center; gap:11px; font-size:17px; font-weight:670; letter-spacing:-.012em; }
+    .number { display:grid; place-items:center; width:25px; height:25px; border-radius:7px; color:#596159; background:#f0f1eb; font-size:12px; font-weight:700; letter-spacing:0; }
+    .panel-actions { display:flex; align-items:center; gap:9px; }
+    .demo-button { min-height:36px; padding:0 13px; border:1px solid #d2dfaa; border-radius:9px; background:#edf5d7; color:#3d5429; font-size:14px; font-weight:700; }
+    .demo-button:hover { background:#e2efbb; }
+    .online-controls { display:flex; align-items:center; gap:12px; min-width:0; }
+    .online-switch { position:relative; display:inline-flex; align-items:center; gap:10px; min-width:0; color:#425447; font-size:13px; font-weight:650; cursor:pointer; }
+    .online-switch input { position:absolute; width:1px; height:1px; opacity:0; }
+    .switch-track { width:43px; height:25px; padding:3px; flex:none; border-radius:99px; background:#cbd1c8; box-shadow:inset 0 0 0 1px #bdc6bc; transition:background .22s, box-shadow .22s; }
+    .switch-thumb { display:block; width:19px; height:19px; border-radius:50%; background:#fff; box-shadow:0 1px 4px rgba(23,46,30,.22); transition:transform .22s; }
+    .online-switch input:checked + .switch-track { background:#70a341; box-shadow:inset 0 0 0 1px #5c9133,0 0 0 3px rgba(123,174,76,.12); }
+    .online-switch input:checked + .switch-track .switch-thumb { transform:translateX(18px); }
+    .online-switch input:focus-visible + .switch-track { outline:3px solid #8dbb3a; outline-offset:3px; }
+    .online-info { flex:none; }
+    .info-button { display:grid; place-items:center; width:25px; height:25px; padding:0; border:1px solid #80b85a; border-radius:50%; background:#ebf7e5; color:#367b35; font-family:Georgia,serif; font-size:15px; font-weight:700; line-height:1; animation:info-pulse 2.7s ease-in-out infinite; }
+    .info-button:hover { background:#e0f2d8; }
+    .info-button:focus-visible { outline:3px solid #8dbb3a; outline-offset:3px; }
+    @keyframes info-pulse { 0%,100% { transform:scale(1); box-shadow:0 0 0 0 rgba(91,169,82,.2); } 50% { transform:scale(1.09); box-shadow:0 0 0 7px rgba(91,169,82,.1); } }
+    .editor-wrap { position:relative; }
+    textarea { width:100%; height:min(45vh,430px); min-height:275px; resize:vertical; border:0; outline:0; background:transparent; padding:29px 30px; color:var(--ink); font-size:17px; line-height:1.76; letter-spacing:.002em; }
+    textarea::placeholder { color:#9da49e; }
+    textarea:focus-visible { outline:0; box-shadow:inset 0 0 0 3px #c2d77c; }
+    .footer { position:relative; padding:19px 25px; border-top:1px solid #e8e9e2; display:flex; align-items:center; justify-content:space-between; gap:20px; }
+    .online-tooltip { position:absolute; z-index:8; left:25px; bottom:calc(100% + 11px); width:min(445px,calc(100% - 50px)); padding:15px 17px; border:1px solid #c8ddbe; border-radius:12px; background:#f5fbf0; box-shadow:0 12px 32px rgba(37,65,37,.16); color:#334638; font-size:13px; line-height:1.55; opacity:0; visibility:hidden; transform:translateY(6px); transition:opacity .18s,transform .18s,visibility .18s; pointer-events:none; }
+    .online-tooltip.is-open { opacity:1; visibility:visible; transform:translateY(0); }
+    .actions { display:flex; align-items:center; gap:12px; }
+    .counter { font-size:13px; color:#8b948c; white-space:nowrap; }
+    .primary { min-height:47px; padding:0 19px; display:inline-flex; align-items:center; justify-content:center; gap:12px; background:var(--ink); border:1px solid var(--ink); color:#fff; border-radius:10px; font-size:14px; font-weight:690; transition:transform .2s, background .2s, box-shadow .2s; }
+    .primary:hover:not(:disabled) { background:#344239; transform:translateY(-1px); box-shadow:0 8px 20px rgba(30,41,37,.14); }
+    .primary:disabled { cursor:not-allowed; opacity:.42; }
+    .primary svg { flex:none; }
+    .feature-row { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-top:23px; }
+    .feature { min-height:84px; border:1px solid #e5e5de; background:#f9f8f4; border-radius:14px; padding:17px 20px; display:flex; align-items:center; gap:15px; }
+    .feature-icon { height:35px; width:35px; flex:none; border:1px solid #d9ded0; border-radius:9px; display:grid; place-items:center; color:#476044; font-family:Georgia,serif; font-size:19px; }
+    .feature strong { display:block; font-size:15px; font-weight:680; margin-bottom:4px; }
+    .feature span:last-child { display:block; font-size:13px; color:#79837a; line-height:1.4; }
+    .fineprint { margin:18px 4px 0; color:#78847b; font-size:13px; line-height:1.55; }
+    .hidden { display:none !important; }
+    .loading { padding:60px 28px 67px; text-align:center; min-height:320px; display:flex; flex-direction:column; align-items:center; justify-content:center; }
+    .loader-art { position:relative; height:80px; width:80px; margin-bottom:22px; }
+    .loader-ring { position:absolute; inset:0; border-radius:50%; border:2px solid #e5e9d8; border-top-color:#677f33; animation:spin 1.25s linear infinite; }
+    .loader-glyph { position:absolute; inset:0; display:grid; place-items:center; color:#35432c; font-family:Georgia,serif; font-size:38px; animation:breathe 1.3s ease-in-out infinite alternate; }
+    .loading h2 { margin:0 0 8px; font-size:25px; letter-spacing:-.025em; line-height:1.2; }
+    .loading p { margin:0; color:var(--muted); font-size:15px; }
+    @keyframes spin { to { transform:rotate(360deg); } }
+    @keyframes breathe { to { transform:scale(1.12); opacity:.55; } }
+    .success-line { display:flex; align-items:center; gap:13px; margin:0 0 24px; animation:arrive .45s ease both; }
+    .success-mark { width:41px; height:41px; border-radius:50%; background:var(--accent); display:grid; place-items:center; animation:pop .52s cubic-bezier(.2,1.5,.4,1) both; }
+    .success-line h2 { margin:0; font-size:25px; letter-spacing:-.025em; line-height:1.2; }
+    .success-line p { margin:4px 0 0; color:var(--muted); font-size:14px; line-height:1.45; }
+    @keyframes pop { from { transform:scale(.3); opacity:0; } to { transform:scale(1); opacity:1; } }
+    @keyframes arrive { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+    .result-stack { display:grid; grid-template-rows:auto auto; gap:17px; animation:arrive .55s .1s ease both; }
+    .result-panel { background:var(--panel); border:1px solid #e1e1da; border-radius:18px; overflow:hidden; box-shadow:0 12px 35px rgba(30,41,37,.035); }
+    .result-panel .panel-head { min-height:66px; }
+    .badge { display:inline-flex; align-items:center; justify-content:center; min-width:28px; height:25px; padding:0 8px; border-radius:7px; background:#eff2e4; color:#53632f; font-size:12px; font-weight:750; }
+    .issue-list { overflow-y:auto; max-height:248px; min-height:123px; scrollbar-color:#c5cbbd transparent; scrollbar-width:thin; }
+    .issue-list:focus-visible, .result-text:focus-visible { outline:3px solid #8dbb3a; outline-offset:-3px; }
+    .issue { display:grid; grid-template-columns:148px minmax(0,1fr); gap:22px; padding:19px 26px; border-top:1px solid #ecece6; }
+    .issue:first-child { border-top:0; }
+    .issue-category { display:flex; align-items:flex-start; gap:8px; font-size:13px; font-weight:700; color:#667264; padding-top:2px; }
+    .issue-number { display:inline-grid; place-items:center; flex:none; min-width:20px; height:20px; padding:0 4px; border:0; border-radius:5px; background:#e9efdf; color:#3f602e; font-size:11px; line-height:1; font-weight:750; cursor:pointer; }
+    .issue-number:hover { background:#d8e9ba; }
+    .issue-number:focus-visible { outline:2px solid #70a341; outline-offset:2px; }
+    .issue.pending .issue-number { background:#fbe8e5; color:#a5433a; }
+    .issue.review .issue-number { background:#fff0d9; color:#805928; }
+    .issue.dismissed .issue-number { background:#e8eee4; color:#657260; }
+    .issue-main { min-width:0; }
+    .issue-main strong { font-size:14px; font-weight:670; }
+    .issue-main p { margin:5px 0 0; color:#727f75; font-size:14px; line-height:1.5; }
+    .change { display:flex; align-items:center; flex-wrap:wrap; gap:8px; }
+    .snippet { padding:3px 7px; border-radius:5px; font-size:14px; line-height:1.4; overflow-wrap:anywhere; }
+    .snippet.before { background:var(--rose); color:#85513d; text-decoration:line-through; text-decoration-thickness:1px; }
+    .snippet.after { background:#edf3dc; color:#425e2d; }
+    .snippet.suspect { background:#fff0d9; color:#805928; }
+    .suggestion-text { color:#52634e; font-size:14px; line-height:1.5; }
+    .suggestion-button { padding:4px 9px; border:1px solid #d4dfc8; border-radius:6px; background:#f1f6e7; color:#36522c; font-size:13px; font-weight:650; }
+    .suggestion-button:hover { background:#e4efce; }
+    .dismiss-button { padding:4px 9px; border:1px solid #d9ddd3; border-radius:6px; background:#fffefa; color:#5d665e; font-size:13px; font-weight:650; }
+    .dismiss-button:hover { background:#f0f2eb; }
+    .change-arrow { font-size:14px; color:#9ba59c; }
+    .empty-issues { padding:31px 27px; color:#667264; font-size:14px; line-height:1.55; }
+    .result-head-right { display:flex; align-items:center; gap:14px; }
+    .copy { width:38px; height:38px; display:grid; place-items:center; border:1px solid #d9ded4; border-radius:9px; color:#48574b; background:#fbfcf8; transition:background .2s, transform .2s; }
+    .copy:hover { background:#eaf0df; transform:translateY(-1px); }
+    .copy svg { width:17px; height:17px; }
+    .result-text { margin:0; padding:25px 27px 28px; max-height:350px; min-height:160px; overflow-y:auto; white-space:pre-wrap; overflow-wrap:anywhere; font-size:17px; line-height:2.15; scrollbar-color:#c5cbbd transparent; scrollbar-width:thin; }
+    .result-editor { display:block; width:100%; height:350px; min-height:180px; max-height:60vh; padding:25px 27px; border:0; border-radius:0; background:#fffefa; color:var(--ink); font-size:17px; line-height:1.75; resize:vertical; }
+    .result-editor:focus-visible { outline:3px solid #8dbb3a; outline-offset:-3px; }
+    .review-bar { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:14px; padding:17px 25px; border-top:1px solid #e8e9e2; }
+    .review-bar p { margin:0; color:#647266; font-size:13px; line-height:1.5; }
+    .review-actions { display:flex; align-items:center; flex-wrap:wrap; gap:9px; }
+    .review-actions .primary { min-height:40px; }
+    .review-actions .secondary { min-height:40px; }
+    .result-mark { border-radius:3px; box-decoration-break:clone; -webkit-box-decoration-break:clone; }
+    .result-mark.format { background:linear-gradient(transparent 64%, #d7ebb0 64%); }
+    .result-mark.error { background:#b8df70; box-shadow:inset 0 -3px #7ca837; }
+    .result-mark.suspect { text-decoration-line:underline; text-decoration-style:wavy; text-decoration-color:#d64a42; text-decoration-thickness:1.5px; text-underline-offset:4px; }
+    .result-mark.context { text-decoration-line:underline; text-decoration-style:dotted; text-decoration-color:#b8792d; text-decoration-thickness:2px; text-underline-offset:4px; }
+    .result-issue-pin { display:inline-block; position:relative; width:0; height:0; vertical-align:baseline; }
+    .result-issue-pin::before { content:attr(data-number); position:absolute; left:0; bottom:.85em; transform:translateX(-12%); display:grid; place-items:center; min-width:17px; height:16px; padding:0 4px; border-radius:5px; background:#405f32; color:#fff; box-shadow:0 2px 5px rgba(27,54,30,.16); font-size:10px; font-weight:750; line-height:1; white-space:nowrap; }
+    .result-issue-pin.pending::before { background:#b94e45; }
+    .result-issue-pin.is-active::before { background:#213f20; box-shadow:0 0 0 7px rgba(118,174,70,.24),0 3px 10px rgba(27,54,30,.25); transform:translateX(-12%) scale(1.15); }
+    .pending-badge { display:inline-flex; align-items:center; padding:4px 7px; border-radius:6px; background:#fff0d9; color:#805928; font-size:11px; font-weight:700; letter-spacing:0; white-space:nowrap; }
+    .bottom-bar { display:flex; align-items:center; justify-content:space-between; gap:15px; padding:18px 1px 0; }
+    .bottom-bar p { margin:0; color:#78847b; font-size:13px; line-height:1.5; }
+    .online-credits { display:flex; align-items:center; flex-wrap:wrap; gap:8px 22px; margin:16px 1px 0; }
+    .online-credit { margin:0; font-size:14px; line-height:1.5; }
+    .online-credit a { color:#405b2b; text-decoration:underline; text-underline-offset:3px; }
+    .secondary { min-height:43px; padding:0 16px; border:1px solid #cfd5c8; border-radius:9px; background:transparent; color:#334239; font-size:14px; font-weight:700; }
+    .secondary:hover { background:#e8eddf; }
+    .toast { position:fixed; right:28px; bottom:25px; z-index:10; display:flex; align-items:center; gap:8px; border-radius:10px; padding:12px 16px; background:var(--ink); color:#fff; box-shadow:0 15px 40px rgba(0,0,0,.18); font-size:13px; font-weight:650; animation:arrive .25s ease both; transition:opacity .22s ease, transform .22s ease; }
+    .toast.is-leaving { animation:none; opacity:0; transform:translateY(8px); }
+    .confirm-overlay { position:fixed; inset:0; z-index:30; display:grid; place-items:center; padding:16px; background:rgba(20,31,26,.48); backdrop-filter:blur(3px); }
+    .confirm-dialog { width:min(440px,100%); max-height:calc(100vh - 32px); overflow-y:auto; padding:29px; border:1px solid #dfe3d8; border-radius:18px; background:var(--panel); color:var(--ink); box-shadow:0 28px 90px rgba(17,27,22,.24); animation:arrive .25s ease both; }
+    .dialog-mark { width:39px; height:39px; display:grid; place-items:center; border-radius:11px; background:#edf5d7; color:#496333; font-family:var(--serif); font-size:26px; font-weight:700; }
+    .confirm-dialog h2 { margin:20px 0 9px; font-size:26px; line-height:1.2; letter-spacing:-.025em; }
+    .confirm-dialog p { margin:0; color:#5d6b60; font-size:16px; line-height:1.6; }
+    .dialog-actions { display:flex; justify-content:flex-end; gap:10px; margin-top:28px; }
+    .dialog-actions .primary, .dialog-actions .secondary { min-height:43px; }
+    @media (max-width:760px) { .shell { padding:0 18px 35px; } .topbar { height:73px; } .topmeta { font-size:12px; } .topmeta strong { display:none; } .intro { display:block; padding:38px 0 27px; } .intro p:last-child { margin:14px 0 0; max-width:520px; } h1 { font-size:clamp(37px,8.5vw,56px); } .feature-row { grid-template-columns:1fr; gap:8px; } .feature { min-height:65px; padding:12px 15px; } .feature span:last-child { display:none; } .panel-head { padding:14px 17px; } .input-head { flex-wrap:wrap; } .panel-actions { flex-wrap:wrap; justify-content:flex-end; } textarea { padding:20px 19px; min-height:290px; font-size:16px; } .footer { padding:15px 17px; flex-wrap:wrap; gap:14px; } .online-tooltip { left:17px; width:calc(100% - 34px); } .actions { width:100%; justify-content:space-between; } .primary { flex:1; } .issue { grid-template-columns:1fr; gap:6px; padding:17px 19px; } .result-text { padding:20px; } .bottom-bar { align-items:flex-start; } }
+    @media (max-width:760px) { .result-panel .panel-head { flex-wrap:wrap; } .result-head-right { margin-left:auto; } }
+    @media (max-width:420px) { .brand-name { font-size:25px; } .mark { width:33px; height:33px; } .topmeta { gap:7px; } .online-switch { font-size:12px; gap:8px; } .online-controls { gap:9px; width:100%; } .bottom-bar { flex-direction:column-reverse; align-items:stretch; } .secondary { width:100%; } .confirm-dialog { padding:24px; } .dialog-actions { flex-direction:column; } .dialog-actions .primary, .dialog-actions .secondary { width:100%; } }
+    @media (prefers-reduced-motion:reduce) { *, *::before, *::after { animation-duration:.01ms !important; transition-duration:.01ms !important; scroll-behavior:auto !important; } }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <header class="topbar">
+      <a class="brand" id="home-link" href="./index.html" aria-label="Типограф — на главный экран"><span class="mark" aria-hidden="true">Т</span><span class="brand-name">Типограф</span></a>
+      <div class="topmeta"><span class="dot" aria-hidden="true"></span><strong>Рабочее пространство</strong><span>Прототип · 20</span></div>
+    </header>
+
+    <main>
+      <div class="intro">
+        <div><p class="eyebrow">Помощник редактора</p><h1 id="page-title">Проверка текста</h1></div>
+        <p id="intro-description">Вставьте черновик статьи. Типограф покажет правки и подготовит текст для копирования.</p>
+      </div>
+
+      <section id="input-screen" aria-labelledby="page-title">
+        <div class="workspace">
+          <div class="panel-head input-head"><div class="panel-title"><span class="number">01</span> Исходный текст</div><div class="panel-actions"><button class="demo-button" id="demo-button" type="button" title="Создать текст с ошибками и сразу проверить">✦ Попробовать на примере</button></div></div>
+          <div class="editor-wrap"><textarea id="source" aria-label="Текст статьи" spellcheck="false" placeholder="Вставьте сюда текст статьи или начните писать…"></textarea></div>
+          <div class="footer">
+            <div class="online-controls">
+              <label class="online-switch"><input id="online-toggle" type="checkbox" role="switch"><span class="switch-track" aria-hidden="true"><span class="switch-thumb"></span></span><span>Проверить пунктуацию и орфографию онлайн</span></label><div class="online-info hidden" id="online-info"><button class="info-button" id="online-info-button" type="button" aria-label="Информация об онлайн-проверке" aria-describedby="online-tooltip">i</button></div>
+            </div>
+            <div class="actions"><span class="counter" id="char-count">0 символов</span><button class="primary" id="check-button" type="button" disabled>Проверить текст <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M2.5 8h10m-4-4 4 4-4 4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button></div>
+            <div class="online-tooltip" id="online-tooltip" role="tooltip">При онлайн-проверке текст передаётся в Яндекс.Спеллер для орфографии и в настроенный сервис LanguageTool для пунктуации и грамматики. В однофайловой версии используется публичный LanguageTool. Не включайте онлайн-проверку для конфиденциальных текстов и персональных данных без разрешения на передачу третьим лицам.</div>
+          </div>
+        </div>
+        <div class="feature-row" aria-label="Что проверяет Типограф">
+          <div class="feature"><span class="feature-icon" aria-hidden="true">Аа</span><div><strong>Орфография</strong><span>Локальный словарь и онлайн-проверка</span></div></div>
+          <div class="feature"><span class="feature-icon" aria-hidden="true">,;</span><div><strong>Пунктуация</strong><span>Локальные правила и онлайн-проверка по выбору</span></div></div>
+          <div class="feature"><span class="feature-icon" aria-hidden="true">↳</span><div><strong>Висячие предлоги</strong><span>Неразрывные пробелы после коротких слов</span></div></div>
+        </div>
+        <p class="fineprint">Несколько возможных исправлений остаются на выбор редактора.</p>
+      </section>
+
+      <section id="loading-screen" class="workspace hidden" aria-live="polite" aria-label="Проверка текста">
+        <div class="loading"><div class="loader-art" aria-hidden="true"><div class="loader-ring"></div><div class="loader-glyph">Т</div></div><h2>Читаем текст</h2><p id="loading-detail">Сверяем слова с русским словарём, проверяем пунктуацию и предлоги…</p></div>
+      </section>
+
+      <section id="result-screen" class="hidden" aria-label="Результат проверки">
+        <div class="success-line" role="status"><div class="success-mark" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="m5 12 4.2 4.2L19 6.5" stroke="#2A3A21" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div><h2 id="result-status-title">Автоматическая проверка завершена</h2><p id="success-summary">Просмотрите замечания и текст перед подтверждением.</p></div></div>
+        <div class="result-stack">
+          <section class="result-panel" aria-labelledby="issues-title"><div class="panel-head"><div class="panel-title" id="issues-title">Замечания и правки <span class="badge" id="issue-count">0</span></div><span class="counter">Нажмите номер</span></div><div class="issue-list" id="issue-list" tabindex="0"></div></section>
+          <section class="result-panel" aria-labelledby="result-title"><div class="panel-head"><div class="panel-title"><span id="result-title">Текст на проверке</span><span class="pending-badge hidden" id="pending-badge"></span></div><div class="result-head-right"><span class="counter" id="result-count"></span><button class="copy" id="copy-button" type="button" aria-label="Скопировать черновик" title="Скопировать черновик"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="8" y="8" width="11" height="11" rx="1.5" stroke="currentColor" stroke-width="1.7"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2" stroke="currentColor" stroke-width="1.7"/></svg></button></div></div><div class="result-text" id="result-text" tabindex="0"></div><textarea class="result-editor hidden" id="result-editor" aria-label="Редактирование проверенного текста" spellcheck="true"></textarea><div class="review-bar"><p id="review-status" role="status">Проверьте замечания и текст.</p><div class="review-actions"><button class="secondary" id="edit-result-button" type="button">Редактировать текст</button><button class="secondary hidden" id="recheck-button" type="button">Повторно проверить</button><button class="primary" id="finish-button" type="button" disabled>Подтвердить результат</button></div></div></section>
+        </div>
+        <div class="bottom-bar"><p>Проверьте смысл и авторские формулировки перед публикацией.</p><button class="secondary" id="edit-button" type="button">Изменить исходный текст</button></div>
+        <div class="online-credits"><div class="online-credit hidden" id="online-credit"><a href="https://yandex.ru/dev/speller/" target="_blank" rel="noopener noreferrer">Проверка правописания: Яндекс.Спеллер</a></div><div class="online-credit hidden" id="grammar-credit"><a href="https://languagetool.org/" target="_blank" rel="noopener noreferrer">Пунктуация и грамматика: LanguageTool</a></div></div>
+      </section>
+    </main>
+  </div>
+  <div class="toast hidden" id="toast" role="status" aria-live="polite"><span aria-hidden="true">✓</span><span id="toast-message">Текст скопирован</span></div>
+  <div class="confirm-overlay hidden" id="leave-overlay">
+    <div class="confirm-dialog" role="dialog" aria-modal="true" aria-labelledby="leave-title" aria-describedby="leave-description">
+      <div class="dialog-mark" aria-hidden="true">!</div>
+      <h2 id="leave-title">Внимание</h2>
+      <p id="leave-description">Вы действительно хотите вернуться на главную страницу? Результат будет потерян.</p>
+      <div class="dialog-actions"><button class="secondary" id="cancel-leave" type="button">Отмена</button><button class="primary" id="confirm-leave" type="button">Перейти на главную</button></div>
+    </div>
+  </div>
+
+  <script src="./spellcheck.js"></script>
+  <script>
+    const source = document.getElementById('source');
+    const inputScreen = document.getElementById('input-screen');
+    const loadingScreen = document.getElementById('loading-screen');
+    const resultScreen = document.getElementById('result-screen');
+    const checkButton = document.getElementById('check-button');
+    const issueList = document.getElementById('issue-list');
+    const resultText = document.getElementById('result-text');
+    const resultEditor = document.getElementById('result-editor');
+    const resultTitle = document.getElementById('result-title');
+    const pendingBadge = document.getElementById('pending-badge');
+    const copyButton = document.getElementById('copy-button');
+    const editResultButton = document.getElementById('edit-result-button');
+    const recheckButton = document.getElementById('recheck-button');
+    const finishButton = document.getElementById('finish-button');
+    const introDescription = document.getElementById('intro-description');
+    const reviewStatus = document.getElementById('review-status');
+    const resultStatusTitle = document.getElementById('result-status-title');
+    const toast = document.getElementById('toast');
+    const homeLink = document.getElementById('home-link');
+    const leaveOverlay = document.getElementById('leave-overlay');
+    const leaveDescription = document.getElementById('leave-description');
+    const cancelLeave = document.getElementById('cancel-leave');
+    const confirmLeave = document.getElementById('confirm-leave');
+    const onlineToggle = document.getElementById('online-toggle');
+    const onlineInfo = document.getElementById('online-info');
+    const onlineInfoButton = document.getElementById('online-info-button');
+    const onlineTooltip = document.getElementById('online-tooltip');
+    const onlineCredit = document.getElementById('online-credit');
+    const grammarCredit = document.getElementById('grammar-credit');
+    let preparedText = '';
+    let currentIssues = [];
+    let currentHighlights = [];
+    let acceptedSpelling = {};
+    let hasResult = false;
+    let reviewed = false;
+    let editingResult = false;
+    let toastTimer;
+    let toastFadeTimer;
+    let toastHovered = false;
+    let toastRemaining = 0;
+    let toastDeadline = 0;
+    let jumpTimer;
+    let checkTimer;
+    let previousFocus;
+    let previousOverflow;
+    let leaveAction = 'home';
+    let checkRun = 0;
+    const defaultIntroDescription = 'Вставьте черновик статьи. Типограф покажет правки и подготовит текст для копирования.';
+    let onlineMatches = [];
+    const resultStorageKey = 'typograf-result-v1:' + window.location.pathname;
+
+    function saveResult() {
+      if (!hasResult) return;
+      const snapshot = {
+        source:source.value,
+        text:preparedText,
+        issues:currentIssues,
+        highlights:currentHighlights,
+        acceptedSpelling,
+        onlineMatches,
+        onlineEnabled:onlineToggle.checked,
+        onlineAvailable:!onlineCredit.classList.contains('hidden'),
+        grammarAvailable:!grammarCredit.classList.contains('hidden'),
+        reviewed,
+        editingResult,
+        editorDraft:editingResult ? resultEditor.value : '',
+        summary:document.getElementById('success-summary').textContent
+      };
+      try {
+        window.sessionStorage.setItem(resultStorageKey, JSON.stringify(snapshot));
+      } catch { /* Storage can be unavailable for local file pages. */ }
+      try { window.history.replaceState({typografResult:snapshot}, ''); }
+      catch { /* History state may also be unavailable or too large. */ }
+    }
+    function clearSavedResult() {
+      try { window.sessionStorage.removeItem(resultStorageKey); }
+      catch { /* The page still works when storage is unavailable. */ }
+      try { window.history.replaceState(null, ''); }
+      catch { /* The page still works when history state is unavailable. */ }
+    }
+    function warnBeforeLeaving(event) {
+      saveResult();
+      event.preventDefault();
+      event.returnValue = true;
+    }
+    function protectResult() {
+      window.addEventListener('beforeunload', warnBeforeLeaving);
+    }
+    function unprotectResult() {
+      window.removeEventListener('beforeunload', warnBeforeLeaving);
+    }
+    function restoreSavedResult() {
+      let saved;
+      try {
+        const raw = window.sessionStorage.getItem(resultStorageKey);
+        if (raw) saved = JSON.parse(raw);
+      } catch { /* Try the history entry instead. */ }
+      if (!saved) {
+        try { saved = window.history.state?.typografResult; }
+        catch { /* No saved result is available. */ }
+      }
+      if (!saved) return;
+      if (typeof saved.source !== 'string' || typeof saved.text !== 'string' ||
+          !Array.isArray(saved.issues) || !Array.isArray(saved.highlights)) { clearSavedResult(); return; }
+      try {
+        source.value = saved.source;
+        acceptedSpelling = saved.acceptedSpelling && typeof saved.acceptedSpelling === 'object' ? saved.acceptedSpelling : {};
+        onlineMatches = Array.isArray(saved.onlineMatches) ? saved.onlineMatches : [];
+        onlineToggle.checked = !!saved.onlineEnabled;
+        syncOnlineToggle();
+        updateCount();
+        updateResult(saved.text, saved.issues, saved.highlights);
+        reviewed = !!saved.reviewed;
+        editingResult = !!saved.editingResult;
+        resultEditor.value = editingResult && typeof saved.editorDraft === 'string' ? saved.editorDraft : saved.text;
+        syncReviewUI();
+        if (typeof saved.summary === 'string') document.getElementById('success-summary').textContent = saved.summary;
+        onlineCredit.classList.toggle('hidden', !saved.onlineAvailable);
+        grammarCredit.classList.toggle('hidden', !saved.grammarAvailable);
+        inputScreen.classList.add('hidden');
+        loadingScreen.classList.add('hidden');
+        resultScreen.classList.remove('hidden');
+        document.getElementById('page-title').textContent = 'Результат проверки';
+        document.getElementById('intro-description').textContent = 'Просмотрите найденные правки и скопируйте текст после проверки.';
+        hasResult = true;
+        protectResult();
+      } catch { clearSavedResult(); }
+    }
+
+    const demoTopics = [
+      {product:'новый сервис', user:'редактору', task:'вычитывать статьи', destination:'редактор Хабра'},
+      {product:'небольшой плагин', user:'автору', task:'проверять черновики', destination:'рабочий документ'},
+      {product:'интерфес для команды', user:'редактору', task:'готовить публикации', destination:'черновик статьи'}
+    ];
+    let previousDemo = -1;
+    function generateDemoText() {
+      const shift = 1 + Math.floor(Math.random() * (demoTopics.length - 1));
+      previousDemo = (previousDemo + shift) % demoTopics.length;
+      const topic = demoTopics[previousDemo];
+      return `Вообщем, мы собрали ${topic.product} который помогает ${topic.user} ${topic.task}. Он проверяет орфаграфию , исправляет пунктуацию и убирает висячие предлоги.\n\nВ этой статье раскажем как работает проверка в браузере. Готовый текст можно скопировать в ${topic.destination} но перед публикацией его стоит прочитать ещё раз`;
+    }
+    const spelling = [
+      ['вообщем','в общем'], ['орфаграфию','орфографию'], ['орфаграфия','орфография'], ['раскажем','расскажем'],
+      ['запетые','запятые'],
+      ['расказать','рассказать'], ['превет','привет'], ['пожалуста','пожалуйста'], ['сдесь','здесь'],
+      ['щас','сейчас'], ['будующее','будущее'], ['агрегация','агрегация'], ['приложенние','приложение'],
+      ['функционалность','функциональность'], ['разработчки','разработчики'], ['коментарий','комментарий'],
+      ['коментарии','комментарии'], ['интерфес','интерфейс'], ['информацыю','информацию'], ['проблемма','проблема'],
+      ['проблемму','проблему'], ['тектс','текст'], ['пунктация','пунктуация'], ['програма','программа'],
+      ['шол','шёл'], ['пошол','пошёл'], ['подошол','подошёл'], ['пришол','пришёл'], ['зашол','зашёл'],
+      ['нашол','нашёл'], ['ушол','ушёл'], ['дошол','дошёл'], ['обошол','обошёл'], ['прошол','прошёл'],
+      ['вошол','вошёл'], ['перешол','перешёл'], ['отошол','отошёл'], ['сошол','сошёл'], ['вышол','вышел'],
+      ['ошибычный','ошибочный'], ['ошибычная','ошибочная'], ['ошибычное','ошибочное'], ['ошибычные','ошибочные'],
+      ['крипис','крепись'], ['прешол','пришёл'], ['упол','упал']
+    ].filter(([a,b]) => a !== b);
+    const spellingAllowlist = new Set([
+      'хабр','хабра','хабре','хабром','типограф','типографа','типографом',
+      'веб-продукт','веб-продукте','веб-разработка','веб-разработки',
+      'микросервис','микросервисы','микросервисов','фронтенд','фронтенда','фронтендом',
+      'пайплайн','пайплайна','пайплайне','пайплайны','рендер','рендера','что-то',
+      // Разговорные и обсценные формы принимаем как лексику, не считая их опечатками.
+      'засрать','засрал','засрала','засрало','засрали','засран','засрана','засрано','засраны',
+      'засру','засрёшь','засрешь','засрёт','засрет','засрём','засрем','засрёте','засрете','засрут','засри','засрите',
+      'засрался','засралась','засралось','засрались',
+      // Имена и топонимы «Отчаянных домохозяек»: принимаем варианты транслитерации,
+      // не нормализуем их автоматически, поскольку написание зависит от дубляжа.
+      'бри','ван','де','камп','кампа','кампу','кампом',
+      'сьюзан','сьюзен','майер','майера','майеру','майером','мейер','мейера','мейеру','мейером',
+      'линнетт','линетт','скаво','габриэль','габриел','солис','солиса','солису','солисом',
+      'мэри','элис','янг','янга','иди','эдди','бритт','вистерия','лейн','лейна',
+      // Имя редактора из пользовательского сценария.
+      'таня','тани','тане','таню','таней'
+    ]);
+    const spellingKeys = new Set(spelling.map(([wrong]) => wrong));
+    const protectedPattern = /(```[\s\S]*?```|~~~[\s\S]*?~~~|<pre\b[^>]*>[\s\S]*?<\/pre>|<code\b[^>]*>[\s\S]*?<\/code>|`[^`\n]*`|(?:https?:\/\/|mailto:|www\.)[^\s<>()]+)/gi;
+    let dictionarySpell;
+    function getDictionarySpell() {
+      if (!dictionarySpell) {
+        if (!globalThis.typografSpell) throw new Error('Русский словарь не загружен');
+        dictionarySpell = globalThis.typografSpell.ready();
+      }
+      return dictionarySpell;
+    }
+    const punctuationLabel = 'Пунктуация';
+    const useLocalService = /^https?:$/.test(window.location.protocol || '');
+    const spellingEndpoint = useLocalService ? '/api/spelling' : 'https://speller.yandex.net/services/spellservice.json/checkText';
+    const grammarEndpoint = useLocalService ? '/api/grammar' : 'https://api.languagetool.org/v2/check';
+    let nextIssueId = 0;
+    const addIssue = (issues, category, before, after, note, applied = true, suggestions = []) => {
+      const issue = {id:++nextIssueId, category, before, after, note, applied, suggestions};
+      issues.push(issue);
+      return issue;
+    };
+    const preserveCase = (found, replacement) => /^[А-ЯЁ]/.test(found) ? replacement.charAt(0).toUpperCase() + replacement.slice(1) : replacement;
+    const escapeHTML = value => value.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    function isSafeOnlineCandidate(before, after) {
+      const a = before.toLowerCase(), b = after.toLowerCase();
+      if (a === b || !/^[а-яё-]+$/u.test(b) || Math.min(a.length, b.length) < 4) return false;
+      if (Math.abs(a.length - b.length) === 1) {
+        const short = a.length < b.length ? a : b;
+        const long = a.length < b.length ? b : a;
+        let i = 0, j = 0, skipped = false;
+        while (i < short.length && j < long.length) {
+          if (short[i] === long[j]) { i++; j++; }
+          else if (!skipped) { skipped = true; j++; }
+          else return false;
+        }
+        return true;
+      }
+      if (a.length !== b.length) return false;
+      let differences = 0;
+      for (let index = 0; index < a.length; index++) if (a[index] !== b[index]) differences++;
+      if (differences === 1) return true;
+      let i = 0;
+      while (i < a.length && a[i] === b[i]) i++;
+      return i < a.length - 1 && a[i] === b[i + 1] && a[i + 1] === b[i] && a.slice(i + 2) === b.slice(i + 2);
+    }
+    function trustedLocalSuggestion(word, suggestions, dictionary) {
+      if (word.length < 6 || suggestions.length !== 1) return '';
+      const candidate = suggestions[0];
+      if (candidate !== candidate.toLowerCase() || !dictionary.correct(candidate) || !isSafeOnlineCandidate(word, candidate)) return '';
+      if (word.length !== candidate.length) return candidate;
+      let i = 0;
+      while (i < word.length && word[i] === candidate[i]) i++;
+      return i < word.length - 1 && word[i] === candidate[i + 1] && word[i + 1] === candidate[i] && word.slice(i + 2) === candidate.slice(i + 2)
+        ? candidate : '';
+    }
+    async function getOnlineMatches(input) {
+      const normalized = input.replace(/\r\n?/g, '\n').trim();
+      const masked = normalized.replace(protectedPattern, fragment => fragment.replace(/[^\n]/g, ' '));
+      const chunks = [];
+      for (let start = 0; start < masked.length;) {
+        if (chunks.length >= 8) throw new Error('Текст слишком длинный для онлайн-проверки за один запуск');
+        let end = Math.min(start + 8000, masked.length);
+        if (end < masked.length) {
+          const split = Math.max(masked.lastIndexOf('\n', end), masked.lastIndexOf(' ', end));
+          if (split > start + 4000) end = split + 1;
+        }
+        chunks.push({start, text:masked.slice(start, end)});
+        start = end;
+      }
+      const matches = [];
+      for (const chunk of chunks) {
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 15000);
+        try {
+          const response = await fetch(spellingEndpoint, {
+            method:'POST', body:new URLSearchParams({text:chunk.text, lang:'ru'}), signal:controller.signal
+          });
+          if (!response.ok) throw new Error('Сервис проверки не ответил');
+          const found = await response.json();
+          if (!Array.isArray(found)) throw new Error('Некорректный ответ сервиса');
+          for (const item of found) if (Number.isInteger(item.pos) && Number.isInteger(item.len)) {
+            matches.push({...item, pos:item.pos + chunk.start});
+          }
+        } finally { clearTimeout(timeout); }
+      }
+      return matches;
+    }
+
+    async function getGrammarMatches(input) {
+      const masked = input.replace(protectedPattern, fragment => fragment.replace(/[^\n]/g, ' '));
+      if (new TextEncoder().encode(masked).length > 19000) throw new Error('Текст длиннее лимита онлайн-проверки пунктуации');
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 15000);
+      try {
+        const response = await fetch(grammarEndpoint, {
+          method:'POST', body:new URLSearchParams({text:masked, language:'ru'}), signal:controller.signal
+        });
+        if (!response.ok) throw new Error('Сервис проверки пунктуации не ответил');
+        const data = await response.json();
+        if (!Array.isArray(data.matches)) throw new Error('Некорректный ответ сервиса');
+        return {matches:data.matches, masked};
+      } finally { clearTimeout(timeout); }
+    }
+
+    function applyGrammarMatches(result, remote) {
+      const {text, issues} = result;
+      const highlights = result.highlights.map(mark => ({...mark}));
+      const edits = [];
+      const pending = [];
+      let lastEnd = 0;
+      const letters = value => value.replace(/[^\p{L}\p{N}]/gu, '');
+      const marks = value => value.replace(/[\p{L}\p{N}\s]/gu, '');
+      const isSingleCommaInsertion = (before, after) => {
+        const oldMarks = marks(before), newMarks = marks(after);
+        if (newMarks.length !== oldMarks.length + 1) return false;
+        for (let index = 0; index < newMarks.length; index++) {
+          if (newMarks[index] === ',' && newMarks.slice(0, index) + newMarks.slice(index + 1) === oldMarks) return true;
+        }
+        return false;
+      };
+      const prepositions = new Set(['в','во','на','к','ко','с','со','у','о','об','обо','от','до','из','за','по','под','над','при','без','для','про']);
+      const restorePrepositions = value => value.replace(/(?<![\p{L}])([А-Яа-яЁё]{1,4})[ \t]+(?=[А-Яа-яЁё])/gu, (found, word) => prepositions.has(word.toLowerCase()) ? word + '\u00a0' : found);
+      const removeResolvedLocalWarning = (before, after) => {
+        const duplicateIds = new Set(issues.filter(issue => issue.category === punctuationLabel && !issue.applied && issue.before === before && (issue.after === after || issue.suggestions.includes(after))).map(issue => issue.id));
+        if (!duplicateIds.size) return;
+        const pinStarts = new Set(highlights.filter(mark => mark.kind === 'issue-pin' && duplicateIds.has(mark.issueId)).map(mark => mark.start));
+        for (const id of duplicateIds) {
+          const index = issues.findIndex(issue => issue.id === id);
+          if (index >= 0) issues.splice(index, 1);
+        }
+        for (let index = highlights.length - 1; index >= 0; index--) {
+          const mark = highlights[index];
+          if (mark.kind === 'issue-pin' && duplicateIds.has(mark.issueId)) highlights.splice(index, 1);
+          else if (mark.kind === 'context' && pinStarts.has(mark.start) && mark.end - mark.start === before.length) highlights.splice(index, 1);
+        }
+      };
+      for (const match of [...remote.matches].sort((a, b) => a.offset - b.offset)) {
+        const category = match.rule?.category?.id;
+        if (!['PUNCTUATION', 'GRAMMAR'].includes(category) || !Number.isInteger(match.offset) || !Number.isInteger(match.length) || match.length <= 0) continue;
+        const start = match.offset, end = start + match.length;
+        if (start < lastEnd || end > text.length) continue;
+        const before = text.slice(start, end);
+        if (before !== remote.masked.slice(start, end)) continue;
+        const candidates = [...new Set((match.replacements || []).map(item => typeof item.value === 'string' ? restorePrepositions(item.value) : '').filter(value => value && value !== before && value.length <= 180))].slice(0, 3);
+        if (category === 'GRAMMAR') {
+          pending.push({start, end, before, candidates, category:'Грамматика', reviewOnly:true,
+            note:'LanguageTool заметил возможную грамматическую ошибку. Проверьте контекст, затем выберите вариант или оставьте текст без изменения.'});
+          lastEnd = end;
+          continue;
+        }
+        const punctuationCandidates = candidates.filter(value => letters(value) === letters(before) && marks(value) !== marks(before));
+        const commaCandidates = punctuationCandidates.filter(value => isSingleCommaInsertion(before, value));
+        if (punctuationCandidates.length === 1 && commaCandidates.length === 1) {
+          removeResolvedLocalWarning(before, commaCandidates[0]);
+          edits.push({start, end, before, after:commaCandidates[0]});
+        } else if (punctuationCandidates.length) {
+          pending.push({start, end, before, candidates:punctuationCandidates, category:punctuationLabel,
+            reviewOnly:true, note:'LanguageTool предлагает несколько вариантов пунктуации. Проверьте контекст и выберите подходящий.'});
+        }
+        lastEnd = end;
+      }
+      let next = '', cursor = 0, delta = 0;
+      for (const edit of edits) {
+        next += text.slice(cursor, edit.start);
+        edit.newStart = next.length;
+        next += edit.after;
+        edit.newEnd = next.length;
+        let prefix = 0, suffix = 0;
+        while (prefix < Math.min(edit.before.length, edit.after.length) && edit.before[prefix] === edit.after[prefix]) prefix++;
+        while (suffix < Math.min(edit.before.length, edit.after.length) - prefix && edit.before[edit.before.length - 1 - suffix] === edit.after[edit.after.length - 1 - suffix]) suffix++;
+        edit.prefix = prefix;
+        edit.suffix = suffix;
+        delta += edit.after.length - edit.before.length;
+        edit.deltaAfter = delta;
+        cursor = edit.end;
+        const issue = addIssue(issues, punctuationLabel, edit.before, edit.after, 'LanguageTool предложил добавить одну запятую; слова и остальные знаки не менялись. Проверьте правку в контексте.', true, [edit.after]);
+        Object.assign(issue, {onlinePunctuation:true, start:edit.newStart + edit.prefix, end:edit.newEnd - edit.suffix});
+        edit.issueId = issue.id;
+      }
+      next += text.slice(cursor);
+      function mapPoint(position, edge) {
+        let lo = 0, hi = edits.length;
+        while (lo < hi) {
+          const mid = (lo + hi) >> 1;
+          if (edits[mid].end <= position) lo = mid + 1; else hi = mid;
+        }
+        const previousDelta = lo ? edits[lo - 1].deltaAfter : 0;
+        const edit = edits[lo];
+        if (!edit || position < edit.start) return position + previousDelta;
+        if (position <= edit.start + edit.prefix) return edit.newStart + position - edit.start;
+        if (position >= edit.end - edit.suffix) return edit.newEnd - (edit.end - position);
+        return edge === 'start' ? edit.newStart + edit.prefix : edit.newEnd - edit.suffix;
+      }
+      for (const mark of highlights) {
+        mark.start = mapPoint(mark.start, 'start');
+        mark.end = mapPoint(mark.end, 'end');
+      }
+      for (const issue of issues) if (issue.onlinePunctuation) {
+        issue.start = mapPoint(issue.start, 'start');
+        issue.end = mapPoint(issue.end, 'end');
+      }
+      for (const edit of edits) {
+        highlights.push({start:edit.newStart + edit.prefix, end:edit.newEnd - edit.suffix, kind:'format'});
+        highlights.push({start:edit.newStart + edit.prefix, end:edit.newStart + edit.prefix, kind:'issue-pin', issueId:edit.issueId});
+      }
+      for (const item of pending) {
+        const start = mapPoint(item.start, 'start'), end = mapPoint(item.end, 'end');
+        if (next.slice(start, end) !== item.before) continue;
+        const issue = addIssue(issues, item.category, item.before, item.candidates.join(' / '), item.note, false, item.candidates);
+        Object.assign(issue, {reviewOnly:item.reviewOnly, onlinePunctuation:item.category === punctuationLabel, start, end});
+        highlights.push({start, end:start, kind:'issue-pin', issueId:issue.id});
+        highlights.push({start, end, kind:'context'});
+      }
+      return {text:next, issues, highlights};
+    }
+
+    function checkText(input, accepted = {}, remoteMatches = []) {
+      const issues = [];
+      let text = input.replace(/\r\n?/g, '\n').trim();
+      const highlights = [];
+      function replaceTracked(pattern, kind, replacer, markRange) {
+        const edits = [];
+        const next = text.replace(pattern, (...args) => {
+          const before = args[0];
+          const offset = args[args.length - 2];
+          const issueStart = issues.length;
+          const after = replacer(...args);
+          const pins = [];
+          for (const issue of issues.slice(issueStart)) {
+            const leading = before.match(/^[\s(«„]+/u)?.[0].length || 0;
+            const pin = {start:offset + leading, end:offset + leading, kind:'issue-pin', issueId:issue.id};
+            highlights.push(pin);
+            pins.push(pin);
+          }
+          if (after !== before) edits.push({start:offset, end:offset + before.length, before, after, pins});
+          return after;
+        });
+        if (!edits.length) { text = next; return; }
+        let delta = 0;
+        for (const edit of edits) {
+          edit.newStart = edit.start + delta;
+          edit.newEnd = edit.newStart + edit.after.length;
+          let prefix = 0;
+          while (prefix < Math.min(edit.before.length, edit.after.length) && edit.before[prefix] === edit.after[prefix]) prefix++;
+          let suffix = 0;
+          while (suffix < Math.min(edit.before.length, edit.after.length) - prefix && edit.before[edit.before.length - 1 - suffix] === edit.after[edit.after.length - 1 - suffix]) suffix++;
+          edit.prefix = prefix;
+          edit.suffix = suffix;
+          delta += edit.after.length - edit.before.length;
+          edit.deltaAfter = delta;
+        }
+        function mapPoint(position, edge) {
+          let lo = 0, hi = edits.length;
+          while (lo < hi) {
+            const mid = (lo + hi) >> 1;
+            if (edits[mid].end <= position) lo = mid + 1; else hi = mid;
+          }
+          const previousDelta = lo ? edits[lo - 1].deltaAfter : 0;
+          const edit = edits[lo];
+          if (!edit || position < edit.start) return position + previousDelta;
+          if (position <= edit.start + edit.prefix) return edit.newStart + position - edit.start;
+          if (position >= edit.end - edit.suffix) return edit.newEnd - (edit.end - position);
+          return edge === 'start' ? edit.newStart + edit.prefix : edit.newEnd - edit.suffix;
+        }
+        for (const mark of highlights) {
+          mark.start = mapPoint(mark.start, 'start');
+          mark.end = mapPoint(mark.end, 'end');
+        }
+        if (kind) for (const edit of edits) {
+          const [start, end] = markRange ? markRange(edit) : [0, edit.after.length];
+          highlights.push({start:edit.newStart + start, end:edit.newStart + end, kind});
+          for (const pin of edit.pins) {
+            pin.start = edit.newStart + start;
+            pin.end = pin.start;
+          }
+        }
+        text = next;
+      }
+      function suggestPunctuation(pattern, replacer, note) {
+        text.replace(pattern, (...args) => {
+          const before = args[0];
+          const offset = args[args.length - 2];
+          const after = replacer(...args);
+          if (after !== before) {
+            const issue = addIssue(issues, punctuationLabel, before, after, note, false, [after]);
+            issue.reviewOnly = true;
+            highlights.push({start:offset, end:offset, kind:'issue-pin', issueId:issue.id});
+            highlights.push({start:offset, end:offset + before.length, kind:'context'});
+          }
+          return before;
+        });
+      }
+      const onlineEdits = [];
+      const remoteSuggestions = new Map();
+      for (const item of [...remoteMatches].sort((a, b) => a.pos - b.pos)) {
+        if (![1, 3].includes(item.code) || item.pos < 0 || item.len <= 0 || item.pos + item.len > text.length) continue;
+        const found = text.slice(item.pos, item.pos + item.len);
+        if (found !== item.word || spellingKeys.has(found.toLowerCase()) || spellingAllowlist.has(found.toLowerCase()) || getDictionarySpell().correct(found.toLowerCase())) continue;
+        const candidates = Array.isArray(item.s) ? item.s.filter(value => typeof value === 'string' && /^[А-Яа-яЁё-]+$/u.test(value) && value.toLowerCase() !== found.toLowerCase()).slice(0, 5) : [];
+        const safe = candidates.filter(value => isSafeOnlineCandidate(found, value));
+        if (safe.length !== 1) {
+          if (candidates.length) remoteSuggestions.set(found.toLowerCase(), candidates.slice(0, 3));
+          continue;
+        }
+        if (onlineEdits.length && item.pos < onlineEdits[onlineEdits.length - 1].pos + onlineEdits[onlineEdits.length - 1].len) continue;
+        onlineEdits.push({pos:item.pos, len:item.len, found, fixed:preserveCase(found, safe[0].toLowerCase())});
+      }
+      if (onlineEdits.length) {
+        let next = '', cursor = 0;
+        for (const edit of onlineEdits) {
+          next += text.slice(cursor, edit.pos);
+          const start = next.length;
+          next += edit.fixed;
+          highlights.push({start, end:next.length, kind:'error'});
+          const issue = addIssue(issues, 'Орфография', edit.found, edit.fixed, 'Исправлено онлайн-проверкой.');
+          highlights.push({start, end:start, kind:'issue-pin', issueId:issue.id});
+          cursor = edit.pos + edit.len;
+        }
+        text = next + text.slice(cursor);
+      }
+      const protectedFragments = [];
+      let markerStart = '\uE000';
+      while (text.includes(markerStart)) markerStart += '\uE000';
+      const markerEnd = '\uE001';
+      replaceTracked(protectedPattern, null, fragment => {
+        const marker = markerStart + protectedFragments.length + markerEnd;
+        protectedFragments.push(fragment);
+        return marker;
+      });
+
+      const femininePastForms = {подошол:'подошла', пришол:'пришла', зашол:'зашла', нашол:'нашла', ушол:'ушла', вошол:'вошла', дошол:'дошла', прошол:'прошла'};
+      replaceTracked(/(?<![\p{L}])(она|таня|татьяна|девочка|женщина|редакторка|авторка)([ \t]+)(подошол|пришол|зашол|нашол|ушол|вошол|дошол|прошол)(?![\p{L}])/giu, 'error', (found, subject, gap, verb) => {
+        const fixed = femininePastForms[verb.toLowerCase()];
+        addIssue(issues, 'Грамматика', verb, preserveCase(verb, fixed), 'Форма прошедшего времени согласована с подлежащим женского рода.');
+        return subject + gap + preserveCase(verb, fixed);
+      }, edit => {
+        const correctedVerb = edit.after.match(/[А-Яа-яЁё]+$/u)[0];
+        return [edit.after.length - correctedVerb.length, edit.after.length];
+      });
+
+      for (const [wrong, right] of spelling) {
+        const pattern = new RegExp('(?<![\\p{L}])' + wrong.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '(?![\\p{L}])', 'giu');
+        replaceTracked(pattern, 'error', found => {
+          const fixed = preserveCase(found, right);
+          addIssue(issues, 'Орфография', found, fixed, 'Исправлена распространённая опечатка.');
+          return fixed;
+        });
+      }
+
+      // Both forms below are valid words in other contexts, so check the phrase.
+      replaceTracked(/(?<![\p{L}])(это)([ \t]+)скора(?=[ \t]+закончиться(?![\p{L}]))/giu, 'error', (found, it, gap) => {
+        addIssue(issues, 'Орфография', 'скора', 'скоро', 'Форма наречия в этом сочетании.');
+        return it + gap + 'скоро';
+      }, edit => [edit.after.length - 'скоро'.length, edit.after.length]);
+      replaceTracked(/(?<![\p{L}])(это)([ \t]+)скоро([ \t]+)закончиться(?![\p{L}])/giu, 'error', (found, it, first, second) => {
+        addIssue(issues, 'Грамматика', 'закончиться', 'закончится', 'Здесь нужна форма будущего времени.');
+        return it + first + 'скоро' + second + 'закончится';
+      }, edit => [edit.after.length - 'закончится'.length, edit.after.length]);
+      replaceTracked(/(?<![\p{L}])упал([ \t]+)на([ \t]+)пал(?![\p{L}])/giu, 'error', (found, first, second) => {
+        addIssue(issues, 'Грамматика', 'на пал', 'на пол', 'После «упал на» здесь нужно слово «пол».');
+        return found.slice(0, -3) + 'пол';
+      }, edit => [edit.after.length - 'пол'.length, edit.after.length]);
+      replaceTracked(/(^|[.!?][ \t]+)(приведи)([ \t]+)(мой)([ \t]+)(дорогой)([ \t]+)(друг)(?=[ \t]+котор(?:ой|ый)[ \t]+маячит)/gimu, 'format', (found, prefix, verb, gap1, possessive, gap2, adjective, gap3, noun) => {
+        addIssue(issues, punctuationLabel, verb + ' ' + possessive + ' ' + adjective + ' ' + noun, verb + ', ' + possessive + ' ' + adjective + ' ' + noun, 'Обращение отделено запятой.');
+        return prefix + verb + ',' + gap1 + possessive + gap2 + adjective + gap3 + noun;
+      }, edit => [edit.after.indexOf(','), edit.after.indexOf(',') + 1]);
+      replaceTracked(/(?<![\p{L}])(друг)([ \t]+)который(?=[ \t]+маячит)/giu, 'format', (found, noun, gap) => {
+        addIssue(issues, punctuationLabel, 'друг который', 'друг, который', 'Придаточная часть отделена запятой.');
+        return noun + ',' + gap + 'который';
+      }, edit => [edit.after.indexOf(','), edit.after.indexOf(',') + 1]);
+      replaceTracked(/(?<![\p{L}])(друг)([ \t]+)которой(?=[ \t]+маячит)/giu, 'format', (found, noun, gap) => {
+        addIssue(issues, 'Грамматика', 'которой', 'который', 'Местоимение согласовано со словом «друг».');
+        addIssue(issues, punctuationLabel, 'друг которой', 'друг, который', 'Придаточная часть отделена запятой.');
+        return noun + ',' + gap + 'который';
+      }, edit => [edit.after.indexOf(','), edit.after.indexOf(',') + 1]);
+      for (const match of text.matchAll(/(?<![\p{L}])друг,[ \t]+(который)(?=[ \t]+маячит)/giu)) {
+        highlights.push({start:match.index + match[0].lastIndexOf('который'), end:match.index + match[0].lastIndexOf('который') + 'который'.length, kind:'error'});
+      }
+
+      const dictionary = getDictionarySpell();
+      const suggestionCache = new Map();
+      replaceTracked(/[А-Яа-яЁё]+(?:-[А-Яа-яЁё]+)*/gu, 'error', (found, offset) => {
+        const word = found.toLowerCase();
+        if (word.length < 3 || spellingAllowlist.has(word) || dictionary.correct(word)) return found;
+        if (accepted[word]) {
+          const fixed = preserveCase(found, accepted[word]);
+          addIssue(issues, 'Орфография', found, fixed, 'Вариант выбран редактором.');
+          return fixed;
+        }
+        if (!suggestionCache.has(word)) suggestionCache.set(word,
+          remoteSuggestions.get(word) || dictionary.suggest(word).filter(item => /^[А-Яа-яЁё-]+$/.test(item)).slice(0, 3));
+        const suggestions = suggestionCache.get(word);
+        const automatic = !remoteSuggestions.has(word) && trustedLocalSuggestion(word, suggestions, dictionary);
+        if (automatic) {
+          const fixed = preserveCase(found, automatic);
+          addIssue(issues, 'Орфография', found, fixed, 'Исправлена однозначная опечатка по словарю.');
+          return fixed;
+        }
+        addIssue(issues, 'Орфография', found, suggestions.join(', '), remoteSuggestions.has(word) ? 'Онлайн-проверка нашла несколько вариантов. Выберите нужный.' : 'Слово не найдено в словаре. Выберите вариант или исправьте исходный текст.', false, suggestions);
+        highlights.push({start:offset, end:offset + found.length, kind:'suspect'});
+        return found;
+      });
+
+      replaceTracked(/[ \t]{2,}/g, 'format', found => {
+        addIssue(issues, punctuationLabel, 'несколько пробелов', 'один пробел', 'Убраны лишние пробелы.');
+        return ' ';
+      });
+      replaceTracked(/[ \t]+([,.;:!?])/g, 'format', (found, mark) => {
+        addIssue(issues, punctuationLabel, 'пробел перед «' + mark + '»', mark, 'Перед знаком препинания пробел не нужен.');
+        return mark;
+      });
+      replaceTracked(/([,;:!?])(?=[А-Яа-яЁё])/g, 'format', mark => {
+        addIssue(issues, punctuationLabel, mark + 'слово', mark + ' слово', 'После знака препинания добавлен пробел.');
+        return mark + ' ';
+      });
+      suggestPunctuation(/(?<![\p{L}])([А-Яа-яЁё]{2,})([ \t]+)(который|которая|которое|которые|если|чтобы|но|а|однако|потому что)(?=\s)/giu,
+        (found, last, space, word) => last + ',' + space + word,
+        'Возможна запятая перед союзом или придаточной частью. Проверьте смысл.');
+      suggestPunctuation(/(?<![\p{L}])(настройки)([ \t]+)(тесты)(?=[,;])/giu,
+        (found, first, space, second) => first + ',' + space + second,
+        'Возможно, перечисление нужно разделить запятой. Проверьте структуру фразы.');
+      suggestPunctuation(/(?<![\p{L}])([А-Яа-яЁё-]+)([ \t]+)(зачастую)(?=[ \t]+(?:даже[ \t]+)?не[ \t]+)/giu,
+        (found, previous, space, adverb) => previous + ',' + space + adverb,
+        'Возможно, здесь нужна запятая перед присоединительной частью. Проверьте смысл.');
+      replaceTracked(/(?<![\p{L}])(сказал|сказала|сказали|ответил|ответила|ответили|написал|написала|написали|сообщил|сообщила|сообщили|спросил|спросила|спросили|уточнил|уточнила|уточнили|отметил|отметила|отметили|добавил|добавила|добавили|знаю|знает|знаем|думаю|думает|думали|понял|поняла|поняли|объяснил|объяснила|объяснили|выяснил|выяснила|выяснили|решил|решила|решили)([ \t]+)(что|почему|когда|где)(?=[ \t]+)/giu, 'format', (found, verb, space, word) => {
+        addIssue(issues, punctuationLabel, verb + ' ' + word, verb + ', ' + word, 'Добавлена запятая перед придаточной частью.');
+        return verb + ',' + space + word;
+      }, edit => [edit.after.indexOf(','), edit.after.indexOf(',') + 1]);
+      replaceTracked(/(^|[.!?][ \t]+)(Пожалуйста|Например|Конечно|Итак|Во-первых|Во-вторых)([ \t]+)(?=[А-Яа-яЁё])/gmu, 'format', (found, prefix, word, space) => {
+        addIssue(issues, punctuationLabel, word + ' слово', word + ', слово', 'Вводное слово отделено запятой.');
+        return prefix + word + ',' + space;
+      }, edit => [edit.after.indexOf(','), edit.after.indexOf(',') + 1]);
+      replaceTracked(/(?<![\p{L}])(подош[её]л|подошла|подошли|приш[её]л|пришла|пришли|вош[её]л|вошла|вошли)([ \t]+)(увидел|увидела|увидели|заметил|заметила|заметили|услышал|услышала|услышали)(?![\p{L}])/giu, 'format', (found, first, space, second) => {
+        addIssue(issues, punctuationLabel, first + ' ' + second, first + ', ' + second, 'Разделены однородные действия.');
+        return first + ',' + space + second;
+      }, edit => [edit.after.indexOf(','), edit.after.indexOf(',') + 1]);
+      const firstAction = '(?:пропи|купи|откры|прочита|написа|провери|исправи|подня|урони|сдела|созда|увиде|замети|посмотре)';
+      const nextAction = '(?:упа|вста|посмотре|провери|исправи|отправи|улыба|засмея|верну|продолжи|закры|откры)';
+      for (const [past, reflexive] of [['л','лся'], ['ла','лась'], ['ли','лись']]) {
+        const pattern = new RegExp('(?<![\\p{L}])(' + firstAction + past + ')([ \\t]+)([А-Яа-яЁё-]+)([ \\t]+)(' + nextAction + '(?:' + past + '|' + reflexive + '))(?=[ \\t]+(?:(?:его|её|ее|их)[ \\t]+)?и[ \\t]+' + nextAction + '(?:' + past + '|' + reflexive + ')(?![\\p{L}]))', 'giu');
+        suggestPunctuation(pattern, (found, first, gap, object, space, second) => first + gap + object + ',' + space + second,
+          'Возможна запятая между однородными сказуемыми. Проверьте контекст.');
+      }
+      replaceTracked(/(?<![\p{L}])(увидел|увидела|увидели|заметил|заметила|заметили|услышал|услышала|услышали)([ \t]+)(как)(?=[ \t]+(?:я|ты|он|она|оно|мы|вы|они)(?![\p{L}]))/giu, 'format', (found, verb, space, word) => {
+        addIssue(issues, punctuationLabel, verb + ' ' + word, verb + ', ' + word, 'Придаточная часть с «как» отделена запятой.');
+        return verb + ',' + space + word;
+      }, edit => [edit.after.indexOf(','), edit.after.indexOf(',') + 1]);
+      replaceTracked(/(?<![\p{L}])крепись([ \t]+)это(?![\p{L}])/giu, 'format', (found, space) => {
+        addIssue(issues, punctuationLabel, 'крепись это', 'крепись, это', 'Добавлена запятая между частями предложения.');
+        return found.slice(0, -space.length - 3) + ',' + space + 'это';
+      });
+      replaceTracked(/(?<![\p{L}])([вВ])([ \t]+)течении(?=[ \t]+(?:следующ(?:ей|его)|прошл(?:ой|ого)|этой|всей|целой|одной|двух|трёх|нескольких|недел[июяь]|месяц[аев]?|год[ауы]?|дн[еяй]|суток|час[аов]?)(?![\p{L}]))/giu, 'error', (found, preposition, gap) => {
+        const fixed = preposition + gap + 'течение';
+        addIssue(issues, 'Грамматика', found, fixed, 'В значении длительности используется предлог «в течение».');
+        return fixed;
+      });
+      replaceTracked(/(?<![\p{L}])(лучше)([ \t]+)(поздно)([ \t]+)(чем)(?=[ \t]+никогда(?![\p{L}]))/giu, 'format', (found, better, gap1, late, gap2, than) => {
+        const before = better + gap1 + late + gap2 + than;
+        const after = better + gap1 + late + ',' + gap2 + than;
+        addIssue(issues, punctuationLabel, before, after, 'В устойчивом выражении «лучше поздно, чем никогда» нужна запятая перед «чем».');
+        return after;
+      }, edit => [edit.after.indexOf(','), edit.after.indexOf(',') + 1]);
+      replaceTracked(/(расскажем|покажем|объясним|разберём)([ \t]+)(почему)(?=\s)/giu, 'format', (found, verb, space, word) => {
+        addIssue(issues, punctuationLabel, verb + ' ' + word, verb + ', ' + word, 'Добавлена запятая перед придаточной частью.');
+        return verb + ',' + space + word;
+      });
+      replaceTracked(/(?<![\p{L}])(рассказал|рассказала|рассказали)([ \t]+)(почему)(?=\s)/giu, 'format', (found, verb, space, word) => {
+        addIssue(issues, punctuationLabel, verb + ' ' + word, verb + ', ' + word, 'Добавлена запятая перед придаточной частью.');
+        return verb + ',' + space + word;
+      });
+      replaceTracked(/(?<![\p{L}])(сказал|сказала|сказали|знаю|знает|знаем|думаю|думает|думали|понял|поняла|поняли|объяснил|объяснила|объяснили|выяснил|выяснила|выяснили|решил|решила|решили|расскажем|покажем|объясним|разберём|рассказал|рассказала|рассказали|проверил|проверила|проверили|показал|показала|показали|описал|описала|описали|изучил|изучила|изучили|обнаружил|обнаружила|обнаружили)([ \t]+)(как)(?=[ \t]+(?:(?:будто|это|он|она|оно|они|мы|вы|я|ты|не|ни|можно|нужно|следует)(?![\p{L}])|[А-Яа-яЁё-]+(?:ет|ит|ют|ут|ат|ят|ется|ются|илась|илось|ились|ился|лась|лось|лись|ена|ено|ены|ть|ться|ал|ял|ел|ёл|ил|ол|ул|али|яли|ели|или|оли|ули)(?![\p{L}])|[А-Яа-яЁё-]+[ \t]+[А-Яа-яЁё-]+(?:ет|ит|ют|ут|ат|ят|ется|ются|илась|илось|ились|ился|лась|лось|лись|ена|ено|ены|ть|ться|ал|ял|ел|ёл|ил|ол|ул|али|яли|ели|или|оли|ули)(?![\p{L}])))/giu, 'format', (found, verb, space, word) => {
+        addIssue(issues, punctuationLabel, verb + ' ' + word, verb + ', ' + word, 'Добавлена запятая перед придаточной частью.');
+        return verb + ',' + space + word;
+      });
+      replaceTracked(/(?<![\p{L}])(посмотри|посмотрите)([ \t]+)(как)(?=[ \t]+(?:это|он|она|оно|они|мы|вы|я|ты)(?![\p{L}]))/giu, 'format', (found, verb, space, word) => {
+        addIssue(issues, punctuationLabel, verb + ' ' + word, verb + ', ' + word, 'Придаточная часть с «как» отделена запятой.');
+        return verb + ',' + space + word;
+      });
+      for (const match of text.matchAll(/(?<![\p{L}])(конечно|возможно)(?=[ \t]+[А-Яа-яЁё])/giu)) {
+        const word = match[1];
+        const rest = text.slice(match.index + word.length).trimStart();
+        if (/^же(?![\p{L}])/iu.test(rest)) continue;
+        const issue = addIssue(issues, punctuationLabel, word, word + ',',
+          'Возможно, после вводного слова нужна запятая. Проверьте предложение вручную.', false, [word + ',']);
+        issue.reviewOnly = true;
+        highlights.push({start:match.index, end:match.index, kind:'issue-pin', issueId:issue.id});
+        highlights.push({start:match.index, end:match.index + word.length, kind:'context'});
+      }
+      if (/[А-Яа-яЁё\d]$/.test(text)) {
+        const issue = addIssue(issues, punctuationLabel, 'конец текста без точки', 'точка в конце', 'Добавлена финальная точка.');
+        highlights.push({start:text.length, end:text.length, kind:'issue-pin', issueId:issue.id});
+        highlights.push({start:text.length, end:text.length + 1, kind:'format'});
+        text += '.';
+      }
+
+      const prepositions = new Set(['в','во','на','к','ко','с','со','у','о','об','обо','от','до','из','за','по','под','над','при','без','для','про']);
+      replaceTracked(/(^|[\s(«„])([А-Яа-яЁё]{1,4})([ \t]+)([А-Яа-яЁё][А-Яа-яЁё-]*)/gmu, 'format', (found, prefix, word, gap, next) => {
+        if (!prepositions.has(word.toLowerCase())) return found;
+        addIssue(issues, 'Висячие предлоги', word + ' ' + next, word + '\u00a0' + next, 'Добавлен неразрывный пробел: предлог останется со следующим словом.');
+        return prefix + word + '\u00a0' + next;
+      }, edit => [/^[\s(«„]/.test(edit.before) ? 1 : 0, edit.after.length]);
+      replaceTracked(new RegExp(markerStart + '(\\d+)' + markerEnd, 'g'), null, (marker, index) => protectedFragments[Number(index)]);
+      for (const issue of issues) if (!issue.applied && !Number.isInteger(issue.start)) {
+        const pin = highlights.find(mark => mark.kind === 'issue-pin' && mark.issueId === issue.id);
+        if (pin && text.slice(pin.start, pin.start + issue.before.length) === issue.before) {
+          issue.start = pin.start;
+          issue.end = pin.start + issue.before.length;
+        }
+      }
+      return {text, issues, highlights};
+    }
+
+    function updateCount() {
+      const n = source.value.length;
+      document.getElementById('char-count').textContent = n.toLocaleString('ru-RU') + ' ' + plural(n, ['символ','символа','символов']);
+      checkButton.disabled = !source.value.trim();
+    }
+    function resetIntroDescription() { introDescription.textContent = defaultIntroDescription; }
+    function plural(n, forms) { const m = n % 100, d = n % 10; return m > 10 && m < 20 ? forms[2] : d === 1 ? forms[0] : d >= 2 && d <= 4 ? forms[1] : forms[2]; }
+    const toastDuration = 4600;
+    const toastFadeDuration = 220;
+    const toastHoverResumeMinimum = 1500;
+    function clearToastTimers() { clearTimeout(toastTimer); clearTimeout(toastFadeTimer); toastTimer = null; toastFadeTimer = null; }
+    function scheduleToastDismiss(delay) {
+      clearToastTimers();
+      if (toastHovered || toast.classList.contains('hidden')) return;
+      toastRemaining = Math.max(0, delay);
+      toastDeadline = Date.now() + toastRemaining;
+      toastTimer = setTimeout(() => {
+        toastTimer = null;
+        if (toastHovered || toast.classList.contains('hidden')) return;
+        toast.classList.add('is-leaving');
+        toastFadeTimer = setTimeout(() => {
+          toastFadeTimer = null;
+          if (!toastHovered) {
+            toast.classList.add('hidden');
+            toast.classList.remove('is-leaving');
+          }
+        }, toastFadeDuration);
+      }, toastRemaining);
+    }
+    function showToast(message) {
+      clearToastTimers();
+      toast.classList.remove('hidden', 'is-leaving');
+      document.getElementById('toast-message').textContent = message;
+      toastRemaining = toastDuration;
+      if (!toastHovered) scheduleToastDismiss(toastDuration);
+    }
+    toast.addEventListener('mouseenter', () => {
+      if (toast.classList.contains('hidden')) return;
+      toastHovered = true;
+      if (toastTimer !== null) {
+        toastRemaining = Math.max(0, toastDeadline - Date.now());
+        clearToastTimers();
+      } else if (toastFadeTimer !== null || toast.classList.contains('is-leaving')) {
+        clearToastTimers();
+        toastRemaining = 0;
+        toast.classList.remove('is-leaving');
+      }
+    });
+    toast.addEventListener('mouseleave', () => {
+      if (!toastHovered) return;
+      toastHovered = false;
+      if (!toast.classList.contains('hidden')) scheduleToastDismiss(Math.max(toastHoverResumeMinimum, toastRemaining));
+    });
+    function renderIssues(issues, preserveScroll = false) {
+      const previousScrollTop = preserveScroll ? issueList.scrollTop : 0;
+      document.getElementById('issue-count').textContent = issues.length;
+      if (!issues.length) {
+        issueList.innerHTML = '<div class="empty-issues">Замечаний не найдено. Текст всё равно стоит перечитать перед публикацией.</div>';
+        issueList.scrollTop = previousScrollTop;
+        return;
+      }
+      issueList.innerHTML = issues.map((item, index) => {
+        const className = (item.reviewOnly ? 'review' : item.category === 'Орфография' || item.category === 'Грамматика' ? 'spelling' : item.category === punctuationLabel ? 'punctuation' : 'preposition') + (item.resolved ? ' dismissed' : item.applied ? '' : ' pending');
+        const before = item.category === 'Висячие предлоги' ? item.before.replace(' ', '␠') : item.before;
+        const after = item.category === 'Висячие предлоги' ? item.after.replace('\u00a0', '⍽') : item.after;
+        const options = item.suggestions.map((option, choice) => item.resolved
+          ? ''
+          : Number.isInteger(item.start)
+            ? '<button class="suggestion-button" type="button" data-issue-index="' + index + '" data-choice-index="' + choice + '" aria-label="Применить вариант ' + escapeHTML(option) + '">' + escapeHTML(option) + '</button>'
+            : '<span class="snippet after">' + escapeHTML(option) + '</span>').join('');
+        const change = item.resolved
+          ? '<span class="snippet after">Оставлено без изменения: ' + escapeHTML(before) + '</span>'
+          : item.applied
+          ? '<span class="snippet before">' + escapeHTML(before) + '</span><span class="change-arrow" aria-hidden="true">→</span><span class="snippet after">' + escapeHTML(after) + '</span>'
+          : '<span class="snippet suspect">' + escapeHTML(before) + '</span><span class="suggestion-text">' + (options ? 'Проверьте и выберите вариант:' : 'Проверьте вручную:') + '</span>' + options + '<button class="dismiss-button" type="button" data-dismiss-issue="' + index + '">Оставить как есть</button>';
+        return '<div class="issue ' + className + '"><div class="issue-category"><button class="issue-number" type="button" data-jump-issue="' + (index + 1) + '" aria-controls="result-text" aria-label="Показать правку ' + (index + 1) + ' в тексте">' + (index + 1) + '</button>' + escapeHTML(item.category) + '</div><div class="issue-main"><div class="change">' + change + '</div><p>' + escapeHTML(item.note) + '</p></div></div>';
+      }).join('');
+      issueList.scrollTop = previousScrollTop;
+    }
+    function renderHighlightedText(value, highlights, issues = []) {
+      const issueNumbers = new Map(issues.map((item, index) => [item.id, {number:index + 1, pending:!item.applied && !item.resolved}]));
+      const events = [];
+      const isWord = character => /[\p{L}\p{N}]/u.test(character || '');
+      function wordAnchor(position) {
+        if (isWord(value[position])) {
+          while (position > 0 && isWord(value[position - 1])) position--;
+          return position;
+        }
+        for (let next = position; next < Math.min(value.length, position + 4) && value[next] !== '\n'; next++) {
+          if (isWord(value[next])) return wordAnchor(next);
+        }
+        for (let previous = position - 1; previous >= Math.max(0, position - 4) && value[previous] !== '\n'; previous--) {
+          if (isWord(value[previous])) return wordAnchor(previous);
+        }
+        return position;
+      }
+      for (const mark of highlights) {
+        const start = Math.max(0, Math.min(value.length, mark.start));
+        const end = Math.max(start, Math.min(value.length, mark.end));
+        if (mark.kind === 'issue-pin') {
+          const issue = issueNumbers.get(mark.issueId);
+          if (issue) events.push({position:wordAnchor(start), kind:'issue-pin', ...issue});
+        } else if (end > start) {
+          events.push({position:start, kind:mark.kind, change:1});
+          events.push({position:end, kind:mark.kind, change:-1});
+        }
+      }
+      events.sort((a, b) => a.position - b.position);
+      let html = '', cursor = 0, errorCount = 0, formatCount = 0, suspectCount = 0, contextCount = 0, index = 0;
+      function wrap(part) {
+        const classes = errorCount ? ['error'] : [formatCount && 'format', suspectCount && 'suspect', contextCount && 'context'].filter(Boolean);
+        return classes.length ? '<span class="result-mark ' + classes.join(' ') + '">' + part + '</span>' : part;
+      }
+      while (index < events.length) {
+        const position = events[index].position;
+        if (position > cursor) {
+          html += wrap(escapeHTML(value.slice(cursor, position)));
+        }
+        const pins = [];
+        while (index < events.length && events[index].position === position) {
+          if (events[index].kind === 'error') errorCount += events[index].change;
+          else if (events[index].kind === 'format') formatCount += events[index].change;
+          else if (events[index].kind === 'suspect') suspectCount += events[index].change;
+          else if (events[index].kind === 'context') contextCount += events[index].change;
+          else if (events[index].kind === 'issue-pin') pins.push(events[index]);
+          index++;
+        }
+        if (pins.length) {
+          pins.sort((a, b) => a.number - b.number);
+          const numbers = pins.map(pin => pin.number).join(', ');
+          html += '<span class="result-issue-pin' + (pins.some(pin => pin.pending) ? ' pending' : '') + '" data-number="' + numbers + '" role="note" tabindex="-1" aria-label="' + (pins.length > 1 ? 'Замечания ' : 'Замечание ') + numbers + '"></span>';
+        }
+        cursor = position;
+      }
+      return html + wrap(escapeHTML(value.slice(cursor)));
+    }
+    function syncReviewUI() {
+      const pending = currentIssues.filter(item => !item.applied && !item.resolved).length;
+      const ready = reviewed && !editingResult;
+      resultTitle.textContent = ready ? 'Готовый текст' : 'Текст на проверке';
+      resultStatusTitle.textContent = ready ? 'Результат подтверждён редактором' : 'Автоматическая проверка завершена';
+      pendingBadge.classList.toggle('hidden', !pending);
+      pendingBadge.textContent = pending ? 'Осталось: ' + pending : '';
+      finishButton.disabled = editingResult || ready;
+      finishButton.textContent = ready ? 'Подтверждено' : 'Подтвердить результат';
+      reviewStatus.textContent = editingResult
+        ? 'После редактирования запустите повторную проверку.'
+        : ready && pending ? 'Редактор подтвердил результат, оставив ' + pending + ' ' + plural(pending, ['замечание','замечания','замечаний']) + ' без изменения.'
+        : ready ? 'Редактор подтвердил текст. Его можно копировать как итоговый.'
+        : pending ? 'Проверьте замечания или оставьте их без изменения перед подтверждением.'
+        : 'Перечитайте текст и подтвердите результат.';
+      resultText.classList.toggle('hidden', editingResult);
+      resultEditor.classList.toggle('hidden', !editingResult);
+      editResultButton.classList.toggle('hidden', editingResult);
+      recheckButton.classList.toggle('hidden', !editingResult);
+      copyButton.disabled = editingResult;
+      const copyLabel = ready ? 'Скопировать готовый текст' : 'Скопировать черновик';
+      copyButton.setAttribute('aria-label', copyLabel);
+      copyButton.title = copyLabel;
+    }
+    function updateResult(text, issues, highlights, preserveView = false) {
+      const previousListScroll = preserveView ? issueList.scrollTop : 0;
+      const previousTextScroll = preserveView ? resultText.scrollTop : 0;
+      const previousWindowX = preserveView ? (window.scrollX || 0) : 0;
+      const previousWindowY = preserveView ? (window.scrollY || 0) : 0;
+      clearTimeout(jumpTimer);
+      preparedText = text;
+      currentIssues = issues;
+      currentHighlights = highlights;
+      reviewed = false;
+      editingResult = false;
+      renderIssues(issues, preserveView);
+      resultText.innerHTML = renderHighlightedText(text, highlights, issues);
+      if (preserveView) {
+        issueList.scrollTop = previousListScroll;
+        resultText.scrollTop = previousTextScroll;
+        // Re-rendering removes the clicked suggestion button. Keep focus in the
+        // scrollable list without letting the browser move the document to it.
+        issueList.focus({preventScroll:true});
+        window.scrollTo(previousWindowX, previousWindowY);
+      }
+      document.getElementById('result-count').textContent = text.length.toLocaleString('ru-RU') + ' симв.';
+      const pending = issues.filter(item => !item.applied && !item.resolved).length;
+      const applied = issues.filter(item => item.applied).length;
+      syncReviewUI();
+      document.getElementById('success-summary').textContent = pending
+        ? 'Внесено ' + applied + ' ' + plural(applied, ['правка','правки','правок']) + '. ' + pending + ' ' + plural(pending, ['замечание','замечания','замечаний']) + (pending === 1 ? ' требует' : ' требуют') + ' ручной проверки.'
+        : issues.length ? 'Внесено ' + applied + ' ' + plural(applied, ['правка','правки','правок']) + '. Перечитайте текст перед подтверждением.'
+        : 'Автоматические правки не понадобились. Перечитайте текст перед подтверждением.';
+      saveResult();
+    }
+    async function showResults(run) {
+      checkTimer = null;
+      let onlineAvailable = false;
+      let onlineWarning = '';
+      let grammarAvailable = false;
+      let grammarWarning = '';
+      onlineMatches = [];
+      if (onlineToggle.checked) {
+        try { onlineMatches = await getOnlineMatches(source.value); onlineAvailable = true; }
+        catch { onlineWarning = 'Онлайн-проверка орфографии недоступна. Показаны локальные правки.'; }
+      }
+      if (run !== checkRun) return;
+      let result;
+      try { result = checkText(source.value, acceptedSpelling, onlineMatches); }
+      catch {
+        loadingScreen.classList.add('hidden');
+        inputScreen.classList.remove('hidden');
+        showToast('Русский словарь не загрузился. Откройте всю папку проекта.');
+        return;
+      }
+      if (onlineToggle.checked) {
+        try {
+          result = applyGrammarMatches(result, await getGrammarMatches(result.text));
+          grammarAvailable = true;
+        } catch (error) {
+          grammarWarning = error.message.includes('длиннее лимита')
+            ? 'Текст слишком длинный для LanguageTool. Показаны локальные правки.'
+            : 'Онлайн-проверка пунктуации недоступна. Показаны локальные правки.';
+        }
+      }
+      if (run !== checkRun) return;
+      hasResult = true;
+      updateResult(result.text, result.issues, result.highlights);
+      if (onlineAvailable) onlineCredit.classList.remove('hidden');
+      else onlineCredit.classList.add('hidden');
+      if (grammarAvailable) grammarCredit.classList.remove('hidden');
+      else grammarCredit.classList.add('hidden');
+      if (onlineWarning) document.getElementById('success-summary').textContent += ' ' + onlineWarning;
+      if (grammarWarning) document.getElementById('success-summary').textContent += ' ' + grammarWarning;
+      saveResult();
+      protectResult();
+      resultText.scrollTop = 0;
+      loadingScreen.classList.add('hidden');
+      resultScreen.classList.remove('hidden');
+      document.getElementById('page-title').textContent = 'Результат проверки';
+      document.getElementById('intro-description').textContent = 'Просмотрите найденные правки и скопируйте текст после проверки.';
+      window.scrollTo({top:0, behavior:'smooth'});
+    }
+
+    source.addEventListener('input', () => { resetIntroDescription(); updateCount(); });
+    function closeOnlineTooltip() { onlineTooltip.classList.remove('is-open'); }
+    function syncOnlineToggle() {
+      onlineInfo.classList.toggle('hidden', !onlineToggle.checked);
+      if (!onlineToggle.checked) closeOnlineTooltip();
+    }
+    onlineToggle.addEventListener('change', syncOnlineToggle);
+    onlineInfo.addEventListener('mouseenter', () => onlineTooltip.classList.add('is-open'));
+    onlineInfo.addEventListener('mouseleave', closeOnlineTooltip);
+    onlineInfoButton.addEventListener('focus', () => onlineTooltip.classList.add('is-open'));
+    onlineInfoButton.addEventListener('blur', closeOnlineTooltip);
+    onlineInfoButton.addEventListener('click', () => onlineTooltip.classList.add('is-open'));
+    syncOnlineToggle();
+    function jumpToIssue(number) {
+      const pins = [...resultText.querySelectorAll('.result-issue-pin')];
+      const target = pins.find(pin => pin.dataset.number.split(',').some(value => Number(value.trim()) === number));
+      if (!target) return;
+      clearTimeout(jumpTimer);
+      for (const pin of pins) pin.classList.remove('is-active');
+      target.classList.add('is-active');
+      target.scrollIntoView({behavior:window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block:'center'});
+      target.focus({preventScroll:true});
+      jumpTimer = setTimeout(() => target.classList.remove('is-active'), 2200);
+    }
+    function applyChosenSuggestion(issue, choice) {
+      const {start, end} = issue;
+      if (!Number.isInteger(start) || !Number.isInteger(end) || preparedText.slice(start, end) !== issue.before) return false;
+      const delta = choice.length - (end - start);
+      const nextText = preparedText.slice(0, start) + choice + preparedText.slice(end);
+      const nextIssues = currentIssues.filter(item => item !== issue).map(item => {
+        if (!Number.isInteger(item.start) || !Number.isInteger(item.end)) return item;
+        if (item.start >= end) return {...item, start:item.start + delta, end:item.end + delta};
+        return item;
+      }).filter(item => !Number.isInteger(item.start) || item.end <= start || item.start >= start + choice.length);
+      const nextHighlights = [];
+      for (const mark of currentHighlights) {
+        if (mark.issueId === issue.id || (mark.kind === 'context' && mark.start === start && mark.end === end)) continue;
+        const copy = {...mark};
+        if (copy.start >= end) { copy.start += delta; copy.end += delta; }
+        else if (copy.end > start) {
+          if (copy.start < start && copy.end > end) copy.end += delta;
+          else if (copy.start < start) copy.end = start;
+          else if (copy.end > end) { copy.start = start + choice.length; copy.end += delta; }
+          else continue;
+        }
+        nextHighlights.push(copy);
+      }
+      const applied = addIssue(nextIssues, issue.category, issue.before, choice, 'Вариант выбран редактором.');
+      nextHighlights.push({start, end:start, kind:'issue-pin', issueId:applied.id});
+      nextHighlights.push({start, end:start + choice.length, kind:issue.category === punctuationLabel ? 'format' : 'error'});
+      updateResult(nextText, nextIssues, nextHighlights, true);
+      return true;
+    }
+    issueList.addEventListener('click', async event => {
+      if (editingResult) return;
+      const jump = event.target.closest('button[data-jump-issue]');
+      if (jump && jump.dataset.jumpIssue !== undefined) {
+        jumpToIssue(Number(jump.dataset.jumpIssue));
+        return;
+      }
+      const dismiss = event.target.closest('button[data-dismiss-issue]');
+      if (dismiss && dismiss.dataset.dismissIssue !== undefined) {
+        const issue = currentIssues[Number(dismiss.dataset.dismissIssue)];
+        if (!issue || issue.applied || issue.resolved) return;
+        issue.resolved = 'dismissed';
+        currentHighlights = currentHighlights.filter(mark => !(
+          ['suspect','context'].includes(mark.kind) && mark.start === issue.start && mark.end === issue.end
+        ));
+        updateResult(preparedText, currentIssues, currentHighlights, true);
+        showToast('Замечание оставлено без изменения.');
+        return;
+      }
+      const button = event.target.closest('button[data-issue-index]');
+      if (!button) return;
+      const issue = currentIssues[Number(button.dataset.issueIndex)];
+      const choice = issue?.suggestions[Number(button.dataset.choiceIndex)];
+      if (!choice || issue.applied || issue.resolved) return;
+      if (applyChosenSuggestion(issue, choice)) showToast('Выбранный вариант добавлен в текст.');
+    });
+    function startCheck() {
+      if (!source.value.trim()) return;
+      resetIntroDescription();
+      hasResult = false;
+      unprotectResult();
+      clearSavedResult();
+      acceptedSpelling = {};
+      reviewed = false;
+      editingResult = false;
+      const run = ++checkRun;
+      inputScreen.classList.add('hidden');
+      resultScreen.classList.add('hidden');
+      loadingScreen.classList.remove('hidden');
+      document.getElementById('loading-detail').textContent = onlineToggle.checked
+        ? 'Сверяем орфографию с Яндекс.Спеллером, пунктуацию и грамматику с LanguageTool, проверяем предлоги…'
+        : 'Сверяем слова с русским словарём, проверяем пунктуацию и предлоги…';
+      window.scrollTo({top:0, behavior:'smooth'});
+      checkTimer = setTimeout(() => showResults(run), window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 150 : 1350);
+    }
+    checkButton.addEventListener('click', startCheck);
+    document.getElementById('demo-button').addEventListener('click', () => { source.value = generateDemoText(); updateCount(); startCheck(); });
+    editResultButton.addEventListener('click', () => {
+      if (!hasResult) return;
+      reviewed = false;
+      editingResult = true;
+      resultEditor.value = preparedText;
+      syncReviewUI();
+      saveResult();
+      resultEditor.focus();
+    });
+    resultEditor.addEventListener('input', () => {
+      document.getElementById('result-count').textContent = resultEditor.value.length.toLocaleString('ru-RU') + ' симв.';
+      saveResult();
+    });
+    recheckButton.addEventListener('click', () => {
+      if (!editingResult || !resultEditor.value.trim()) { showToast('Введите текст перед повторной проверкой.'); return; }
+      source.value = resultEditor.value;
+      updateCount();
+      startCheck();
+    });
+    finishButton.addEventListener('click', () => {
+      if (editingResult || reviewed) return;
+      openLeaveModal('finish');
+    });
+    function finishResult() {
+      const confirmedText = preparedText;
+      closeLeaveModal();
+      source.value = confirmedText;
+      updateCount();
+      preparedText = '';
+      currentIssues = [];
+      currentHighlights = [];
+      acceptedSpelling = {};
+      onlineMatches = [];
+      hasResult = false;
+      reviewed = false;
+      editingResult = false;
+      unprotectResult();
+      clearSavedResult();
+      issueList.innerHTML = '';
+      resultText.textContent = '';
+      resultEditor.value = '';
+      document.getElementById('issue-count').textContent = '0';
+      document.getElementById('result-count').textContent = '';
+      loadingScreen.classList.add('hidden');
+      resultScreen.classList.add('hidden');
+      inputScreen.classList.remove('hidden');
+      document.getElementById('page-title').textContent = 'Проверка текста';
+      document.getElementById('intro-description').textContent = 'Подтверждённый исправленный текст готов к дальнейшей работе.';
+      window.scrollTo({top:0, behavior:'smooth'});
+      source.focus();
+      showToast('Подтверждённый текст перенесён на главный экран.');
+    }
+    document.getElementById('edit-button').addEventListener('click', () => openLeaveModal('edit'));
+    function openLeaveModal(action) {
+      leaveAction = action;
+      leaveDescription.textContent = action === 'edit'
+        ? 'Вы действительно хотите изменить исходный текст? Текущий результат будет потерян.'
+        : action === 'finish'
+        ? 'Вы действительно хотите подтвердить данный результат?'
+        : 'Вы действительно хотите вернуться на главную страницу? Результат будет потерян.';
+      confirmLeave.textContent = action === 'edit' ? 'Изменить текст' : action === 'finish' ? 'Подтвердить результат' : 'Перейти на главную';
+      previousFocus = document.activeElement;
+      previousOverflow = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+      leaveOverlay.classList.remove('hidden');
+      cancelLeave.focus();
+    }
+    function closeLeaveModal() {
+      if (leaveOverlay.classList.contains('hidden')) return;
+      leaveOverlay.classList.add('hidden');
+      document.body.style.overflow = previousOverflow;
+      if (previousFocus && typeof previousFocus.focus === 'function') previousFocus.focus();
+    }
+    function resetToHome() {
+      closeLeaveModal();
+      clearTimeout(checkTimer);
+      checkRun++;
+      checkTimer = null;
+      clearToastTimers();
+      toastHovered = false;
+      toastRemaining = 0;
+      toast.classList.remove('is-leaving');
+      toast.classList.add('hidden');
+      source.value = '';
+      preparedText = '';
+      currentIssues = [];
+      currentHighlights = [];
+      acceptedSpelling = {};
+      onlineMatches = [];
+      hasResult = false;
+      reviewed = false;
+      editingResult = false;
+      unprotectResult();
+      clearSavedResult();
+      issueList.innerHTML = '';
+      resultText.textContent = '';
+      document.getElementById('issue-count').textContent = '0';
+      document.getElementById('result-count').textContent = '';
+      loadingScreen.classList.add('hidden');
+      resultScreen.classList.add('hidden');
+      inputScreen.classList.remove('hidden');
+      document.getElementById('page-title').textContent = 'Проверка текста';
+      resetIntroDescription();
+      updateCount();
+      window.scrollTo({top:0, behavior:'smooth'});
+      source.focus();
+    }
+    function returnToEditor() {
+      closeLeaveModal();
+      preparedText = '';
+      currentIssues = [];
+      currentHighlights = [];
+      acceptedSpelling = {};
+      onlineMatches = [];
+      hasResult = false;
+      reviewed = false;
+      editingResult = false;
+      unprotectResult();
+      clearSavedResult();
+      issueList.innerHTML = '';
+      resultText.textContent = '';
+      resultScreen.classList.add('hidden');
+      inputScreen.classList.remove('hidden');
+      document.getElementById('page-title').textContent = 'Проверка текста';
+      resetIntroDescription();
+      window.scrollTo({top:0, behavior:'smooth'});
+      source.focus();
+    }
+    homeLink.addEventListener('click', event => {
+      event.preventDefault();
+      if (hasResult) openLeaveModal('home');
+      else resetToHome();
+    });
+    cancelLeave.addEventListener('click', closeLeaveModal);
+    confirmLeave.addEventListener('click', () => {
+      if (leaveAction === 'edit') returnToEditor();
+      else if (leaveAction === 'finish') finishResult();
+      else resetToHome();
+    });
+    leaveOverlay.addEventListener('keydown', event => {
+      if (event.key === 'Escape') { event.preventDefault(); closeLeaveModal(); }
+      if (event.key === 'Tab') {
+        if (event.shiftKey && document.activeElement === cancelLeave) { event.preventDefault(); confirmLeave.focus(); }
+        else if (!event.shiftKey && document.activeElement === confirmLeave) { event.preventDefault(); cancelLeave.focus(); }
+      }
+    });
+    copyButton.addEventListener('click', async () => {
+      if (editingResult) return;
+      const copiedMessage = reviewed ? 'Готовый текст скопирован' : 'Черновик скопирован';
+      try { await navigator.clipboard.writeText(preparedText); showToast(copiedMessage); }
+      catch {
+        const helper = document.createElement('textarea');
+        helper.value = preparedText;
+        helper.style.position = 'fixed';
+        helper.style.opacity = '0';
+        let copied = false;
+        try { document.body.appendChild(helper); helper.select(); copied = document.execCommand('copy'); }
+        catch { copied = false; }
+        finally { helper.remove(); }
+        showToast(copied ? copiedMessage : 'Не удалось скопировать текст');
+      }
+    });
+    updateCount();
+    restoreSavedResult();
+  </script>
+</body>
+</html>
