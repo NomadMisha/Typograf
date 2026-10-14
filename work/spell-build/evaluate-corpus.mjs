@@ -60,7 +60,9 @@ const mutated = [
   if (!item.text.includes(correct)) throw new Error(`Missing mutation target: ${item.source} ${correct}`);
   const input = item.text.replace(correct, error);
   const result = check(input);
-  return {source: item.source, category, input, restored: normalized(result.text) === normalized(item.text), output: normalized(result.text), pending: result.issues.filter(issue => !issue.applied).length};
+  const targetDetected = result.issues.some(issue => issue.category === (category === 'spelling' ? 'Орфография' : 'Пунктуация') &&
+    normalized(issue.before).toLowerCase().includes(error.trim().toLowerCase()));
+  return {source: item.source, category, input, targetDetected, restored: normalized(result.text) === normalized(item.text), output: normalized(result.text), pending: result.issues.filter(issue => !issue.applied).length};
 });
 
 export const summary = {
@@ -72,17 +74,17 @@ export const summary = {
   reviewWithWarnings: review.filter(item => item.pending.length > 0).length,
   injectedCases: mutated.length,
   injectedRestored: mutated.filter(item => item.restored).length,
-  injectedDetectedOrRestored: mutated.filter(item => item.restored || item.pending > 0).length,
-  injectedSilentMisses: mutated.filter(item => !item.restored && item.pending === 0).length,
+  injectedDetectedOrRestored: mutated.filter(item => item.restored || item.targetDetected).length,
+  injectedSilentMisses: mutated.filter(item => !item.restored && !item.targetDetected).length,
   byCategory:Object.fromEntries(['spelling','punctuation'].map(category => {
     const cases = mutated.filter(item => item.category === category);
-    return [category,{cases:cases.length,restored:cases.filter(item => item.restored).length,detectedOrRestored:cases.filter(item => item.restored || item.pending > 0).length}];
+    return [category,{cases:cases.length,restored:cases.filter(item => item.restored).length,detectedOrRestored:cases.filter(item => item.restored || item.targetDetected).length}];
   })),
   cleanChanges: clean.filter(item => !item.unchanged),
   cleanWarnings: clean.filter(item => item.pending.length > 0).map(({source,pending}) => ({source,pending})),
   reviewChanges: review.filter(item => !item.unchanged),
   reviewWarnings: review.filter(item => item.pending.length > 0).map(({source,pending}) => ({source,pending})),
   unrestoredInjections: mutated.filter(item => !item.restored),
-  silentMisses: mutated.filter(item => !item.restored && item.pending === 0)
+  silentMisses: mutated.filter(item => !item.restored && !item.targetDetected)
 };
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) console.log(JSON.stringify(summary, null, 2));

@@ -1,0 +1,987 @@
+{
+  "dataset": "development_regression",
+  "datasetDigest": "c1080fbda278723efc4176e4233be868019e48913a15ee0cc5f3ff00136a44c9",
+  "provenance": "Synthetic examples authored by AI; references require human review. Not an independent editorial benchmark.",
+  "humanReviewed": false,
+  "metrics": {
+    "cases": 50,
+    "cleanCases": 31,
+    "cleanTextChanges": 0,
+    "cleanCasesWithNotices": 4,
+    "exactReference": 43,
+    "wrongAutomaticOnAnnotatedTargets": 0,
+    "annotatedTargets": 19,
+    "detectedTargets": 18,
+    "missedTargets": 1,
+    "unexpectedNotices": 6,
+    "annotatedDetectionPrecision": 0.75,
+    "annotatedDetectionRecall": 0.9473684210526315
+  },
+  "cases": [
+    {
+      "id": "clean-01",
+      "input": "Он сказал как отрезал.",
+      "reference": "Он сказал как отрезал.",
+      "actual": "Он сказал как отрезал.",
+      "exactReference": true,
+      "clean": true,
+      "changed": false,
+      "detectedTargets": 0,
+      "totalTargets": 0,
+      "missedTargets": [],
+      "wrongAutomatic": [],
+      "unexpectedNotices": [],
+      "issues": []
+    },
+    {
+      "id": "clean-02",
+      "input": "Она сказала как отрезала.",
+      "reference": "Она сказала как отрезала.",
+      "actual": "Она сказала как отрезала.",
+      "exactReference": true,
+      "clean": true,
+      "changed": false,
+      "detectedTargets": 0,
+      "totalTargets": 0,
+      "missedTargets": [],
+      "wrongAutomatic": [],
+      "unexpectedNotices": [],
+      "issues": []
+    },
+    {
+      "id": "clean-03",
+      "input": "Он сказал как есть.",
+      "reference": "Он сказал как есть.",
+      "actual": "Он сказал как есть.",
+      "exactReference": true,
+      "clean": true,
+      "changed": false,
+      "detectedTargets": 0,
+      "totalTargets": 0,
+      "missedTargets": [],
+      "wrongAutomatic": [],
+      "unexpectedNotices": [],
+      "issues": []
+    },
+    {
+      "id": "clean-04",
+      "input": "Я знаю что к чему.",
+      "reference": "Я знаю что к чему.",
+      "actual": "Я знаю что к чему.",
+      "exactReference": true,
+      "clean": true,
+      "changed": false,
+      "detectedTargets": 0,
+      "totalTargets": 0,
+      "missedTargets": [],
+      "wrongAutomatic": [],
+      "unexpectedNotices": [],
+      "issues": []
+    },
+    {
+      "id": "clean-05",
+      "input": "Он сказал что угодно.",
+      "reference": "Он сказал что угодно.",
+      "actual": "Он сказал что угодно.",
+      "exactReference": true,
+      "clean": true,
+      "changed": false,
+      "detectedTargets": 0,
+      "totalTargets": 0,
+      "missedTargets": [],
+      "wrongAutomatic": [],
+      "unexpectedNotices": [],
+      "issues": []
+    },
+    {
+      "id": "clean-06",
+      "input": "Она написала что попало.",
+      "reference": "Она написала что попало.",
+      "actual": "Она написала что попало.",
+      "exactReference": true,
+      "clean": true,
+      "changed": false,
+      "detectedTargets": 0,
+      "totalTargets": 0,
+      "missedTargets": [],
+      "wrongAutomatic": [],
+      "unexpectedNotices": [],
+      "issues": []
+    },
+    {
+      "id": "clean-07",
+      "input": "Он объяснил как можно проще.",
+      "reference": "Он объяснил как можно проще.",
+      "actual": "Он объяснил как можно проще.",
+      "exactReference": true,
+      "clean": true,
+      "changed": false,
+      "detectedTargets": 0,
+      "totalTargets": 0,
+      "missedTargets": [],
+      "wrongAutomatic": [],
+      "unexpectedNotices": [],
+      "issues": []
+    },
+    {
+      "id": "clean-08",
+      "input": "Она решила как следует.",
+      "reference": "Она решила как следует.",
+      "actual": "Она решила как следует.",
+      "exactReference": true,
+      "clean": true,
+      "changed": false,
+      "detectedTargets": 0,
+      "totalTargets": 0,
+      "missedTargets": [],
+      "wrongAutomatic": [],
+      "unexpectedNotices": [],
+      "issues": []
+    },
+    {
+      "id": "clean-09",
+      "input": "Изменения в течении следующей реки заметны.",
+      "reference": "Изменения в течении следующей реки заметны.",
+      "actual": "Изменения в течении следующей реки заметны.",
+      "exactReference": true,
+      "clean": true,
+      "changed": false,
+      "detectedTargets": 0,
+      "totalTargets": 0,
+      "missedTargets": [],
+      "wrongAutomatic": [],
+      "unexpectedNotices": [],
+      "issues": []
+    },
+    {
+      "id": "clean-10",
+      "input": "Измерения в течении этой реки завершены.",
+      "reference": "Измерения в течении этой реки завершены.",
+      "actual": "Измерения в течении этой реки завершены.",
+      "exactReference": true,
+      "clean": true,
+      "changed": false,
+      "detectedTargets": 0,
+      "totalTargets": 0,
+      "missedTargets": [],
+      "wrongAutomatic": [],
+      "unexpectedNotices": [],
+      "issues": []
+    },
+    {
+      "id": "clean-11",
+      "input": "Конечно же, он пришёл.",
+      "reference": "Конечно же, он пришёл.",
+      "actual": "Конечно же, он пришёл.",
+      "exactReference": true,
+      "clean": true,
+      "changed": false,
+      "detectedTargets": 0,
+      "totalTargets": 0,
+      "missedTargets": [],
+      "wrongAutomatic": [],
+      "unexpectedNotices": [],
+      "issues": []
+    },
+    {
+      "id": "clean-12",
+      "input": "Возможно решение задачи.",
+      "reference": "Возможно решение задачи.",
+      "actual": "Возможно решение задачи.",
+      "exactReference": true,
+      "clean": true,
+      "changed": false,
+      "detectedTargets": 0,
+      "totalTargets": 0,
+      "missedTargets": [],
+      "wrongAutomatic": [],
+      "unexpectedNotices": [
+        {
+          "category": "Пунктуация",
+          "before": "Возможно",
+          "after": "Возможно,",
+          "applied": false
+        }
+      ],
+      "issues": [
+        {
+          "category": "Пунктуация",
+          "before": "Возможно",
+          "after": "Возможно,",
+          "applied": false
+        }
+      ]
+    },
+    {
+      "id": "clean-13",
+      "input": "Щас проверю файл.",
+      "reference": "Щас проверю файл.",
+      "actual": "Щас проверю файл.",
+      "exactReference": true,
+      "clean": true,
+      "changed": false,
+      "detectedTargets": 0,
+      "totalTargets": 0,
+      "missedTargets": [],
+      "wrongAutomatic": [],
+      "unexpectedNotices": [],
+      "issues": []
+    },
+    {
+      "id": "clean-14",
+      "input": "Проверка орфографии",
+      "reference": "Проверка орфографии",
+      "actual": "Проверка орфографии",
+      "exactReference": true,
+      "clean": true,
+      "changed": false,
+      "detectedTargets": 0,
+      "totalTargets": 0,
+      "missedTargets": [],
+      "wrongAutomatic": [],
+      "unexpectedNotices": [
+        {
+          "category": "Пунктуация",
+          "before": "",
+          "after": ".",
+          "applied": false
+        }
+      ],
+      "issues": [
+        {
+          "category": "Пунктуация",
+          "before": "",
+          "after": ".",
+          "applied": false
+        }
+      ]
+    },
+    {
+      "id": "clean-15",
+      "input": "JSON",
+      "reference": "JSON",
+      "actual": "JSON",
+      "exactReference": true,
+      "clean": true,
+      "changed": false,
+      "detectedTargets": 0,
+      "totalTargets": 0,
+      "missedTargets": [],
+      "wrongAutomatic": [],
+      "unexpectedNotices": [],
+      "issues": []
+    },
+    {
+      "id": "clean-16",
+      "input": "Версия 2",
+      "reference": "Версия 2",
+      "actual": "Версия 2",
+      "exactReference": true,
+      "clean": true,
+      "changed": false,
+      "detectedTargets": 0,
+      "totalTargets": 0,
+      "missedTargets": [],
+      "wrongAutomatic": [],
+      "unexpectedNotices": [
+        {
+          "category": "Пунктуация",
+          "before": "",
+          "after": ".",
+          "applied": false
+        }
+      ],
+      "issues": [
+        {
+          "category": "Пунктуация",
+          "before": "",
+          "after": ".",
+          "applied": false
+        }
+      ]
+    },
+    {
+      "id": "clean-17",
+      "input": "Список изменений",
+      "reference": "Список изменений",
+      "actual": "Список изменений",
+      "exactReference": true,
+      "clean": true,
+      "changed": false,
+      "detectedTargets": 0,
+      "totalTargets": 0,
+      "missedTargets": [],
+      "wrongAutomatic": [],
+      "unexpectedNotices": [
+        {
+          "category": "Пунктуация",
+          "before": "",
+          "after": ".",
+          "applied": false
+        }
+      ],
+      "issues": [
+        {
+          "category": "Пунктуация",
+          "before": "",
+          "after": ".",
+          "applied": false
+        }
+      ]
+    },
+    {
+      "id": "clean-18",
+      "input": "Иван Петров опубликовал статью.",
+      "reference": "Иван Петров опубликовал статью.",
+      "actual": "Иван Петров опубликовал статью.",
+      "exactReference": true,
+      "clean": true,
+      "changed": false,
+      "detectedTargets": 0,
+      "totalTargets": 0,
+      "missedTargets": [],
+      "wrongAutomatic": [],
+      "unexpectedNotices": [],
+      "issues": []
+    },
+    {
+      "id": "clean-19",
+      "input": "Код: `прешол = \"подошол\";`.",
+      "reference": "Код: `прешол = \"подошол\";`.",
+      "actual": "Код: `прешол = \"подошол\";`.",
+      "exactReference": true,
+      "clean": true,
+      "changed": false,
+      "detectedTargets": 0,
+      "totalTargets": 0,
+      "missedTargets": [],
+      "wrongAutomatic": [],
+      "unexpectedNotices": [],
+      "issues": []
+    },
+    {
+      "id": "clean-20",
+      "input": "Адрес: подошол@example.com.",
+      "reference": "Адрес: подошол@example.com.",
+      "actual": "Адрес: подошол@example.com.",
+      "exactReference": true,
+      "clean": true,
+      "changed": false,
+      "detectedTargets": 0,
+      "totalTargets": 0,
+      "missedTargets": [],
+      "wrongAutomatic": [],
+      "unexpectedNotices": [],
+      "issues": []
+    },
+    {
+      "id": "clean-21",
+      "input": "Ключ: подошол_count.",
+      "reference": "Ключ: подошол_count.",
+      "actual": "Ключ: подошол_count.",
+      "exactReference": true,
+      "clean": true,
+      "changed": false,
+      "detectedTargets": 0,
+      "totalTargets": 0,
+      "missedTargets": [],
+      "wrongAutomatic": [],
+      "unexpectedNotices": [],
+      "issues": []
+    },
+    {
+      "id": "clean-22",
+      "input": "Файл: подошол.json.",
+      "reference": "Файл: подошол.json.",
+      "actual": "Файл: подошол.json.",
+      "exactReference": true,
+      "clean": true,
+      "changed": false,
+      "detectedTargets": 0,
+      "totalTargets": 0,
+      "missedTargets": [],
+      "wrongAutomatic": [],
+      "unexpectedNotices": [],
+      "issues": []
+    },
+    {
+      "id": "clean-23",
+      "input": "Номер: 1234567890.",
+      "reference": "Номер: 1234567890.",
+      "actual": "Номер: 1234567890.",
+      "exactReference": true,
+      "clean": true,
+      "changed": false,
+      "detectedTargets": 0,
+      "totalTargets": 0,
+      "missedTargets": [],
+      "wrongAutomatic": [],
+      "unexpectedNotices": [],
+      "issues": []
+    },
+    {
+      "id": "clean-24",
+      "input": "Цена: 199,99 руб.",
+      "reference": "Цена: 199,99 руб.",
+      "actual": "Цена: 199,99 руб.",
+      "exactReference": true,
+      "clean": true,
+      "changed": false,
+      "detectedTargets": 0,
+      "totalTargets": 0,
+      "missedTargets": [],
+      "wrongAutomatic": [],
+      "unexpectedNotices": [],
+      "issues": []
+    },
+    {
+      "id": "clean-25",
+      "input": "Он не согласен с выводами.",
+      "reference": "Он не согласен с выводами.",
+      "actual": "Он не согласен с выводами.",
+      "exactReference": true,
+      "clean": true,
+      "changed": false,
+      "detectedTargets": 0,
+      "totalTargets": 0,
+      "missedTargets": [],
+      "wrongAutomatic": [],
+      "unexpectedNotices": [],
+      "issues": []
+    },
+    {
+      "id": "clean-26",
+      "input": "Она прочитала статью и ответила автору.",
+      "reference": "Она прочитала статью и ответила автору.",
+      "actual": "Она прочитала статью и ответила автору.",
+      "exactReference": true,
+      "clean": true,
+      "changed": false,
+      "detectedTargets": 0,
+      "totalTargets": 0,
+      "missedTargets": [],
+      "wrongAutomatic": [],
+      "unexpectedNotices": [],
+      "issues": []
+    },
+    {
+      "id": "clean-27",
+      "input": "Он работает как редактор.",
+      "reference": "Он работает как редактор.",
+      "actual": "Он работает как редактор.",
+      "exactReference": true,
+      "clean": true,
+      "changed": false,
+      "detectedTargets": 0,
+      "totalTargets": 0,
+      "missedTargets": [],
+      "wrongAutomatic": [],
+      "unexpectedNotices": [],
+      "issues": []
+    },
+    {
+      "id": "clean-28",
+      "input": "Лучше поздно, чем никогда.",
+      "reference": "Лучше поздно, чем никогда.",
+      "actual": "Лучше поздно, чем никогда.",
+      "exactReference": true,
+      "clean": true,
+      "changed": false,
+      "detectedTargets": 0,
+      "totalTargets": 0,
+      "missedTargets": [],
+      "wrongAutomatic": [],
+      "unexpectedNotices": [],
+      "issues": []
+    },
+    {
+      "id": "clean-29",
+      "input": "В течение недели он проверял статьи.",
+      "reference": "В течение недели он проверял статьи.",
+      "actual": "В течение недели он проверял статьи.",
+      "exactReference": true,
+      "clean": true,
+      "changed": false,
+      "detectedTargets": 0,
+      "totalTargets": 0,
+      "missedTargets": [],
+      "wrongAutomatic": [],
+      "unexpectedNotices": [],
+      "issues": []
+    },
+    {
+      "id": "clean-30",
+      "input": "Текст содержит https://example.org/подошол и `упол`.",
+      "reference": "Текст содержит https://example.org/подошол и `упол`.",
+      "actual": "Текст содержит https://example.org/подошол и `упол`.",
+      "exactReference": true,
+      "clean": true,
+      "changed": false,
+      "detectedTargets": 0,
+      "totalTargets": 0,
+      "missedTargets": [],
+      "wrongAutomatic": [],
+      "unexpectedNotices": [],
+      "issues": []
+    },
+    {
+      "id": "error-01",
+      "input": "Он подошол к дому.",
+      "reference": "Он подошёл к дому.",
+      "actual": "Он подошёл к дому.",
+      "exactReference": true,
+      "clean": false,
+      "changed": true,
+      "detectedTargets": 1,
+      "totalTargets": 1,
+      "missedTargets": [],
+      "wrongAutomatic": [],
+      "unexpectedNotices": [],
+      "issues": [
+        {
+          "category": "Орфография",
+          "before": "подошол",
+          "after": "подошёл",
+          "applied": true
+        }
+      ]
+    },
+    {
+      "id": "error-02",
+      "input": "ПОДОШОЛ К ДОМУ.",
+      "reference": "ПОДОШЁЛ К ДОМУ.",
+      "actual": "ПОДОШЁЛ К ДОМУ.",
+      "exactReference": true,
+      "clean": false,
+      "changed": true,
+      "detectedTargets": 1,
+      "totalTargets": 1,
+      "missedTargets": [],
+      "wrongAutomatic": [],
+      "unexpectedNotices": [],
+      "issues": [
+        {
+          "category": "Орфография",
+          "before": "ПОДОШОЛ",
+          "after": "ПОДОШЁЛ",
+          "applied": true
+        }
+      ]
+    },
+    {
+      "id": "error-03",
+      "input": "Вообщем, всё готово.",
+      "reference": "В общем, всё готово.",
+      "actual": "В общем, всё готово.",
+      "exactReference": true,
+      "clean": false,
+      "changed": true,
+      "detectedTargets": 1,
+      "totalTargets": 1,
+      "missedTargets": [],
+      "wrongAutomatic": [],
+      "unexpectedNotices": [],
+      "issues": [
+        {
+          "category": "Орфография",
+          "before": "Вообщем",
+          "after": "В общем",
+          "applied": true
+        }
+      ]
+    },
+    {
+      "id": "error-04",
+      "input": "ВОOБЩЕМ, всё готово.",
+      "reference": "В ОБЩЕМ, всё готово.",
+      "actual": "ВОOБЩЕМ, всё готово.",
+      "exactReference": false,
+      "clean": false,
+      "changed": false,
+      "detectedTargets": 0,
+      "totalTargets": 1,
+      "missedTargets": [
+        {
+          "before": "ВОOБЩЕМ",
+          "category": "Орфография",
+          "after": "В ОБЩЕМ"
+        }
+      ],
+      "wrongAutomatic": [],
+      "unexpectedNotices": [
+        {
+          "category": "Орфография",
+          "before": "БЩЕМ",
+          "after": "БАЕМ, БОЕМ, БУЕМ",
+          "applied": false
+        }
+      ],
+      "issues": [
+        {
+          "category": "Орфография",
+          "before": "БЩЕМ",
+          "after": "БАЕМ, БОЕМ, БУЕМ",
+          "applied": false
+        }
+      ]
+    },
+    {
+      "id": "error-05",
+      "input": "Он прешол домой.",
+      "reference": "Он пришёл домой.",
+      "actual": "Он пришёл домой.",
+      "exactReference": true,
+      "clean": false,
+      "changed": true,
+      "detectedTargets": 1,
+      "totalTargets": 1,
+      "missedTargets": [],
+      "wrongAutomatic": [],
+      "unexpectedNotices": [],
+      "issues": [
+        {
+          "category": "Орфография",
+          "before": "прешол",
+          "after": "пришёл",
+          "applied": true
+        }
+      ]
+    },
+    {
+      "id": "error-06",
+      "input": "Мы раскажем о проекте.",
+      "reference": "Мы расскажем о проекте.",
+      "actual": "Мы расскажем о проекте.",
+      "exactReference": true,
+      "clean": false,
+      "changed": true,
+      "detectedTargets": 1,
+      "totalTargets": 1,
+      "missedTargets": [],
+      "wrongAutomatic": [],
+      "unexpectedNotices": [],
+      "issues": [
+        {
+          "category": "Орфография",
+          "before": "раскажем",
+          "after": "расскажем",
+          "applied": true
+        }
+      ]
+    },
+    {
+      "id": "error-07",
+      "input": "Нужна орфаграфия.",
+      "reference": "Нужна орфография.",
+      "actual": "Нужна орфография.",
+      "exactReference": true,
+      "clean": false,
+      "changed": true,
+      "detectedTargets": 1,
+      "totalTargets": 1,
+      "missedTargets": [],
+      "wrongAutomatic": [],
+      "unexpectedNotices": [],
+      "issues": [
+        {
+          "category": "Орфография",
+          "before": "орфаграфия",
+          "after": "орфография",
+          "applied": true
+        }
+      ]
+    },
+    {
+      "id": "error-08",
+      "input": "Он сказал что текст готов.",
+      "reference": "Он сказал, что текст готов.",
+      "actual": "Он сказал, что текст готов.",
+      "exactReference": true,
+      "clean": false,
+      "changed": true,
+      "detectedTargets": 1,
+      "totalTargets": 1,
+      "missedTargets": [],
+      "wrongAutomatic": [],
+      "unexpectedNotices": [],
+      "issues": [
+        {
+          "category": "Пунктуация",
+          "before": "сказал что",
+          "after": "сказал, что",
+          "applied": true
+        }
+      ]
+    },
+    {
+      "id": "error-09",
+      "input": "Подошёл увидел как она присела.",
+      "reference": "Подошёл, увидел, как она присела.",
+      "actual": "Подошёл, увидел, как она присела.",
+      "exactReference": true,
+      "clean": false,
+      "changed": true,
+      "detectedTargets": 1,
+      "totalTargets": 1,
+      "missedTargets": [],
+      "wrongAutomatic": [],
+      "unexpectedNotices": [
+        {
+          "category": "Пунктуация",
+          "before": "увидел как",
+          "after": "увидел, как",
+          "applied": true
+        }
+      ],
+      "issues": [
+        {
+          "category": "Пунктуация",
+          "before": "Подошёл увидел",
+          "after": "Подошёл, увидел",
+          "applied": true
+        },
+        {
+          "category": "Пунктуация",
+          "before": "увидел как",
+          "after": "увидел, как",
+          "applied": true
+        }
+      ]
+    },
+    {
+      "id": "error-10",
+      "input": "Он увидел как она присела.",
+      "reference": "Он увидел, как она присела.",
+      "actual": "Он увидел, как она присела.",
+      "exactReference": true,
+      "clean": false,
+      "changed": true,
+      "detectedTargets": 1,
+      "totalTargets": 1,
+      "missedTargets": [],
+      "wrongAutomatic": [],
+      "unexpectedNotices": [],
+      "issues": [
+        {
+          "category": "Пунктуация",
+          "before": "увидел как",
+          "after": "увидел, как",
+          "applied": true
+        }
+      ]
+    },
+    {
+      "id": "error-11",
+      "input": "В течении недели мы проверяли текст.",
+      "reference": "В течение недели мы проверяли текст.",
+      "actual": "В течение недели мы проверяли текст.",
+      "exactReference": true,
+      "clean": false,
+      "changed": true,
+      "detectedTargets": 1,
+      "totalTargets": 1,
+      "missedTargets": [],
+      "wrongAutomatic": [],
+      "unexpectedNotices": [],
+      "issues": [
+        {
+          "category": "Грамматика",
+          "before": "В течении",
+          "after": "В течение",
+          "applied": true
+        }
+      ]
+    },
+    {
+      "id": "error-12",
+      "input": "В течении следующей недели он придёт.",
+      "reference": "В течение следующей недели он придёт.",
+      "actual": "В течение следующей недели он придёт.",
+      "exactReference": true,
+      "clean": false,
+      "changed": true,
+      "detectedTargets": 1,
+      "totalTargets": 1,
+      "missedTargets": [],
+      "wrongAutomatic": [],
+      "unexpectedNotices": [],
+      "issues": [
+        {
+          "category": "Грамматика",
+          "before": "В течении",
+          "after": "В течение",
+          "applied": true
+        }
+      ]
+    },
+    {
+      "id": "error-13",
+      "input": "Крипис, друг.",
+      "reference": "Крепись, друг.",
+      "actual": "Крипис, друг.",
+      "exactReference": false,
+      "clean": false,
+      "changed": false,
+      "detectedTargets": 1,
+      "totalTargets": 1,
+      "missedTargets": [],
+      "wrongAutomatic": [],
+      "unexpectedNotices": [],
+      "issues": [
+        {
+          "category": "Орфография",
+          "before": "Крипис",
+          "after": "Крепись, Кризис",
+          "applied": false
+        }
+      ]
+    },
+    {
+      "id": "error-14",
+      "input": "Крипис повлиял на рынок.",
+      "reference": "Кризис повлиял на рынок.",
+      "actual": "Крипис повлиял на рынок.",
+      "exactReference": false,
+      "clean": false,
+      "changed": false,
+      "detectedTargets": 1,
+      "totalTargets": 1,
+      "missedTargets": [],
+      "wrongAutomatic": [],
+      "unexpectedNotices": [],
+      "issues": [
+        {
+          "category": "Орфография",
+          "before": "Крипис",
+          "after": "Крепись, Кризис",
+          "applied": false
+        }
+      ]
+    },
+    {
+      "id": "error-15",
+      "input": "Это машна.",
+      "reference": "Это машина.",
+      "actual": "Это машна.",
+      "exactReference": false,
+      "clean": false,
+      "changed": false,
+      "detectedTargets": 1,
+      "totalTargets": 1,
+      "missedTargets": [],
+      "wrongAutomatic": [],
+      "unexpectedNotices": [],
+      "issues": [
+        {
+          "category": "Орфография",
+          "before": "машна",
+          "after": "майна, манна, машина",
+          "applied": false
+        }
+      ]
+    },
+    {
+      "id": "error-16",
+      "input": "Это приложнеие.",
+      "reference": "Это приложение.",
+      "actual": "Это приложнеие.",
+      "exactReference": false,
+      "clean": false,
+      "changed": false,
+      "detectedTargets": 1,
+      "totalTargets": 1,
+      "missedTargets": [],
+      "wrongAutomatic": [],
+      "unexpectedNotices": [],
+      "issues": [
+        {
+          "category": "Орфография",
+          "before": "приложнеие",
+          "after": "приложение",
+          "applied": false
+        }
+      ]
+    },
+    {
+      "id": "error-17",
+      "input": "Он закончил работу",
+      "reference": "Он закончил работу.",
+      "actual": "Он закончил работу",
+      "exactReference": false,
+      "clean": false,
+      "changed": false,
+      "detectedTargets": 1,
+      "totalTargets": 1,
+      "missedTargets": [],
+      "wrongAutomatic": [],
+      "unexpectedNotices": [],
+      "issues": [
+        {
+          "category": "Пунктуация",
+          "before": "",
+          "after": ".",
+          "applied": false
+        }
+      ]
+    },
+    {
+      "id": "error-18",
+      "input": "Он вернулся но ничего не сказал.",
+      "reference": "Он вернулся, но ничего не сказал.",
+      "actual": "Он вернулся но ничего не сказал.",
+      "exactReference": false,
+      "clean": false,
+      "changed": false,
+      "detectedTargets": 1,
+      "totalTargets": 1,
+      "missedTargets": [],
+      "wrongAutomatic": [],
+      "unexpectedNotices": [],
+      "issues": [
+        {
+          "category": "Пунктуация",
+          "before": "вернулся но",
+          "after": "вернулся, но",
+          "applied": false
+        }
+      ]
+    },
+    {
+      "id": "protected-remote",
+      "input": "Код: `машна`.",
+      "reference": "Код: `машна`.",
+      "actual": "Код: `машна`.",
+      "exactReference": true,
+      "clean": true,
+      "changed": false,
+      "detectedTargets": 0,
+      "totalTargets": 0,
+      "missedTargets": [],
+      "wrongAutomatic": [],
+      "unexpectedNotices": [],
+      "issues": []
+    },
+    {
+      "id": "remote-ambiguity",
+      "input": "Это Блокси.",
+      "reference": "Это Блокси.",
+      "actual": "Это Блокси.",
+      "exactReference": true,
+      "clean": false,
+      "changed": false,
+      "detectedTargets": 1,
+      "totalTargets": 1,
+      "missedTargets": [],
+      "wrongAutomatic": [],
+      "unexpectedNotices": [],
+      "issues": [
+        {
+          "category": "Орфография",
+          "before": "Блокси",
+          "after": "Блоки",
+          "applied": false
+        }
+      ]
+    }
+  ]
+}

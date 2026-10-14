@@ -1,0 +1,134 @@
+{
+  "schemaVersion": 1,
+  "purpose": "held_out_diagnostic",
+  "provenance": "Synthetic AI-authored reference draft, frozen before this rule change. No human review; not an independent measure of real-world quality.",
+  "reviewedBy": null,
+  "cases": [
+    {
+      "id": "holdout-01",
+      "category": "clean",
+      "input": "Он ответил как мог.",
+      "reference": "Он ответил как мог.",
+      "targets": []
+    },
+    {
+      "id": "holdout-02",
+      "category": "clean",
+      "input": "Редактор рассказал как умел.",
+      "reference": "Редактор рассказал как умел.",
+      "targets": []
+    },
+    {
+      "id": "holdout-03",
+      "category": "clean",
+      "input": "Она объяснила как можно точнее.",
+      "reference": "Она объяснила как можно точнее.",
+      "targets": []
+    },
+    {
+      "id": "holdout-04",
+      "category": "mixed",
+      "input": "Я знаю что попало в отчёт.",
+      "reference": "Я знаю, что попало в отчёт.",
+      "targets": [
+        {
+          "before": "знаю что",
+          "category": "Пунктуация"
+        }
+      ]
+    },
+    {
+      "id": "holdout-05",
+      "category": "clean",
+      "input": "Он знает что угодно о ремонте.",
+      "reference": "Он знает что угодно о ремонте.",
+      "targets": []
+    },
+    {
+      "id": "holdout-06",
+      "category": "clean",
+      "input": "Возможно несколько решений.",
+      "reference": "Возможно несколько решений.",
+      "targets": []
+    },
+    {
+      "id": "holdout-07",
+      "category": "clean",
+      "input": "Итак, проверка закончена.",
+      "reference": "Итак, проверка закончена.",
+      "targets": []
+    },
+    {
+      "id": "holdout-08",
+      "category": "clean",
+      "input": "Число решений конечно.",
+      "reference": "Число решений конечно.",
+      "targets": []
+    },
+    {
+      "id": "holdout-09",
+      "category": "clean",
+      "input": "В течении этой реки много водоворотов.",
+      "reference": "В течении этой реки много водоворотов.",
+      "targets": []
+    },
+    {
+      "id": "holdout-10",
+      "category": "mixed",
+      "input": "ПРЕШОЛ И УПОЛ.",
+      "reference": "ПРИШЁЛ И УПАЛ.",
+      "targets": [
+        {
+          "before": "ПРЕШОЛ",
+          "category": "Орфография"
+        },
+        {
+          "before": "УПОЛ",
+          "category": "Орфография"
+        }
+      ]
+    },
+    {
+      "id": "holdout-11",
+      "category": "clean",
+      "input": "Документация API",
+      "reference": "Документация API",
+      "targets": []
+    },
+    {
+      "id": "holdout-12",
+      "category": "clean",
+      "input": "Сборка 42",
+      "reference": "Сборка 42",
+      "targets": []
+    },
+    {
+      "id": "holdout-13",
+      "category": "clean",
+      "input": "Пишите на прешол@example.org.",
+      "reference": "Пишите на прешол@example.org.",
+      "targets": []
+    },
+    {
+      "id": "holdout-14",
+      "category": "clean",
+      "input": "Идентификатор: упол_total.",
+      "reference": "Идентификатор: упол_total.",
+      "targets": []
+    },
+    {
+      "id": "holdout-15",
+      "category": "clean",
+      "input": "Файл орфаграфия.json хранит настройки.",
+      "reference": "Файл орфаграфия.json хранит настройки.",
+      "targets": []
+    },
+    {
+      "id": "holdout-16",
+      "category": "clean",
+      "input": "Стоимость выросла с 10 до 12 рублей.",
+      "reference": "Стоимость выросла с 10 до 12 рублей.",
+      "targets": []
+    }
+  ]
+}

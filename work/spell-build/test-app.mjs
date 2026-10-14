@@ -9,6 +9,7 @@ const dictionary = scripts.length > 1 ? scripts[0] : fs.readFileSync('../../outp
 const ids = ['source','input-screen','loading-screen','result-screen','check-button','issue-list','result-text','result-editor','result-title','result-status-title','pending-badge','review-status','edit-result-button','recheck-button','finish-button','toast','char-count','toast-message','issue-count','result-count','success-summary','page-title','intro-description','demo-button','edit-button','copy-button','home-link','leave-overlay','leave-description','cancel-leave','confirm-leave','online-toggle','online-info','online-info-button','online-tooltip','online-credit','grammar-credit','loading-detail'];
 const elements = {};
 ids.push('history-panel','history-count','dictionary-count','history-storage-status','history-list','dictionary-words','save-history-button','export-history','import-history','history-file','dictionary-form','dictionary-word');
+ids.push('neural-check-button','neural-status');
 const document = {activeElement:null, body:{style:{overflow:''},appendChild(){}}, getElementById:id=>elements[id], createElement:id=>new Element(id), execCommand:()=>true};
 
 function Element(id) {
@@ -92,9 +93,10 @@ test('online check requires an explicit switch action', () => {
   assert.ok(!/\bchecked\b/.test(toggle));
   assert.ok(elements['online-info'].classList.contains('hidden'));
 });
-test('user sample corrected in context', () => {
+test('user sample fixes clear grammar and leaves the ambiguous word for review', () => {
   const result=check('Крипис это скора закончиться');
-  assert.equal(result.text, 'Крепись, это скоро закончится.');
+  assert.equal(result.text, 'Крипис это скоро закончится');
+  assert.ok(result.issues.some(item=>item.before==='Крипис' && !item.applied && item.suggestions.includes('Крепись') && item.suggestions.includes('Кризис')));
   assert.equal(result.issues.filter(item=>item.category==='Орфография').length,2);
   assert.ok(result.issues.some(item=>item.category==='Грамматика' && item.after==='закончится'));
 });
@@ -368,9 +370,10 @@ test('automatic LanguageTool comma removes a duplicate local punctuation warning
   assert.equal(result.issues.filter(item=>item.before==='тоже а').length,1);
   assert.ok(result.issues.some(item=>item.before==='тоже а' && item.applied));
 });
-test('online close correction enters final text while valid words stay untouched', () => {
+test('online close candidate requires approval and valid words stay untouched', () => {
   const result=vm.runInContext('checkText("Это машна. Он пал.", {}, [{code:1,pos:4,len:5,word:"машна",s:["машина"]},{code:1,pos:14,len:3,word:"пал",s:["пол"]}])',context);
-  assert.ok(result.text.includes('Это машина.'));
+  assert.ok(result.text.includes('Это машна.'));
+  assert.ok(result.issues.some(item=>item.before==='машна' && !item.applied));
   assert.ok(result.text.includes('Он пал.'));
   assert.ok(result.issues.some(item=>item.before==='машна' && item.after==='машина'));
 });
@@ -379,21 +382,24 @@ test('ambiguous online choices are shown without a forced replacement', () => {
   assert.ok(result.text.includes('машна'));
   assert.ok(result.issues.some(item=>item.before==='машна' && !item.applied && item.suggestions.includes('машина')));
 });
-test('online suggestion cannot override a verified local correction', () => {
+test('online suggestion cannot force one meaning of an ambiguous word', () => {
   const result=vm.runInContext('checkText("Крипис это скоро закончится.", {}, [{code:1,pos:0,len:6,word:"Крипис",s:["Кризис"]}])',context);
-  assert.equal(result.text,'Крепись, это скоро закончится.');
+  assert.equal(result.text,'Крипис это скоро закончится.');
+  assert.ok(result.issues.some(item=>item.before==='Крипис' && !item.applied));
 });
 test('full sample applies safe fixes and flags ambiguous comma', () => {
   const input='Крипис это скора закончиться.\n\nВообщем, мы сделали новый интерфес который помогает редактору проверять статьи для Хабра . Он подошол к автору и нашол проблемму в тексте.\n\nВ этой статье раскажем как работает проверка в браузере. Она исправляет ошибычные слова  и убирает лишние пробелы';
   const result=check(input);
-  assert.ok(result.text.startsWith('Крепись, это скоро закончится.'));
+  assert.ok(result.text.startsWith('Крипис это скоро закончится.'));
   assert.ok(result.text.includes('нашёл проблему'));
   assert.ok(!result.text.includes('Кризис'));
   assert.ok(result.issues.some(item=>!item.applied && item.category==='Пунктуация' && item.after.includes(', который')));
 });
-test('Крипис corrected as a standalone word', () => {
-  assert.equal(check('Крипис!').text,'Крепись!');
-  assert.equal(check('крипис.').text,'крепись.');
+test('ambiguous standalone Крипис offers both meanings without forcing one', () => {
+  for(const input of ['Крипис!','крипис.']) {
+    const result=check(input); assert.equal(result.text,input);
+    assert.ok(result.issues.some(item=>!item.applied && item.suggestions.some(x=>x.toLowerCase()==='крепись') && item.suggestions.some(x=>x.toLowerCase()==='кризис')));
+  }
 });
 test('valid phrases are not changed by the context rule', () => {
   assert.equal(check('Это скоро закончится.').text,'Это скоро закончится.');
@@ -415,11 +421,11 @@ test('unknown words remain suggestions rather than forced replacements', () => {
   context.pendingResult=result;
   assert.ok(vm.runInContext('renderHighlightedText(pendingResult.text,pendingResult.highlights)',context).includes('<span class="result-mark suspect">машна</span>'));
 });
-test('a unique close dictionary correction appears in the ready text', () => {
+test('a unique dictionary candidate still requires editor approval', () => {
   const result=check('Редкактор открыл приложнеие.');
-  assert.equal(result.text,'Редактор открыл приложение.');
-  assert.equal(result.issues.filter(item=>!item.applied).length,0);
-  assert.ok(result.highlights.filter(item=>item.kind==='error').length>=2);
+  assert.equal(result.text,'Редкактор открыл приложнеие.');
+  assert.equal(result.issues.filter(item=>!item.applied).length,2);
+  assert.ok(result.highlights.filter(item=>item.kind==='suspect').length>=2);
   assert.equal(check('Пашол домой.').text,'Пашол домой.');
 });
 test('suspect underline stays on the pending word after other corrections', () => {
@@ -572,16 +578,16 @@ test('clicking an issue number scrolls to and emphasizes its result pin', () => 
   assert.equal(scrollOptions.block,'center');
 });
 test('finished sample appears in the result text pane and copy source', () => {
-  elements.source.value='Крипис это скора закончиться. Он нашол проблемму.';
+  elements.source.value='Превет, это скора закончиться. Он нашол проблемму в тексте.';
   elements['check-button'].fire('click');
   const timer=timers.findLast(item=>!item.canceled && item.ms===150);
   timer.canceled=true;
   timer.fn();
-  assert.equal(shownResult(),'Крепись, это скоро закончится. Он нашёл проблему.');
+  assert.equal(shownResult(),'Привет, это скоро закончится. Он нашёл проблему в\u00a0тексте.');
   assert.equal(vm.runInContext('preparedText',context),shownResult());
   assert.ok(elements['result-text'].innerHTML.includes('result-mark error'));
   assert.ok(elements['result-text'].innerHTML.includes('result-mark format'));
-  assert.ok(elements['result-text'].innerHTML.includes('<span class="result-mark error">Крепись</span>'));
+  assert.ok(elements['result-text'].innerHTML.includes('<span class="result-mark error">Привет</span>'));
   assert.ok(!elements['result-text'].innerHTML.includes('<span class="result-mark error">это</span>'));
   assert.ok(elements['success-summary'].textContent.includes('Перечитайте текст'));
   assert.equal(elements['result-title'].textContent,'Текст на проверке');
@@ -650,7 +656,8 @@ elements['check-button'].fire('click');
 const onlineTimer=timers.findLast(item=>!item.canceled && item.ms===150);
 onlineTimer.canceled=true;
 await onlineTimer.fn();
-assert.equal(shownResult(),'`машна` и машина.');
+assert.equal(shownResult(),'`машна` и машна.');
+assert.ok(vm.runInContext("currentIssues.some(item=>item.before==='машна' && !item.applied && item.suggestions.includes('машина'))",context));
 assert.ok(!sentTexts[0].includes('`машна`'));
 assert.ok(elements['online-credit'].classList.contains('hidden')===false);
 assert.ok(elements['grammar-credit'].classList.contains('hidden')===false);
@@ -1020,6 +1027,53 @@ test('toast duration, hover pause, and reversible fade', () => {
   assert.ok(toast.classList.contains('hidden'));
 });
 
+test('uppercase author emphasis survives verified typo correction', () => {
+  assert.equal(check('ПРЕШОЛ И УПОЛ.').text,'ПРИШЁЛ И УПАЛ.');
+  assert.equal(check('ВОOБЩЕМ.').text,'ВОOБЩЕМ.');
+});
+test('code, email, technical identifiers and filenames survive local and unexpected remote matches', () => {
+  const input='Адрес: подошол@example.com. Ключ: прешол_count. Файл: упол.json. Код: `машна`.';
+  assert.equal(check(input).text,input);
+  context.protectedInput=input;
+  context.protectedMatches=[{code:1,pos:input.indexOf('машна'),len:5,word:'машна',s:['машина']}];
+  const result=vm.runInContext('checkText(protectedInput,{},protectedMatches)',context);
+  assert.equal(result.text,input);
+  assert.equal(result.issues.filter(x=>x.category==='Орфография').length,0);
+});
+test('fixed expressions and river-flow context are not damaged by broad comma or duration rules', () => {
+  for(const input of ['Он сказал как отрезал.','Она сказала как отрезала.','Он сказал как есть.','Он объяснил как можно проще.',
+    'Я знаю что к чему.','Он сказал что угодно.','Она написала что попало.','Конечно же, он пришёл.',
+    'Измерения в течении этой реки завершены.','Щас проверю файл.']) {
+    assert.equal(check(input).text.replace(/\u00a0/g,' '),input,input);
+  }
+  assert.equal(check('Я знаю что попало в отчёт.').text.replace(/\u00a0/g,' '),'Я знаю, что попало в отчёт.');
+  assert.equal(check('В течении следующей недели он придёт.').text.replace(/\u00a0/g,' '),'В течение следующей недели он придёт.');
+});
+test('a title is not silently punctuated and the editor can accept an end-of-text insertion', () => {
+  const result=check('Проверка текста');
+  assert.equal(result.text,'Проверка текста');
+  const issue=result.issues.find(x=>x.before==='' && x.suggestions.includes('.'));
+  assert.ok(issue && !issue.applied && issue.start===result.text.length && issue.end===issue.start);
+  context.endResult=result;
+  elements.source.value='Проверка текста';
+  vm.runInContext('hasResult=true; updateResult(endResult.text,endResult.issues,endResult.highlights)',context);
+  assert.ok(elements['issue-list'].innerHTML.includes('конец текста'));
+  const index=vm.runInContext('currentIssues.findIndex(x=>x.before==="")',context);
+  const button={dataset:{issueIndex:String(index),choiceIndex:'0'}};
+  elements['issue-list'].fire('click',{target:{closest:selector=>selector==='button[data-issue-index]'?button:null}});
+  assert.equal(shownResult(),'Проверка текста.');
+});
+test('an ambiguous word can be corrected after explicit editor selection', () => {
+  const result=check('Крипис!'); context.ambiguousWordResult=result;
+  elements.source.value='Крипис!';
+  vm.runInContext('hasResult=true; updateResult(ambiguousWordResult.text,ambiguousWordResult.issues,ambiguousWordResult.highlights)',context);
+  const index=vm.runInContext('currentIssues.findIndex(x=>x.before==="Крипис")',context);
+  const choice=vm.runInContext('currentIssues['+index+'].suggestions.indexOf("Крепись")',context);
+  const button={dataset:{issueIndex:String(index),choiceIndex:String(choice)}};
+  elements['issue-list'].fire('click',{target:{closest:selector=>selector==='button[data-issue-index]'?button:null}});
+  assert.equal(shownResult(),'Крепись!');
+  assert.ok(vm.runInContext('currentIssues.some(x=>x.applied && x.after==="Крепись")',context));
+});
 test('history saves the source, corrected text, decisions and markers without duplicate saves', () => {
   vm.runInContext("commitHistory({format:'typograf-history',version:1,documents:[],dictionary:[]}); activeHistoryId=null; hasResult=true",context);
   elements.source.value='Прешол и упол на пал.';
@@ -1181,7 +1235,8 @@ if (process.env.LIVE_SPELL === '1') {
   context.liveMatches=matches;
   const result=vm.runInContext('checkText('+JSON.stringify(input)+',{},liveMatches)',context);
   assert.ok(result.text.includes('машна'));
-  assert.ok(result.text.includes('приложение'));
+  assert.ok(result.text.includes('приложнеие'));
+  assert.ok(result.issues.some(item=>item.before==='приложнеие' && !item.applied && item.suggestions.includes('приложение')));
   assert.ok(result.issues.some(item=>item.before==='машна' && item.suggestions.includes('машина')));
   console.log('PASS live Yandex Speller response:',result.text);
   const sentence='Сегодня я пошёл в магазин но ничего не купил.';

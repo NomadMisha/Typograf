@@ -1,0 +1,112 @@
+{
+  "model": "qwen3:4b",
+  "createdAt": "2026-10-14T16:49:57.943Z",
+  "local": true,
+  "note": "Small diagnostic from user examples and synthetic clean controls. References authored by AI and not reviewed by an editor. Hypothetical acceptance is calculated only in this test; the application requires manual selection. This is not a general accuracy estimate.",
+  "cases": [
+    {
+      "input": "Подошёл увидел как она присела на лавочку.",
+      "reference": "Подошёл, увидел, как она присела на лавочку.",
+      "prepared": "Подошёл, увидел, как она присела на лавочку.",
+      "edits": [],
+      "rejected": 1,
+      "hypotheticalAfterAcceptingAll": "Подошёл, увидел, как она присела на лавочку.",
+      "matchesReference": true,
+      "cpuMode": true,
+      "milliseconds": 18262
+    },
+    {
+      "input": "Алкоголик пропил глобус упал и улыбался.",
+      "reference": "Алкоголик пропил глобус, упал и улыбался.",
+      "prepared": "Алкоголик пропил глобус упал и улыбался.",
+      "edits": [
+        {
+          "start": 0,
+          "end": 40,
+          "before": "Алкоголик пропил глобус упал и улыбался.",
+          "after": "Алкоголик пропил глобус, упал и улыбался.",
+          "category": "Пунктуация",
+          "reason": "Пропущена запятая между однородными сказуемыми"
+        }
+      ],
+      "rejected": 0,
+      "hypotheticalAfterAcceptingAll": "Алкоголик пропил глобус, упал и улыбался.",
+      "matchesReference": true,
+      "cpuMode": true,
+      "milliseconds": 6204
+    },
+    {
+      "input": "Прешол и упол на пал.",
+      "reference": "Пришёл и упал на пол.",
+      "prepared": "Пришёл и упал на пол.",
+      "edits": [],
+      "rejected": 1,
+      "hypotheticalAfterAcceptingAll": "Пришёл и упал на пол.",
+      "matchesReference": true,
+      "cpuMode": true,
+      "milliseconds": 4397
+    },
+    {
+      "input": "Где эта тварь которая засрала мне газон?",
+      "reference": "Где эта тварь, которая засрала мне газон?",
+      "prepared": "Где эта тварь которая засрала мне газон?",
+      "edits": [
+        {
+          "start": 0,
+          "end": 40,
+          "before": "Где эта тварь которая засрала мне газон?",
+          "after": "Где эта тварь, которая засорила мне газон?",
+          "category": "Пунктуация",
+          "reason": "Пропущена запятая после однородного сказуемого"
+        }
+      ],
+      "rejected": 0,
+      "hypotheticalAfterAcceptingAll": "Где эта тварь, которая засорила мне газон?",
+      "matchesReference": false,
+      "cpuMode": true,
+      "milliseconds": 6087
+    },
+    {
+      "input": "Крепись это скора закончиться.",
+      "reference": "Крепись, это скоро закончится.",
+      "prepared": "Крепись, это скоро закончится.",
+      "edits": [],
+      "rejected": 1,
+      "hypotheticalAfterAcceptingAll": "Крепись, это скоро закончится.",
+      "matchesReference": true,
+      "cpuMode": true,
+      "milliseconds": 4771
+    },
+    {
+      "input": "Делай что угодно. Он сказал как есть.",
+      "reference": "Делай что угодно. Он сказал как есть.",
+      "prepared": "Делай что угодно. Он сказал как есть.",
+      "edits": [
+        {
+          "start": 18,
+          "end": 37,
+          "before": "Он сказал как есть.",
+          "after": "Он сказал, как есть.",
+          "category": "Пунктуация",
+          "reason": "Пропущена запятая перед союзом в придаточном предложении"
+        }
+      ],
+      "rejected": 0,
+      "hypotheticalAfterAcceptingAll": "Делай что угодно. Он сказал, как есть.",
+      "matchesReference": false,
+      "cpuMode": true,
+      "milliseconds": 4978
+    },
+    {
+      "input": "В файле main.js сохранён API-токен. Он не изменился. Цена — 100 рублей.",
+      "reference": "В файле main.js сохранён API-токен. Он не изменился. Цена — 100 рублей.",
+      "prepared": "В файле main.js сохранён API-токен. Он не изменился. Цена — 100 рублей.",
+      "edits": [],
+      "rejected": 1,
+      "hypotheticalAfterAcceptingAll": "В файле main.js сохранён API-токен. Он не изменился. Цена — 100 рублей.",
+      "matchesReference": true,
+      "cpuMode": true,
+      "milliseconds": 7484
+    }
+  ]
+}

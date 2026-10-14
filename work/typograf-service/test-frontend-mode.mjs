@@ -29,6 +29,8 @@ const context = vm.createContext({
 });
 vm.runInContext(dictionary, context);
 vm.runInContext(app, context);
+await new Promise(resolve => setImmediate(resolve));
+if (!staticHosting) assert.equal(urls.shift(),'/api/neural/status');
 await vm.runInContext('getOnlineMatches("Тест")', context);
 await vm.runInContext('getGrammarMatches("Тест")', context);
 assert.deepEqual(urls, staticHosting ? [

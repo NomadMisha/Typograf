@@ -1,0 +1,310 @@
+{
+  "dataset": "held_out_diagnostic",
+  "datasetDigest": "00940f7ac3d1b47ffc67d5180311c28f8eedefa5e6947b9fbf5b917f968445f2",
+  "provenance": "Synthetic AI-authored reference draft, frozen before this rule change. No human review; not an independent measure of real-world quality.",
+  "humanReviewed": false,
+  "metrics": {
+    "cases": 16,
+    "cleanCases": 14,
+    "cleanTextChanges": 0,
+    "cleanCasesWithNotices": 2,
+    "exactReference": 16,
+    "wrongAutomaticOnAnnotatedTargets": 0,
+    "annotatedTargets": 3,
+    "detectedTargets": 3,
+    "missedTargets": 0,
+    "unexpectedNotices": 2,
+    "annotatedDetectionPrecision": 0.6,
+    "annotatedDetectionRecall": 1
+  },
+  "cases": [
+    {
+      "id": "holdout-01",
+      "input": "Он ответил как мог.",
+      "reference": "Он ответил как мог.",
+      "actual": "Он ответил как мог.",
+      "exactReference": true,
+      "clean": true,
+      "changed": false,
+      "detectedTargets": 0,
+      "totalTargets": 0,
+      "missedTargets": [],
+      "wrongAutomatic": [],
+      "unexpectedNotices": [],
+      "issues": []
+    },
+    {
+      "id": "holdout-02",
+      "input": "Редактор рассказал как умел.",
+      "reference": "Редактор рассказал как умел.",
+      "actual": "Редактор рассказал как умел.",
+      "exactReference": true,
+      "clean": true,
+      "changed": false,
+      "detectedTargets": 0,
+      "totalTargets": 0,
+      "missedTargets": [],
+      "wrongAutomatic": [],
+      "unexpectedNotices": [],
+      "issues": []
+    },
+    {
+      "id": "holdout-03",
+      "input": "Она объяснила как можно точнее.",
+      "reference": "Она объяснила как можно точнее.",
+      "actual": "Она объяснила как можно точнее.",
+      "exactReference": true,
+      "clean": true,
+      "changed": false,
+      "detectedTargets": 0,
+      "totalTargets": 0,
+      "missedTargets": [],
+      "wrongAutomatic": [],
+      "unexpectedNotices": [],
+      "issues": []
+    },
+    {
+      "id": "holdout-04",
+      "input": "Я знаю что попало в отчёт.",
+      "reference": "Я знаю, что попало в отчёт.",
+      "actual": "Я знаю, что попало в отчёт.",
+      "exactReference": true,
+      "clean": false,
+      "changed": true,
+      "detectedTargets": 1,
+      "totalTargets": 1,
+      "missedTargets": [],
+      "wrongAutomatic": [],
+      "unexpectedNotices": [],
+      "issues": [
+        {
+          "category": "Пунктуация",
+          "before": "знаю что",
+          "after": "знаю, что",
+          "applied": true
+        }
+      ]
+    },
+    {
+      "id": "holdout-05",
+      "input": "Он знает что угодно о ремонте.",
+      "reference": "Он знает что угодно о ремонте.",
+      "actual": "Он знает что угодно о ремонте.",
+      "exactReference": true,
+      "clean": true,
+      "changed": false,
+      "detectedTargets": 0,
+      "totalTargets": 0,
+      "missedTargets": [],
+      "wrongAutomatic": [],
+      "unexpectedNotices": [],
+      "issues": []
+    },
+    {
+      "id": "holdout-06",
+      "input": "Возможно несколько решений.",
+      "reference": "Возможно несколько решений.",
+      "actual": "Возможно несколько решений.",
+      "exactReference": true,
+      "clean": true,
+      "changed": false,
+      "detectedTargets": 0,
+      "totalTargets": 0,
+      "missedTargets": [],
+      "wrongAutomatic": [],
+      "unexpectedNotices": [
+        {
+          "category": "Пунктуация",
+          "before": "Возможно",
+          "after": "Возможно,",
+          "applied": false
+        }
+      ],
+      "issues": [
+        {
+          "category": "Пунктуация",
+          "before": "Возможно",
+          "after": "Возможно,",
+          "applied": false
+        }
+      ]
+    },
+    {
+      "id": "holdout-07",
+      "input": "Итак, проверка закончена.",
+      "reference": "Итак, проверка закончена.",
+      "actual": "Итак, проверка закончена.",
+      "exactReference": true,
+      "clean": true,
+      "changed": false,
+      "detectedTargets": 0,
+      "totalTargets": 0,
+      "missedTargets": [],
+      "wrongAutomatic": [],
+      "unexpectedNotices": [],
+      "issues": []
+    },
+    {
+      "id": "holdout-08",
+      "input": "Число решений конечно.",
+      "reference": "Число решений конечно.",
+      "actual": "Число решений конечно.",
+      "exactReference": true,
+      "clean": true,
+      "changed": false,
+      "detectedTargets": 0,
+      "totalTargets": 0,
+      "missedTargets": [],
+      "wrongAutomatic": [],
+      "unexpectedNotices": [],
+      "issues": []
+    },
+    {
+      "id": "holdout-09",
+      "input": "В течении этой реки много водоворотов.",
+      "reference": "В течении этой реки много водоворотов.",
+      "actual": "В течении этой реки много водоворотов.",
+      "exactReference": true,
+      "clean": true,
+      "changed": false,
+      "detectedTargets": 0,
+      "totalTargets": 0,
+      "missedTargets": [],
+      "wrongAutomatic": [],
+      "unexpectedNotices": [],
+      "issues": []
+    },
+    {
+      "id": "holdout-10",
+      "input": "ПРЕШОЛ И УПОЛ.",
+      "reference": "ПРИШЁЛ И УПАЛ.",
+      "actual": "ПРИШЁЛ И УПАЛ.",
+      "exactReference": true,
+      "clean": false,
+      "changed": true,
+      "detectedTargets": 2,
+      "totalTargets": 2,
+      "missedTargets": [],
+      "wrongAutomatic": [],
+      "unexpectedNotices": [],
+      "issues": [
+        {
+          "category": "Орфография",
+          "before": "ПРЕШОЛ",
+          "after": "ПРИШЁЛ",
+          "applied": true
+        },
+        {
+          "category": "Орфография",
+          "before": "УПОЛ",
+          "after": "УПАЛ",
+          "applied": true
+        }
+      ]
+    },
+    {
+      "id": "holdout-11",
+      "input": "Документация API",
+      "reference": "Документация API",
+      "actual": "Документация API",
+      "exactReference": true,
+      "clean": true,
+      "changed": false,
+      "detectedTargets": 0,
+      "totalTargets": 0,
+      "missedTargets": [],
+      "wrongAutomatic": [],
+      "unexpectedNotices": [],
+      "issues": []
+    },
+    {
+      "id": "holdout-12",
+      "input": "Сборка 42",
+      "reference": "Сборка 42",
+      "actual": "Сборка 42",
+      "exactReference": true,
+      "clean": true,
+      "changed": false,
+      "detectedTargets": 0,
+      "totalTargets": 0,
+      "missedTargets": [],
+      "wrongAutomatic": [],
+      "unexpectedNotices": [
+        {
+          "category": "Пунктуация",
+          "before": "",
+          "after": ".",
+          "applied": false
+        }
+      ],
+      "issues": [
+        {
+          "category": "Пунктуация",
+          "before": "",
+          "after": ".",
+          "applied": false
+        }
+      ]
+    },
+    {
+      "id": "holdout-13",
+      "input": "Пишите на прешол@example.org.",
+      "reference": "Пишите на прешол@example.org.",
+      "actual": "Пишите на прешол@example.org.",
+      "exactReference": true,
+      "clean": true,
+      "changed": false,
+      "detectedTargets": 0,
+      "totalTargets": 0,
+      "missedTargets": [],
+      "wrongAutomatic": [],
+      "unexpectedNotices": [],
+      "issues": []
+    },
+    {
+      "id": "holdout-14",
+      "input": "Идентификатор: упол_total.",
+      "reference": "Идентификатор: упол_total.",
+      "actual": "Идентификатор: упол_total.",
+      "exactReference": true,
+      "clean": true,
+      "changed": false,
+      "detectedTargets": 0,
+      "totalTargets": 0,
+      "missedTargets": [],
+      "wrongAutomatic": [],
+      "unexpectedNotices": [],
+      "issues": []
+    },
+    {
+      "id": "holdout-15",
+      "input": "Файл орфаграфия.json хранит настройки.",
+      "reference": "Файл орфаграфия.json хранит настройки.",
+      "actual": "Файл орфаграфия.json хранит настройки.",
+      "exactReference": true,
+      "clean": true,
+      "changed": false,
+      "detectedTargets": 0,
+      "totalTargets": 0,
+      "missedTargets": [],
+      "wrongAutomatic": [],
+      "unexpectedNotices": [],
+      "issues": []
+    },
+    {
+      "id": "holdout-16",
+      "input": "Стоимость выросла с 10 до 12 рублей.",
+      "reference": "Стоимость выросла с 10 до 12 рублей.",
+      "actual": "Стоимость выросла с 10 до 12 рублей.",
+      "exactReference": true,
+      "clean": true,
+      "changed": false,
+      "detectedTargets": 0,
+      "totalTargets": 0,
+      "missedTargets": [],
+      "wrongAutomatic": [],
+      "unexpectedNotices": [],
+      "issues": []
+    }
+  ]
+}

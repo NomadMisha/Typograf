@@ -1,0 +1,493 @@
+{
+  "schemaVersion": 1,
+  "purpose": "development_regression",
+  "provenance": "Synthetic examples authored by AI; references require human review. Not an independent editorial benchmark.",
+  "reviewedBy": null,
+  "cases": [
+    {
+      "id": "clean-01",
+      "category": "clean",
+      "input": "Он сказал как отрезал.",
+      "reference": "Он сказал как отрезал.",
+      "targets": []
+    },
+    {
+      "id": "clean-02",
+      "category": "clean",
+      "input": "Она сказала как отрезала.",
+      "reference": "Она сказала как отрезала.",
+      "targets": []
+    },
+    {
+      "id": "clean-03",
+      "category": "clean",
+      "input": "Он сказал как есть.",
+      "reference": "Он сказал как есть.",
+      "targets": []
+    },
+    {
+      "id": "clean-04",
+      "category": "clean",
+      "input": "Я знаю что к чему.",
+      "reference": "Я знаю что к чему.",
+      "targets": []
+    },
+    {
+      "id": "clean-05",
+      "category": "clean",
+      "input": "Он сказал что угодно.",
+      "reference": "Он сказал что угодно.",
+      "targets": []
+    },
+    {
+      "id": "clean-06",
+      "category": "clean",
+      "input": "Она написала что попало.",
+      "reference": "Она написала что попало.",
+      "targets": []
+    },
+    {
+      "id": "clean-07",
+      "category": "clean",
+      "input": "Он объяснил как можно проще.",
+      "reference": "Он объяснил как можно проще.",
+      "targets": []
+    },
+    {
+      "id": "clean-08",
+      "category": "clean",
+      "input": "Она решила как следует.",
+      "reference": "Она решила как следует.",
+      "targets": []
+    },
+    {
+      "id": "clean-09",
+      "category": "clean",
+      "input": "Изменения в течении следующей реки заметны.",
+      "reference": "Изменения в течении следующей реки заметны.",
+      "targets": []
+    },
+    {
+      "id": "clean-10",
+      "category": "clean",
+      "input": "Измерения в течении этой реки завершены.",
+      "reference": "Измерения в течении этой реки завершены.",
+      "targets": []
+    },
+    {
+      "id": "clean-11",
+      "category": "clean",
+      "input": "Конечно же, он пришёл.",
+      "reference": "Конечно же, он пришёл.",
+      "targets": []
+    },
+    {
+      "id": "clean-12",
+      "category": "clean",
+      "input": "Возможно решение задачи.",
+      "reference": "Возможно решение задачи.",
+      "targets": []
+    },
+    {
+      "id": "clean-13",
+      "category": "clean",
+      "input": "Щас проверю файл.",
+      "reference": "Щас проверю файл.",
+      "targets": []
+    },
+    {
+      "id": "clean-14",
+      "category": "clean",
+      "input": "Проверка орфографии",
+      "reference": "Проверка орфографии",
+      "targets": []
+    },
+    {
+      "id": "clean-15",
+      "category": "clean",
+      "input": "JSON",
+      "reference": "JSON",
+      "targets": []
+    },
+    {
+      "id": "clean-16",
+      "category": "clean",
+      "input": "Версия 2",
+      "reference": "Версия 2",
+      "targets": []
+    },
+    {
+      "id": "clean-17",
+      "category": "clean",
+      "input": "Список изменений",
+      "reference": "Список изменений",
+      "targets": []
+    },
+    {
+      "id": "clean-18",
+      "category": "clean",
+      "input": "Иван Петров опубликовал статью.",
+      "reference": "Иван Петров опубликовал статью.",
+      "targets": []
+    },
+    {
+      "id": "clean-19",
+      "category": "clean",
+      "input": "Код: `прешол = \"подошол\";`.",
+      "reference": "Код: `прешол = \"подошол\";`.",
+      "targets": []
+    },
+    {
+      "id": "clean-20",
+      "category": "clean",
+      "input": "Адрес: подошол@example.com.",
+      "reference": "Адрес: подошол@example.com.",
+      "targets": []
+    },
+    {
+      "id": "clean-21",
+      "category": "clean",
+      "input": "Ключ: подошол_count.",
+      "reference": "Ключ: подошол_count.",
+      "targets": []
+    },
+    {
+      "id": "clean-22",
+      "category": "clean",
+      "input": "Файл: подошол.json.",
+      "reference": "Файл: подошол.json.",
+      "targets": []
+    },
+    {
+      "id": "clean-23",
+      "category": "clean",
+      "input": "Номер: 1234567890.",
+      "reference": "Номер: 1234567890.",
+      "targets": []
+    },
+    {
+      "id": "clean-24",
+      "category": "clean",
+      "input": "Цена: 199,99 руб.",
+      "reference": "Цена: 199,99 руб.",
+      "targets": []
+    },
+    {
+      "id": "clean-25",
+      "category": "clean",
+      "input": "Он не согласен с выводами.",
+      "reference": "Он не согласен с выводами.",
+      "targets": []
+    },
+    {
+      "id": "clean-26",
+      "category": "clean",
+      "input": "Она прочитала статью и ответила автору.",
+      "reference": "Она прочитала статью и ответила автору.",
+      "targets": []
+    },
+    {
+      "id": "clean-27",
+      "category": "clean",
+      "input": "Он работает как редактор.",
+      "reference": "Он работает как редактор.",
+      "targets": []
+    },
+    {
+      "id": "clean-28",
+      "category": "clean",
+      "input": "Лучше поздно, чем никогда.",
+      "reference": "Лучше поздно, чем никогда.",
+      "targets": []
+    },
+    {
+      "id": "clean-29",
+      "category": "clean",
+      "input": "В течение недели он проверял статьи.",
+      "reference": "В течение недели он проверял статьи.",
+      "targets": []
+    },
+    {
+      "id": "clean-30",
+      "category": "clean",
+      "input": "Текст содержит https://example.org/подошол и `упол`.",
+      "reference": "Текст содержит https://example.org/подошол и `упол`.",
+      "targets": []
+    },
+    {
+      "id": "error-01",
+      "category": "Орфография",
+      "input": "Он подошол к дому.",
+      "reference": "Он подошёл к дому.",
+      "targets": [
+        {
+          "before": "подошол",
+          "category": "Орфография",
+          "after": "подошёл"
+        }
+      ]
+    },
+    {
+      "id": "error-02",
+      "category": "Орфография",
+      "input": "ПОДОШОЛ К ДОМУ.",
+      "reference": "ПОДОШЁЛ К ДОМУ.",
+      "targets": [
+        {
+          "before": "ПОДОШОЛ",
+          "category": "Орфография",
+          "after": "ПОДОШЁЛ"
+        }
+      ]
+    },
+    {
+      "id": "error-03",
+      "category": "Орфография",
+      "input": "Вообщем, всё готово.",
+      "reference": "В общем, всё готово.",
+      "targets": [
+        {
+          "before": "Вообщем",
+          "category": "Орфография",
+          "after": "В общем"
+        }
+      ]
+    },
+    {
+      "id": "error-04",
+      "category": "Орфография",
+      "input": "ВОOБЩЕМ, всё готово.",
+      "reference": "В ОБЩЕМ, всё готово.",
+      "targets": [
+        {
+          "before": "ВОOБЩЕМ",
+          "category": "Орфография",
+          "after": "В ОБЩЕМ"
+        }
+      ]
+    },
+    {
+      "id": "error-05",
+      "category": "Орфография",
+      "input": "Он прешол домой.",
+      "reference": "Он пришёл домой.",
+      "targets": [
+        {
+          "before": "прешол",
+          "category": "Орфография",
+          "after": "пришёл"
+        }
+      ]
+    },
+    {
+      "id": "error-06",
+      "category": "Орфография",
+      "input": "Мы раскажем о проекте.",
+      "reference": "Мы расскажем о проекте.",
+      "targets": [
+        {
+          "before": "раскажем",
+          "category": "Орфография",
+          "after": "расскажем"
+        }
+      ]
+    },
+    {
+      "id": "error-07",
+      "category": "Орфография",
+      "input": "Нужна орфаграфия.",
+      "reference": "Нужна орфография.",
+      "targets": [
+        {
+          "before": "орфаграфия",
+          "category": "Орфография",
+          "after": "орфография"
+        }
+      ]
+    },
+    {
+      "id": "error-08",
+      "category": "Пунктуация",
+      "input": "Он сказал что текст готов.",
+      "reference": "Он сказал, что текст готов.",
+      "targets": [
+        {
+          "before": "сказал что",
+          "category": "Пунктуация",
+          "after": "сказал, что"
+        }
+      ]
+    },
+    {
+      "id": "error-09",
+      "category": "Пунктуация",
+      "input": "Подошёл увидел как она присела.",
+      "reference": "Подошёл, увидел, как она присела.",
+      "targets": [
+        {
+          "before": "Подошёл увидел",
+          "category": "Пунктуация",
+          "after": "Подошёл, увидел"
+        }
+      ]
+    },
+    {
+      "id": "error-10",
+      "category": "Пунктуация",
+      "input": "Он увидел как она присела.",
+      "reference": "Он увидел, как она присела.",
+      "targets": [
+        {
+          "before": "увидел как",
+          "category": "Пунктуация",
+          "after": "увидел, как"
+        }
+      ]
+    },
+    {
+      "id": "error-11",
+      "category": "Грамматика",
+      "input": "В течении недели мы проверяли текст.",
+      "reference": "В течение недели мы проверяли текст.",
+      "targets": [
+        {
+          "before": "В течении",
+          "category": "Грамматика",
+          "after": "В течение"
+        }
+      ]
+    },
+    {
+      "id": "error-12",
+      "category": "Грамматика",
+      "input": "В течении следующей недели он придёт.",
+      "reference": "В течение следующей недели он придёт.",
+      "targets": [
+        {
+          "before": "В течении",
+          "category": "Грамматика",
+          "after": "В течение"
+        }
+      ]
+    },
+    {
+      "id": "error-13",
+      "category": "Орфография",
+      "input": "Крипис, друг.",
+      "reference": "Крепись, друг.",
+      "targets": [
+        {
+          "before": "Крипис",
+          "category": "Орфография",
+          "after": "Крепись"
+        }
+      ]
+    },
+    {
+      "id": "error-14",
+      "category": "Орфография",
+      "input": "Крипис повлиял на рынок.",
+      "reference": "Кризис повлиял на рынок.",
+      "targets": [
+        {
+          "before": "Крипис",
+          "category": "Орфография",
+          "after": "Кризис"
+        }
+      ]
+    },
+    {
+      "id": "error-15",
+      "category": "Орфография",
+      "input": "Это машна.",
+      "reference": "Это машина.",
+      "targets": [
+        {
+          "before": "машна",
+          "category": "Орфография",
+          "after": "машина"
+        }
+      ]
+    },
+    {
+      "id": "error-16",
+      "category": "Орфография",
+      "input": "Это приложнеие.",
+      "reference": "Это приложение.",
+      "targets": [
+        {
+          "before": "приложнеие",
+          "category": "Орфография",
+          "after": "приложение"
+        }
+      ]
+    },
+    {
+      "id": "error-17",
+      "category": "Пунктуация",
+      "input": "Он закончил работу",
+      "reference": "Он закончил работу.",
+      "targets": [
+        {
+          "before": "",
+          "category": "Пунктуация",
+          "after": "."
+        }
+      ]
+    },
+    {
+      "id": "error-18",
+      "category": "Пунктуация",
+      "input": "Он вернулся но ничего не сказал.",
+      "reference": "Он вернулся, но ничего не сказал.",
+      "targets": [
+        {
+          "before": "вернулся но",
+          "category": "Пунктуация",
+          "after": "вернулся, но"
+        }
+      ]
+    },
+    {
+      "id": "protected-remote",
+      "category": "clean",
+      "input": "Код: `машна`.",
+      "reference": "Код: `машна`.",
+      "targets": [],
+      "remoteMatches": [
+        {
+          "pos": 6,
+          "len": 5,
+          "word": "машна",
+          "code": 1,
+          "s": [
+            "машина"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "remote-ambiguity",
+      "category": "Орфография",
+      "input": "Это Блокси.",
+      "reference": "Это Блокси.",
+      "targets": [
+        {
+          "before": "Блокси",
+          "category": "Орфография"
+        }
+      ],
+      "remoteMatches": [
+        {
+          "pos": 4,
+          "len": 6,
+          "word": "Блокси",
+          "code": 1,
+          "s": [
+            "Блоки"
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -69,6 +69,10 @@
     .feature strong { display:block; font-size:15px; font-weight:680; margin-bottom:4px; }
     .feature span:last-child { display:block; font-size:13px; color:#79837a; line-height:1.4; }
     .fineprint { margin:18px 4px 0; color:#78847b; font-size:13px; line-height:1.55; }
+    .neural-review { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:16px; margin-top:18px; padding:18px 22px; border:1px solid var(--line); border-radius:14px; background:#f1f5ed; }
+    .neural-review p { flex:1 1 300px; margin:0; font-size:13px; line-height:1.6; color:#53624f; }
+    .neural-review strong { display:block; color:#2a3a21; font-size:15px; }
+    .neural-review button { white-space:normal; }
     .hidden { display:none !important; }
     .loading { padding:60px 28px 67px; text-align:center; min-height:320px; display:flex; flex-direction:column; align-items:center; justify-content:center; }
     .loader-art { position:relative; height:80px; width:80px; margin-bottom:22px; }
@@ -216,7 +220,7 @@
           <div class="feature"><span class="feature-icon" aria-hidden="true">,;</span><div><strong>Пунктуация</strong><span>Локальные правила и онлайн-проверка по выбору</span></div></div>
           <div class="feature"><span class="feature-icon" aria-hidden="true">↳</span><div><strong>Висячие предлоги</strong><span>Неразрывные пробелы после коротких слов</span></div></div>
         </div>
-        <p class="fineprint">Несколько возможных исправлений остаются на выбор редактора.</p>
+        <p class="fineprint">Неоднозначные слова и словарные подсказки требуют вашего выбора. Проверенные опечатки исправляются автоматически.</p>
       </section>
 
       <section id="loading-screen" class="workspace hidden" aria-live="polite" aria-label="Проверка текста">
@@ -230,6 +234,7 @@
           <section class="result-panel" aria-labelledby="result-title"><div class="panel-head"><div class="panel-title"><span id="result-title">Текст на проверке</span><span class="pending-badge hidden" id="pending-badge"></span></div><div class="result-head-right"><span class="counter" id="result-count"></span><button class="copy" id="copy-button" type="button" aria-label="Скопировать черновик" title="Скопировать черновик"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="8" y="8" width="11" height="11" rx="1.5" stroke="currentColor" stroke-width="1.7"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2" stroke="currentColor" stroke-width="1.7"/></svg></button></div></div><div class="result-text" id="result-text" tabindex="0"></div><textarea class="result-editor hidden" id="result-editor" aria-label="Редактирование проверенного текста" spellcheck="true"></textarea><div class="review-bar"><p id="review-status" role="status">Проверьте замечания и текст.</p><div class="review-actions"><button class="secondary" id="edit-result-button" type="button">Редактировать текст</button><button class="secondary hidden" id="recheck-button" type="button">Повторно проверить</button><button class="secondary" id="save-history-button" type="button">В историю</button><button class="primary" id="finish-button" type="button" disabled>Подтвердить результат</button></div></div></section>
         </div>
         <div class="bottom-bar"><p>Проверьте смысл и авторские формулировки перед публикацией.</p><button class="secondary" id="edit-button" type="button">Изменить исходный текст</button></div>
+        <div class="neural-review"><p><strong>Нейросетевая проверка на этом Mac</strong><span id="neural-status" role="status">Для локальной модели запустите start-neural.command и откройте http://127.0.0.1:4173. Текст остаётся на компьютере; онлайн-переключатель выше работает отдельно.</span></p><button class="secondary" type="button" id="neural-check-button" disabled>Проверить нейросетью</button></div>
         <div class="online-credits"><div class="online-credit hidden" id="online-credit"><a href="https://yandex.ru/dev/speller/" target="_blank" rel="noopener noreferrer">Проверка правописания: Яндекс.Спеллер</a></div><div class="online-credit hidden" id="grammar-credit"><a href="https://languagetool.org/" target="_blank" rel="noopener noreferrer">Пунктуация и грамматика: LanguageTool</a></div></div>
       </section>
       <details class="workspace history-panel" id="history-panel">
@@ -369,6 +374,8 @@ is-buffer/index.js:
     const onlineTooltip = document.getElementById('online-tooltip');
     const onlineCredit = document.getElementById('online-credit');
     const grammarCredit = document.getElementById('grammar-credit');
+    const neuralButton = document.getElementById('neural-check-button');
+    const neuralStatus = document.getElementById('neural-status');
     let preparedText = '';
     let currentIssues = [];
     let currentHighlights = [];
@@ -665,7 +672,7 @@ is-buffer/index.js:
       ['вообщем','в общем'], ['орфаграфию','орфографию'], ['орфаграфия','орфография'], ['раскажем','расскажем'],
       ['запетые','запятые'],
       ['расказать','рассказать'], ['превет','привет'], ['пожалуста','пожалуйста'], ['сдесь','здесь'],
-      ['щас','сейчас'], ['будующее','будущее'], ['агрегация','агрегация'], ['приложенние','приложение'],
+      ['будующее','будущее'], ['агрегация','агрегация'], ['приложенние','приложение'],
       ['функционалность','функциональность'], ['разработчки','разработчики'], ['коментарий','комментарий'],
       ['коментарии','комментарии'], ['интерфес','интерфейс'], ['информацыю','информацию'], ['проблемма','проблема'],
       ['проблемму','проблему'], ['тектс','текст'], ['пунктация','пунктуация'], ['програма','программа'],
@@ -673,10 +680,10 @@ is-buffer/index.js:
       ['нашол','нашёл'], ['ушол','ушёл'], ['дошол','дошёл'], ['обошол','обошёл'], ['прошол','прошёл'],
       ['вошол','вошёл'], ['перешол','перешёл'], ['отошол','отошёл'], ['сошол','сошёл'], ['вышол','вышел'],
       ['ошибычный','ошибочный'], ['ошибычная','ошибочная'], ['ошибычное','ошибочное'], ['ошибычные','ошибочные'],
-      ['крипис','крепись'], ['прешол','пришёл'], ['упол','упал']
+      ['прешол','пришёл'], ['упол','упал']
     ].filter(([a,b]) => a !== b);
     const spellingAllowlist = new Set([
-      'хабр','хабра','хабре','хабром','типограф','типографа','типографом',
+      'хабр','хабра','хабре','хабром','типограф','типографа','типографом','щас',
       'веб-продукт','веб-продукте','веб-разработка','веб-разработки',
       'микросервис','микросервисы','микросервисов','фронтенд','фронтенда','фронтендом',
       'пайплайн','пайплайна','пайплайне','пайплайны','рендер','рендера','что-то',
@@ -693,8 +700,9 @@ is-buffer/index.js:
       // Имя редактора из пользовательского сценария.
       'таня','тани','тане','таню','таней'
     ]);
-    const spellingKeys = new Set(spelling.map(([wrong]) => wrong));
-    const protectedPattern = /(```[\s\S]*?```|~~~[\s\S]*?~~~|<pre\b[^>]*>[\s\S]*?<\/pre>|<code\b[^>]*>[\s\S]*?<\/code>|`[^`\n]*`|(?:https?:\/\/|mailto:|www\.)[^\s<>()]+)/gi;
+    const ambiguousSpelling = new Map([['крипис', ['крепись', 'кризис']]]);
+    const spellingKeys = new Set([...spelling.map(([wrong]) => wrong), ...ambiguousSpelling.keys()]);
+    const protectedPattern = /(```[\s\S]*?```|~~~[\s\S]*?~~~|<pre\b[^>]*>[\s\S]*?<\/pre>|<code\b[^>]*>[\s\S]*?<\/code>|`[^`\n]*`|(?:https?:\/\/|mailto:|www\.)[^\s<>()]+|[A-Za-zА-Яа-яЁё0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}|[A-Za-zА-Яа-яЁё0-9]+(?:_[A-Za-zА-Яа-яЁё0-9]+)+|[A-Za-zА-Яа-яЁё0-9_-]+\.(?:json|js|ts|jsx|tsx|py|html|css|md|yaml|yml|sql|txt)(?![A-Za-z0-9]))/gi;
     let dictionarySpell;
     function getDictionarySpell() {
       if (!dictionarySpell) {
@@ -707,46 +715,84 @@ is-buffer/index.js:
     const useLocalService = /^https?:$/.test(window.location.protocol || '');
     const spellingEndpoint = useLocalService ? '/api/spelling' : 'https://speller.yandex.net/services/spellservice.json/checkText';
     const grammarEndpoint = useLocalService ? '/api/grammar' : 'https://api.languagetool.org/v2/check';
+    const localNeuralMode = useLocalService && ['127.0.0.1','localhost'].includes(window.location.hostname);
+    let neuralController = null;
+    async function refreshNeuralStatus() {
+      if (!localNeuralMode) return;
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), 4000);
+      try {
+        const response = await fetch('/api/neural/status', {signal:controller.signal});
+        const data = response.ok ? await response.json() : null;
+        neuralStatus.textContent = data?.available
+          ? 'Локальная модель ' + data.model + '. До 8 000 символов за запуск. Правки появятся в списке для вашего выбора; текст не отправляется внешним сервисам этой кнопкой.'
+          : 'Локальная модель пока недоступна. Запустите start-neural.command. Кнопка позволяет повторить подключение.';
+      } catch { neuralStatus.textContent = 'Нет соединения с локальной моделью. Запустите start-neural.command и повторите проверку.'; }
+      finally { clearTimeout(timer); neuralButton.disabled = editingResult; }
+    }
+    function appendNeuralEdits(result, remote) {
+      if (!remote || !Array.isArray(remote.edits) || remote.edits.length > 200 || remote.local !== true) throw new Error('Некорректный ответ нейросетевой проверки.');
+      const issues = result.issues.map(item => ({...item}));
+      const highlights = result.highlights.map(item => ({...item}));
+      let added = 0;
+      const protectedRanges = [...result.text.matchAll(protectedPattern)].map(m => [m.index,m.index + m[0].length]);
+      for (const edit of remote.edits) {
+        const {start,end,before,after,category,reason} = edit || {};
+        if (!Number.isInteger(start) || !Number.isInteger(end) || start < 0 || end <= start || end > result.text.length ||
+          typeof before !== 'string' || result.text.slice(start,end) !== before || typeof after !== 'string' || !after.trim() || after === before || after.length > 1300 ||
+          !['Орфография','Пунктуация','Грамматика'].includes(category) || typeof reason !== 'string' || reason.length > 500 ||
+          protectedRanges.some(([a,b]) => start < b && end > a)) continue;
+        const duplicate = issues.some(item => !item.applied && !item.resolved && item.start === start && item.end === end && item.suggestions.includes(after));
+        if (duplicate) continue;
+        const issue = addIssue(issues,category,before,after,'Локальная нейросеть: ' + reason + ' Проверьте смысл перед применением.',false,[after]);
+        Object.assign(issue,{start,end,reviewOnly:true});
+        highlights.push({start,end,kind:'context'},{start,end:start,kind:'issue-pin',issueId:issue.id});
+        added++;
+      }
+      return {...result,issues,highlights,added};
+    }
+    async function checkWithNeural() {
+      if (neuralController) { neuralController.abort(); return; }
+      if (!localNeuralMode || !hasResult || editingResult) return;
+      const snapshot = preparedText, run = checkRun;
+      if (snapshot.length > 8000) { neuralStatus.textContent = 'Лимит локальной модели — 8 000 символов. Разделите большую статью на части.'; return; }
+      const controller = new AbortController();
+      neuralController = controller;
+      const timer = setTimeout(() => controller.abort(), 600000);
+      neuralButton.textContent = 'Отменить нейропроверку';
+      neuralStatus.textContent = 'Модель читает текст на вашем Mac. Первый запуск может занять несколько минут. Вы можете отменить проверку.';
+      try {
+        const response = await fetch('/api/neural', {method:'POST',body:new URLSearchParams({text:snapshot}),signal:controller.signal});
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || 'Локальная нейросеть недоступна.');
+        if (run !== checkRun || !hasResult || editingResult || snapshot !== preparedText) {
+          neuralStatus.textContent = 'Текст изменился во время проверки. Запустите её снова для актуального текста.'; return;
+        }
+        const result = appendNeuralEdits({text:snapshot,issues:currentIssues,highlights:currentHighlights}, data);
+        updateResult(result.text,result.issues,result.highlights,true);
+        neuralStatus.textContent = result.added
+          ? 'Нейросеть предложила ' + result.added + ' ' + plural(result.added,['правку','правки','правок']) + '. Выберите варианты в списке замечаний. Текст пока не изменён.'
+          : 'Новых предложений нейросети нет. Это не гарантирует отсутствие ошибок — перечитайте текст.';
+        if (data.rejected) neuralStatus.textContent += ' Часть предложений отброшена: не прошла проверку соответствия исходному тексту.';
+        if (data.cpuMode) neuralStatus.textContent += ' Использован резервный режим CPU — он медленнее GPU.';
+      } catch (error) {
+        neuralStatus.textContent = controller.signal.aborted ? 'Нейропроверка остановлена. Текст сохранён без изменений.' : error.message + ' Текст сохранён без изменений.';
+      } finally {
+        clearTimeout(timer); neuralController = null;
+        neuralButton.textContent = 'Проверить нейросетью';
+        neuralButton.disabled = !localNeuralMode || editingResult;
+      }
+    }
+    neuralButton.addEventListener('click',checkWithNeural);
     let nextIssueId = 0;
     const addIssue = (issues, category, before, after, note, applied = true, suggestions = []) => {
       const issue = {id:++nextIssueId, category, before, after, note, applied, suggestions};
       issues.push(issue);
       return issue;
     };
-    const preserveCase = (found, replacement) => /^[А-ЯЁ]/.test(found) ? replacement.charAt(0).toUpperCase() + replacement.slice(1) : replacement;
+    const preserveCase = (found, replacement) => found === found.toUpperCase() && /[А-ЯЁ]/.test(found)
+      ? replacement.toUpperCase() : /^[А-ЯЁ]/.test(found) ? replacement.charAt(0).toUpperCase() + replacement.slice(1) : replacement;
     const escapeHTML = value => value.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-    function isSafeOnlineCandidate(before, after) {
-      const a = before.toLowerCase(), b = after.toLowerCase();
-      if (a === b || !/^[а-яё-]+$/u.test(b) || Math.min(a.length, b.length) < 4) return false;
-      if (Math.abs(a.length - b.length) === 1) {
-        const short = a.length < b.length ? a : b;
-        const long = a.length < b.length ? b : a;
-        let i = 0, j = 0, skipped = false;
-        while (i < short.length && j < long.length) {
-          if (short[i] === long[j]) { i++; j++; }
-          else if (!skipped) { skipped = true; j++; }
-          else return false;
-        }
-        return true;
-      }
-      if (a.length !== b.length) return false;
-      let differences = 0;
-      for (let index = 0; index < a.length; index++) if (a[index] !== b[index]) differences++;
-      if (differences === 1) return true;
-      let i = 0;
-      while (i < a.length && a[i] === b[i]) i++;
-      return i < a.length - 1 && a[i] === b[i + 1] && a[i + 1] === b[i] && a.slice(i + 2) === b.slice(i + 2);
-    }
-    function trustedLocalSuggestion(word, suggestions, dictionary) {
-      if (word.length < 6 || suggestions.length !== 1) return '';
-      const candidate = suggestions[0];
-      if (candidate !== candidate.toLowerCase() || !dictionary.correct(candidate) || !isSafeOnlineCandidate(word, candidate)) return '';
-      if (word.length !== candidate.length) return candidate;
-      let i = 0;
-      while (i < word.length && word[i] === candidate[i]) i++;
-      return i < word.length - 1 && word[i] === candidate[i + 1] && word[i + 1] === candidate[i] && word.slice(i + 2) === candidate.slice(i + 2)
-        ? candidate : '';
-    }
     async function getOnlineMatches(input) {
       const normalized = input.replace(/\r\n?/g, '\n').trim();
       const masked = normalized.replace(protectedPattern, fragment => fragment.replace(/[^\n]/g, ' '));
@@ -984,33 +1030,29 @@ is-buffer/index.js:
           return before;
         });
       }
-      const onlineEdits = [];
-      const remoteSuggestions = new Map();
-      for (const item of [...remoteMatches].sort((a, b) => a.pos - b.pos)) {
-        if (![1, 3].includes(item.code) || item.pos < 0 || item.len <= 0 || item.pos + item.len > text.length) continue;
-        const found = text.slice(item.pos, item.pos + item.len);
-        if (found !== item.word || spellingKeys.has(found.toLowerCase()) || isAllowedWord(found.toLowerCase()) || getDictionarySpell().correct(found.toLowerCase())) continue;
-        const candidates = Array.isArray(item.s) ? item.s.filter(value => typeof value === 'string' && /^[А-Яа-яЁё-]+$/u.test(value) && value.toLowerCase() !== found.toLowerCase()).slice(0, 5) : [];
-        const safe = candidates.filter(value => isSafeOnlineCandidate(found, value));
-        if (safe.length !== 1) {
-          if (candidates.length) remoteSuggestions.set(found.toLowerCase(), candidates.slice(0, 3));
-          continue;
+      function fixedExpressionWithoutComma(verb, connector, rest) {
+        const tail = rest.trimStart();
+        if (connector.toLowerCase() === 'что') {
+          return /^(?:угодно|к[ \t]+чему)(?![\p{L}])/iu.test(tail) || /^попало[.!?]*$/iu.test(tail);
         }
-        if (onlineEdits.length && item.pos < onlineEdits[onlineEdits.length - 1].pos + onlineEdits[onlineEdits.length - 1].len) continue;
-        onlineEdits.push({pos:item.pos, len:item.len, found, fixed:preserveCase(found, safe[0].toLowerCase())});
+        if (connector.toLowerCase() !== 'как') return false;
+        return /^(?:мог|могла|могли|умел|умела|умели|следует)[.!?]*$/iu.test(tail) ||
+          /^можно[ \t]+(?:проще|точнее|быстрее|лучше|скорее)(?![\p{L}])/iu.test(tail) ||
+          (/^сказал(?:а|и)?$/iu.test(verb) && /^(?:есть|отрезал|отрезала|отрезали)[.!?]*$/iu.test(tail));
       }
-      if (onlineEdits.length) {
-        let next = '', cursor = 0;
-        for (const edit of onlineEdits) {
-          next += text.slice(cursor, edit.pos);
-          const start = next.length;
-          next += edit.fixed;
-          highlights.push({start, end:next.length, kind:'error'});
-          const issue = addIssue(issues, 'Орфография', edit.found, edit.fixed, 'Исправлено онлайн-проверкой.');
-          highlights.push({start, end:start, kind:'issue-pin', issueId:issue.id});
-          cursor = edit.pos + edit.len;
-        }
-        text = next + text.slice(cursor);
+      // Edit distance and one dictionary candidate do not establish author intent.
+      // Preserve unknown words and offer replacements; protect technical spans even
+      // if a remote provider returns an unexpected match inside masked content.
+      const protectedRanges = [...text.matchAll(protectedPattern)].map(match => [match.index, match.index + match[0].length]);
+      const remoteSuggestions = new Map();
+      for (const item of remoteMatches) {
+        if (![1,3].includes(item.code) || !Number.isInteger(item.pos) || !Number.isInteger(item.len) ||
+            item.pos < 0 || item.len <= 0 || item.pos + item.len > text.length ||
+            protectedRanges.some(([start,end]) => item.pos < end && item.pos + item.len > start)) continue;
+        const found = text.slice(item.pos,item.pos + item.len);
+        if (found !== item.word || spellingKeys.has(found.toLowerCase()) || isAllowedWord(found.toLowerCase()) || getDictionarySpell().correct(found.toLowerCase())) continue;
+        const candidates = Array.isArray(item.s) ? item.s.filter(value => typeof value === 'string' && /^[А-Яа-яЁё-]+$/u.test(value) && value.toLowerCase() !== found.toLowerCase()).slice(0,3) : [];
+        if (candidates.length) remoteSuggestions.set(found.toLowerCase(),candidates.map(value => preserveCase(found,value)));
       }
       const protectedFragments = [];
       let markerStart = '\uE000';
@@ -1083,15 +1125,11 @@ is-buffer/index.js:
           return fixed;
         }
         if (!suggestionCache.has(word)) suggestionCache.set(word,
-          remoteSuggestions.get(word) || dictionary.suggest(word).filter(item => /^[А-Яа-яЁё-]+$/.test(item)).slice(0, 3));
+          (ambiguousSpelling.get(word) || remoteSuggestions.get(word) || dictionary.suggest(word).filter(item => /^[А-Яа-яЁё-]+$/.test(item)).slice(0,3)).map(item => preserveCase(found,item)));
         const suggestions = suggestionCache.get(word);
-        const automatic = !remoteSuggestions.has(word) && trustedLocalSuggestion(word, suggestions, dictionary);
-        if (automatic) {
-          const fixed = preserveCase(found, automatic);
-          addIssue(issues, 'Орфография', found, fixed, 'Исправлена однозначная опечатка по словарю.');
-          return fixed;
-        }
-        addIssue(issues, 'Орфография', found, suggestions.join(', '), remoteSuggestions.has(word) ? 'Онлайн-проверка нашла несколько вариантов. Выберите нужный.' : 'Слово не найдено в словаре. Выберите вариант или исправьте исходный текст.', false, suggestions);
+        addIssue(issues, 'Орфография', found, suggestions.join(', '), ambiguousSpelling.has(word)
+          ? 'Возможны разные слова с разным смыслом. Выберите вариант по контексту.'
+          : 'Слово не найдено в словаре. Предложение требует подтверждения редактора; оно не заменяет слово автоматически.', false, suggestions);
         highlights.push({start:offset, end:offset + found.length, kind:'suspect'});
         return found;
       });
@@ -1117,11 +1155,13 @@ is-buffer/index.js:
       suggestPunctuation(/(?<![\p{L}])([А-Яа-яЁё-]+)([ \t]+)(зачастую)(?=[ \t]+(?:даже[ \t]+)?не[ \t]+)/giu,
         (found, previous, space, adverb) => previous + ',' + space + adverb,
         'Возможно, здесь нужна запятая перед присоединительной частью. Проверьте смысл.');
-      replaceTracked(/(?<![\p{L}])(сказал|сказала|сказали|ответил|ответила|ответили|написал|написала|написали|сообщил|сообщила|сообщили|спросил|спросила|спросили|уточнил|уточнила|уточнили|отметил|отметила|отметили|добавил|добавила|добавили|знаю|знает|знаем|думаю|думает|думали|понял|поняла|поняли|объяснил|объяснила|объяснили|выяснил|выяснила|выяснили|решил|решила|решили)([ \t]+)(что|почему|когда|где)(?=[ \t]+)/giu, 'format', (found, verb, space, word) => {
+      replaceTracked(/(?<![\p{L}])(сказал|сказала|сказали|ответил|ответила|ответили|написал|написала|написали|сообщил|сообщила|сообщили|спросил|спросила|спросили|уточнил|уточнила|уточнили|отметил|отметила|отметили|добавил|добавила|добавили|знаю|знает|знаем|думаю|думает|думали|понял|поняла|поняли|объяснил|объяснила|объяснили|выяснил|выяснила|выяснили|решил|решила|решили)([ \t]+)(что|почему|когда|где)(?=[ \t]+)/giu, 'format', (found, verb, space, word, offset) => {
+        if (fixedExpressionWithoutComma(verb, word, text.slice(offset + found.length))) return found;
         addIssue(issues, punctuationLabel, verb + ' ' + word, verb + ', ' + word, 'Добавлена запятая перед придаточной частью.');
         return verb + ',' + space + word;
       }, edit => [edit.after.indexOf(','), edit.after.indexOf(',') + 1]);
-      replaceTracked(/(^|[.!?][ \t]+)(Пожалуйста|Например|Конечно|Итак|Во-первых|Во-вторых)([ \t]+)(?=[А-Яа-яЁё])/gmu, 'format', (found, prefix, word, space) => {
+      replaceTracked(/(^|[.!?][ \t]+)(Пожалуйста|Например|Конечно|Итак|Во-первых|Во-вторых)([ \t]+)(?=[А-Яа-яЁё])/gmu, 'format', (found, prefix, word, space, offset) => {
+        if (/^же(?![\p{L}])/iu.test(text.slice(offset + found.length))) return found;
         addIssue(issues, punctuationLabel, word + ' слово', word + ', слово', 'Вводное слово отделено запятой.');
         return prefix + word + ',' + space;
       }, edit => [edit.after.indexOf(','), edit.after.indexOf(',') + 1]);
@@ -1136,7 +1176,8 @@ is-buffer/index.js:
         suggestPunctuation(pattern, (found, first, gap, object, space, second) => first + gap + object + ',' + space + second,
           'Возможна запятая между однородными сказуемыми. Проверьте контекст.');
       }
-      replaceTracked(/(?<![\p{L}])(увидел|увидела|увидели|заметил|заметила|заметили|услышал|услышала|услышали)([ \t]+)(как)(?=[ \t]+(?:я|ты|он|она|оно|мы|вы|они)(?![\p{L}]))/giu, 'format', (found, verb, space, word) => {
+      replaceTracked(/(?<![\p{L}])(увидел|увидела|увидели|заметил|заметила|заметили|услышал|услышала|услышали)([ \t]+)(как)(?=[ \t]+(?:я|ты|он|она|оно|мы|вы|они)(?![\p{L}]))/giu, 'format', (found, verb, space, word, offset) => {
+        if (fixedExpressionWithoutComma(verb, word, text.slice(offset + found.length))) return found;
         addIssue(issues, punctuationLabel, verb + ' ' + word, verb + ', ' + word, 'Придаточная часть с «как» отделена запятой.');
         return verb + ',' + space + word;
       }, edit => [edit.after.indexOf(','), edit.after.indexOf(',') + 1]);
@@ -1144,7 +1185,7 @@ is-buffer/index.js:
         addIssue(issues, punctuationLabel, 'крепись это', 'крепись, это', 'Добавлена запятая между частями предложения.');
         return found.slice(0, -space.length - 3) + ',' + space + 'это';
       });
-      replaceTracked(/(?<![\p{L}])([вВ])([ \t]+)течении(?=[ \t]+(?:следующ(?:ей|его)|прошл(?:ой|ого)|этой|всей|целой|одной|двух|трёх|нескольких|недел[июяь]|месяц[аев]?|год[ауы]?|дн[еяй]|суток|час[аов]?)(?![\p{L}]))/giu, 'error', (found, preposition, gap) => {
+      replaceTracked(/(?<![\p{L}])([вВ])([ \t]+)течении(?=[ \t]+(?:(?:следующ(?:ей|его)|прошл(?:ой|ого)|этой|всей|целой|одной|двух|трёх|нескольких)[ \t]+)?(?:недел[июяь]|месяц[аев]?|год[ауы]?|дн[еяй]|суток|час[аов]?)(?![\p{L}]))/giu, 'error', (found, preposition, gap) => {
         const fixed = preposition + gap + 'течение';
         addIssue(issues, 'Грамматика', found, fixed, 'В значении длительности используется предлог «в течение».');
         return fixed;
@@ -1155,19 +1196,23 @@ is-buffer/index.js:
         addIssue(issues, punctuationLabel, before, after, 'В устойчивом выражении «лучше поздно, чем никогда» нужна запятая перед «чем».');
         return after;
       }, edit => [edit.after.indexOf(','), edit.after.indexOf(',') + 1]);
-      replaceTracked(/(расскажем|покажем|объясним|разберём)([ \t]+)(почему)(?=\s)/giu, 'format', (found, verb, space, word) => {
+      replaceTracked(/(расскажем|покажем|объясним|разберём)([ \t]+)(почему)(?=\s)/giu, 'format', (found, verb, space, word, offset) => {
+        if (fixedExpressionWithoutComma(verb, word, text.slice(offset + found.length))) return found;
         addIssue(issues, punctuationLabel, verb + ' ' + word, verb + ', ' + word, 'Добавлена запятая перед придаточной частью.');
         return verb + ',' + space + word;
       });
-      replaceTracked(/(?<![\p{L}])(рассказал|рассказала|рассказали)([ \t]+)(почему)(?=\s)/giu, 'format', (found, verb, space, word) => {
+      replaceTracked(/(?<![\p{L}])(рассказал|рассказала|рассказали)([ \t]+)(почему)(?=\s)/giu, 'format', (found, verb, space, word, offset) => {
+        if (fixedExpressionWithoutComma(verb, word, text.slice(offset + found.length))) return found;
         addIssue(issues, punctuationLabel, verb + ' ' + word, verb + ', ' + word, 'Добавлена запятая перед придаточной частью.');
         return verb + ',' + space + word;
       });
-      replaceTracked(/(?<![\p{L}])(сказал|сказала|сказали|знаю|знает|знаем|думаю|думает|думали|понял|поняла|поняли|объяснил|объяснила|объяснили|выяснил|выяснила|выяснили|решил|решила|решили|расскажем|покажем|объясним|разберём|рассказал|рассказала|рассказали|проверил|проверила|проверили|показал|показала|показали|описал|описала|описали|изучил|изучила|изучили|обнаружил|обнаружила|обнаружили)([ \t]+)(как)(?=[ \t]+(?:(?:будто|это|он|она|оно|они|мы|вы|я|ты|не|ни|можно|нужно|следует)(?![\p{L}])|[А-Яа-яЁё-]+(?:ет|ит|ют|ут|ат|ят|ется|ются|илась|илось|ились|ился|лась|лось|лись|ена|ено|ены|ть|ться|ал|ял|ел|ёл|ил|ол|ул|али|яли|ели|или|оли|ули)(?![\p{L}])|[А-Яа-яЁё-]+[ \t]+[А-Яа-яЁё-]+(?:ет|ит|ют|ут|ат|ят|ется|ются|илась|илось|ились|ился|лась|лось|лись|ена|ено|ены|ть|ться|ал|ял|ел|ёл|ил|ол|ул|али|яли|ели|или|оли|ули)(?![\p{L}])))/giu, 'format', (found, verb, space, word) => {
+      replaceTracked(/(?<![\p{L}])(сказал|сказала|сказали|знаю|знает|знаем|думаю|думает|думали|понял|поняла|поняли|объяснил|объяснила|объяснили|выяснил|выяснила|выяснили|решил|решила|решили|расскажем|покажем|объясним|разберём|рассказал|рассказала|рассказали|проверил|проверила|проверили|показал|показала|показали|описал|описала|описали|изучил|изучила|изучили|обнаружил|обнаружила|обнаружили)([ \t]+)(как)(?=[ \t]+(?:(?:будто|это|он|она|оно|они|мы|вы|я|ты|не|ни|можно|нужно|следует)(?![\p{L}])|[А-Яа-яЁё-]+(?:ет|ит|ют|ут|ат|ят|ется|ются|илась|илось|ились|ился|лась|лось|лись|ена|ено|ены|ть|ться|ал|ял|ел|ёл|ил|ол|ул|али|яли|ели|или|оли|ули)(?![\p{L}])|[А-Яа-яЁё-]+[ \t]+[А-Яа-яЁё-]+(?:ет|ит|ют|ут|ат|ят|ется|ются|илась|илось|ились|ился|лась|лось|лись|ена|ено|ены|ть|ться|ал|ял|ел|ёл|ил|ол|ул|али|яли|ели|или|оли|ули)(?![\p{L}])))/giu, 'format', (found, verb, space, word, offset) => {
+        if (fixedExpressionWithoutComma(verb, word, text.slice(offset + found.length))) return found;
         addIssue(issues, punctuationLabel, verb + ' ' + word, verb + ', ' + word, 'Добавлена запятая перед придаточной частью.');
         return verb + ',' + space + word;
       });
-      replaceTracked(/(?<![\p{L}])(посмотри|посмотрите)([ \t]+)(как)(?=[ \t]+(?:это|он|она|оно|они|мы|вы|я|ты)(?![\p{L}]))/giu, 'format', (found, verb, space, word) => {
+      replaceTracked(/(?<![\p{L}])(посмотри|посмотрите)([ \t]+)(как)(?=[ \t]+(?:это|он|она|оно|они|мы|вы|я|ты)(?![\p{L}]))/giu, 'format', (found, verb, space, word, offset) => {
+        if (fixedExpressionWithoutComma(verb, word, text.slice(offset + found.length))) return found;
         addIssue(issues, punctuationLabel, verb + ' ' + word, verb + ', ' + word, 'Придаточная часть с «как» отделена запятой.');
         return verb + ',' + space + word;
       });
@@ -1182,10 +1227,9 @@ is-buffer/index.js:
         highlights.push({start:match.index, end:match.index + word.length, kind:'context'});
       }
       if (/[А-Яа-яЁё\d]$/.test(text)) {
-        const issue = addIssue(issues, punctuationLabel, 'конец текста без точки', 'точка в конце', 'Добавлена финальная точка.');
+        const issue = addIssue(issues, punctuationLabel, '', '.', 'Если это законченное предложение, добавьте точку. Заголовок или подпись могут оставаться без неё.', false, ['.']);
+        Object.assign(issue, {reviewOnly:true, start:text.length, end:text.length});
         highlights.push({start:text.length, end:text.length, kind:'issue-pin', issueId:issue.id});
-        highlights.push({start:text.length, end:text.length + 1, kind:'format'});
-        text += '.';
       }
 
       const prepositions = new Set(['в','во','на','к','ко','с','со','у','о','об','обо','от','до','из','за','по','под','над','при','без','для','про']);
@@ -1268,7 +1312,7 @@ is-buffer/index.js:
       }
       issueList.innerHTML = issues.map((item, index) => {
         const className = (item.reviewOnly ? 'review' : item.category === 'Орфография' || item.category === 'Грамматика' ? 'spelling' : item.category === punctuationLabel ? 'punctuation' : 'preposition') + (item.resolved ? ' dismissed' : item.applied ? '' : ' pending');
-        const before = item.category === 'Висячие предлоги' ? item.before.replace(' ', '␠') : item.before;
+        const before = item.category === 'Висячие предлоги' ? item.before.replace(' ', '␠') : item.before || 'конец текста';
         const after = item.category === 'Висячие предлоги' ? item.after.replace('\u00a0', '⍽') : item.after;
         const options = item.suggestions.map((option, choice) => item.resolved
           ? ''
@@ -1342,6 +1386,7 @@ is-buffer/index.js:
       return html + wrap(escapeHTML(value.slice(cursor)));
     }
     function syncReviewUI() {
+      neuralButton.disabled = !localNeuralMode || (editingResult && !neuralController);
       const pending = currentIssues.filter(item => !item.applied && !item.resolved).length;
       const ready = reviewed && !editingResult;
       resultTitle.textContent = ready ? 'Готовый текст' : 'Текст на проверке';
@@ -1526,6 +1571,7 @@ is-buffer/index.js:
     });
     function startCheck() {
       if (!source.value.trim()) return;
+      if (neuralController) neuralController.abort();
       activeHistoryId = null;
       resetIntroDescription();
       hasResult = false;
@@ -1790,6 +1836,7 @@ is-buffer/index.js:
     initializeHistory();
     updateCount();
     restoreSavedResult();
+    refreshNeuralStatus();
   </script>
 </body>
 </html>

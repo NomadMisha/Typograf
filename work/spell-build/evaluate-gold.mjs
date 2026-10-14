@@ -21,9 +21,13 @@ export function evaluateGold(file = 'gold-cases.json') {
     const original = normalized(item.input);
     const actual = normalized(result.text);
     const pending = result.issues.filter(issue => !issue.applied).length;
+    if (item.expectedIssues !== undefined && (!Array.isArray(item.expectedIssues) || item.expectedIssues.some(target =>
+      !target || typeof target.before !== 'string' || typeof target.category !== 'string'))) throw new Error('Некорректная разметка ошибок: ' + item.id);
+    const targetsDetected = item.expectedIssues?.length > 0 && item.expectedIssues.every(target => result.issues.some(issue =>
+      issue.category === target.category && normalized(issue.before).toLowerCase() === normalized(target.before).toLowerCase()));
     const clean = original === expected;
     return {id:item.id, category:item.category, clean, exact:actual === expected,
-      detected:actual === expected || pending > 0,
+      detected:actual === expected || targetsDetected,
       falseChange:clean && actual !== expected,
       pending, actual};
   });
