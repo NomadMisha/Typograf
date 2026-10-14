@@ -1,0 +1,24 @@
+{
+  "format": "typograf-history",
+  "version": 1,
+  "exportedAt": "2026-10-14T12:00:00.000Z",
+  "documents": [
+    {
+      "id": "example-1",
+      "title": "Учебный пример проверки",
+      "createdAt": "2026-10-14T12:00:00.000Z",
+      "updatedAt": "2026-10-14T12:00:00.000Z",
+      "status": "confirmed",
+      "originalText": "Он подошол.",
+      "correctedText": "Он подошёл.",
+      "corrections": [
+        {"id": 1, "category": "Орфография", "before": "подошол", "after": "подошёл", "note": "Исправлена распространённая опечатка.", "applied": true, "suggestions": []}
+      ],
+      "highlights": [
+        {"start": 3, "end": 10, "kind": "error"},
+        {"start": 3, "end": 3, "kind": "issue-pin", "issueId": 1}
+      ]
+    }
+  ],
+  "dictionary": ["нейротипограф"]
+}

@@ -23,6 +23,8 @@ id_ed25519
 credentials.json
 service-account*.json
 secrets*.json
+# Downloaded history backups can contain private article drafts
+typograf-history-*.json
 
 # Dependencies
 node_modules/

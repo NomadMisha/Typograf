@@ -12,8 +12,9 @@
     * { box-sizing:border-box; }
     html { scroll-behavior:smooth; }
     body { margin:0; min-height:100vh; background:var(--paper); color:var(--ink); }
-    button, textarea { font:inherit; }
+    button, textarea, input { font:inherit; }
     button { cursor:pointer; }
+    button:disabled { cursor:not-allowed; opacity:.5; }
     button:focus-visible, textarea:focus-visible { outline:3px solid #8dbb3a; outline-offset:3px; }
     .shell { max-width:1250px; margin:auto; padding:0 42px 52px; }
     .topbar { height:92px; display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid var(--line); }
@@ -142,6 +143,34 @@
     .online-credit a { color:#405b2b; text-decoration:underline; text-underline-offset:3px; }
     .secondary { min-height:43px; padding:0 16px; border:1px solid #cfd5c8; border-radius:9px; background:transparent; color:#334239; font-size:14px; font-weight:700; }
     .secondary:hover { background:#e8eddf; }
+    .history-panel { margin-top:28px; box-shadow:none; }
+    .history-panel > summary { display:flex; align-items:center; flex-wrap:wrap; gap:10px; padding:20px 25px; cursor:pointer; list-style:none; font-weight:670; }
+    .history-panel > summary::-webkit-details-marker { display:none; }
+    .history-panel > summary::before { content:'›'; font-size:23px; line-height:1; transition:transform .2s; }
+    .history-panel[open] > summary::before { transform:rotate(90deg); }
+    .history-local { margin-left:auto; color:var(--muted); font-size:12px; font-weight:400; }
+    .history-content { border-top:1px solid var(--line); padding:22px 25px; }
+    .history-toolbar { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:16px; margin-bottom:17px; }
+    .history-toolbar p { max-width:530px; margin:0; color:var(--muted); font-size:13px; line-height:1.6; }
+    .history-actions { display:flex; flex-wrap:wrap; gap:8px; }
+    .history-status { margin:0 0 16px; padding:11px 14px; border-radius:9px; background:#fff0d9; color:#805928; font-size:13px; line-height:1.55; }
+    .history-list { display:grid; gap:10px; max-height:430px; overflow:auto; scrollbar-width:thin; }
+    .history-card { display:flex; align-items:center; justify-content:space-between; gap:18px; padding:16px; border:1px solid var(--line); border-radius:12px; }
+    .history-copy { min-width:0; }
+    .history-card h3 { margin:0 0 6px; font-size:15px; line-height:1.4; overflow-wrap:anywhere; }
+    .history-card p { margin:0; color:var(--muted); font-size:13px; line-height:1.55; overflow-wrap:anywhere; }
+    .history-meta { display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin-bottom:7px; color:var(--muted); font-size:12px; }
+    .history-card .secondary { min-height:36px; padding:0 12px; font-size:13px; }
+    .history-empty { margin:0; padding:22px 0; color:var(--muted); font-size:14px; line-height:1.6; }
+    .personal-dictionary { margin-top:22px; border-top:1px solid var(--line); padding-top:18px; }
+    .personal-dictionary summary { cursor:pointer; font-size:14px; font-weight:650; }
+    .dictionary-form { display:flex; flex-wrap:wrap; gap:8px; margin:14px 0; }
+    .dictionary-form input { min-width:0; flex:1; padding:11px 12px; border:1px solid #cfd5c8; border-radius:9px; background:var(--panel); color:var(--ink); }
+    .dictionary-words { display:flex; flex-wrap:wrap; gap:8px; }
+    .dictionary-word { display:inline-flex; align-items:center; gap:8px; padding:6px 10px; border-radius:8px; background:#edf3dc; font-size:13px; overflow-wrap:anywhere; }
+    .dictionary-word button { border:0; background:none; padding:3px; color:#53632f; line-height:1; }
+    summary:focus-visible, input:focus-visible { outline:3px solid #8dbb3a; outline-offset:3px; }
+    @media (max-width:760px) { .history-content { padding:18px; } .history-panel > summary { padding:18px; } .history-card { align-items:flex-start; flex-direction:column; gap:12px; } .history-card .history-actions { width:100%; } .history-card .secondary { width:auto; } .history-local { margin-left:0; width:100%; padding-left:22px; } .history-toolbar .history-actions { width:100%; } }
     .toast { position:fixed; right:28px; bottom:25px; z-index:10; display:flex; align-items:center; gap:8px; border-radius:10px; padding:12px 16px; background:var(--ink); color:#fff; box-shadow:0 15px 40px rgba(0,0,0,.18); font-size:13px; font-weight:650; animation:arrive .25s ease both; transition:opacity .22s ease, transform .22s ease; }
     .toast.is-leaving { animation:none; opacity:0; transform:translateY(8px); }
     .confirm-overlay { position:fixed; inset:0; z-index:30; display:grid; place-items:center; padding:16px; background:rgba(20,31,26,.48); backdrop-filter:blur(3px); }
@@ -198,11 +227,20 @@
         <div class="success-line" role="status"><div class="success-mark" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="m5 12 4.2 4.2L19 6.5" stroke="#2A3A21" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div><h2 id="result-status-title">Автоматическая проверка завершена</h2><p id="success-summary">Просмотрите замечания и текст перед подтверждением.</p></div></div>
         <div class="result-stack">
           <section class="result-panel" aria-labelledby="issues-title"><div class="panel-head"><div class="panel-title" id="issues-title">Замечания и правки <span class="badge" id="issue-count">0</span></div><span class="counter">Нажмите номер</span></div><div class="issue-list" id="issue-list" tabindex="0"></div></section>
-          <section class="result-panel" aria-labelledby="result-title"><div class="panel-head"><div class="panel-title"><span id="result-title">Текст на проверке</span><span class="pending-badge hidden" id="pending-badge"></span></div><div class="result-head-right"><span class="counter" id="result-count"></span><button class="copy" id="copy-button" type="button" aria-label="Скопировать черновик" title="Скопировать черновик"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="8" y="8" width="11" height="11" rx="1.5" stroke="currentColor" stroke-width="1.7"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2" stroke="currentColor" stroke-width="1.7"/></svg></button></div></div><div class="result-text" id="result-text" tabindex="0"></div><textarea class="result-editor hidden" id="result-editor" aria-label="Редактирование проверенного текста" spellcheck="true"></textarea><div class="review-bar"><p id="review-status" role="status">Проверьте замечания и текст.</p><div class="review-actions"><button class="secondary" id="edit-result-button" type="button">Редактировать текст</button><button class="secondary hidden" id="recheck-button" type="button">Повторно проверить</button><button class="primary" id="finish-button" type="button" disabled>Подтвердить результат</button></div></div></section>
+          <section class="result-panel" aria-labelledby="result-title"><div class="panel-head"><div class="panel-title"><span id="result-title">Текст на проверке</span><span class="pending-badge hidden" id="pending-badge"></span></div><div class="result-head-right"><span class="counter" id="result-count"></span><button class="copy" id="copy-button" type="button" aria-label="Скопировать черновик" title="Скопировать черновик"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="8" y="8" width="11" height="11" rx="1.5" stroke="currentColor" stroke-width="1.7"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2" stroke="currentColor" stroke-width="1.7"/></svg></button></div></div><div class="result-text" id="result-text" tabindex="0"></div><textarea class="result-editor hidden" id="result-editor" aria-label="Редактирование проверенного текста" spellcheck="true"></textarea><div class="review-bar"><p id="review-status" role="status">Проверьте замечания и текст.</p><div class="review-actions"><button class="secondary" id="edit-result-button" type="button">Редактировать текст</button><button class="secondary hidden" id="recheck-button" type="button">Повторно проверить</button><button class="secondary" id="save-history-button" type="button">В историю</button><button class="primary" id="finish-button" type="button" disabled>Подтвердить результат</button></div></div></section>
         </div>
         <div class="bottom-bar"><p>Проверьте смысл и авторские формулировки перед публикацией.</p><button class="secondary" id="edit-button" type="button">Изменить исходный текст</button></div>
         <div class="online-credits"><div class="online-credit hidden" id="online-credit"><a href="https://yandex.ru/dev/speller/" target="_blank" rel="noopener noreferrer">Проверка правописания: Яндекс.Спеллер</a></div><div class="online-credit hidden" id="grammar-credit"><a href="https://languagetool.org/" target="_blank" rel="noopener noreferrer">Пунктуация и грамматика: LanguageTool</a></div></div>
       </section>
+      <details class="workspace history-panel" id="history-panel">
+        <summary>Мои документы <span class="badge" id="history-count">0</span><span class="history-local">На этом устройстве</span></summary>
+        <div class="history-content">
+          <div class="history-toolbar"><p>Сохраните результат кнопкой «В историю» или подтвердите его. Документы хранятся в этом браузере. JSON позволяет перенести историю на другой компьютер.</p><div class="history-actions"><button class="secondary" id="export-history" type="button">Скачать JSON</button><button class="secondary" id="import-history" type="button">Загрузить JSON</button><input id="history-file" class="hidden" type="file" accept=".json,application/json" aria-label="Файл истории JSON"></div></div>
+          <p id="history-storage-status" class="history-status hidden" role="status"></p>
+          <div class="history-list" id="history-list" aria-label="Сохранённые документы"></div>
+          <details class="personal-dictionary"><summary>Личный словарь <span id="dictionary-count">0</span></summary><p class="fineprint">Добавьте термин или имя, чтобы орфография не считала это слово ошибкой. Новые слова учитываются при следующей проверке; грамматические правила продолжают работать.</p><form class="dictionary-form" id="dictionary-form"><input id="dictionary-word" type="text" maxlength="80" aria-label="Слово для личного словаря" placeholder="Например, название продукта" autocomplete="off" required><button class="secondary" type="submit">Добавить слово</button></form><div class="dictionary-words" id="dictionary-words"></div></details>
+        </div>
+      </details>
     </main>
   </div>
   <div class="toast hidden" id="toast" role="status" aria-live="polite"><span aria-hidden="true">✓</span><span id="toast-message">Текст скопирован</span></div>
@@ -351,12 +389,188 @@ is-buffer/index.js:
     let checkRun = 0;
     const defaultIntroDescription = 'Вставьте черновик статьи. Типограф покажет правки и подготовит текст для копирования.';
     let onlineMatches = [];
+    const historyPanel = document.getElementById('history-panel');
+    const historyStorageKey = 'typograf-history-v1:' + (window.location.pathname || '/').replace(/\/index\.html$/, '/');
+    const historyLimits = {documents:100, characters:1500000, text:200000, issues:5000, dictionary:2000};
+    let historyDatabase = {format:'typograf-history', version:1, documents:[], dictionary:[]};
+    let personalWords = new Set();
+    let activeHistoryId = null;
+    let pendingHistoryAction = null;
+    let historyPersistent = false;
+    let historyReadError = false;
+
+    function validateHistory(value) {
+      const fail = () => { throw new Error('Файл не соответствует формату истории Типографа версии 1.'); };
+      const record = x => x && typeof x === 'object' && !Array.isArray(x);
+      const string = (x, max) => typeof x === 'string' && x.length <= max;
+      const date = x => string(x, 40) && /^\d{4}-\d{2}-\d{2}T/.test(x) && Number.isFinite(Date.parse(x));
+      const identifier = x => typeof x === 'string' && /^[a-zA-Z0-9_-]{1,80}$/.test(x);
+      if (!record(value) || value.format !== 'typograf-history' || value.version !== 1 ||
+          !Array.isArray(value.documents) || value.documents.length > historyLimits.documents ||
+          !Array.isArray(value.dictionary) || value.dictionary.length > historyLimits.dictionary) fail();
+      const ids = new Set();
+      const documents = value.documents.map(doc => {
+        if (!record(doc) || !identifier(doc.id) || ids.has(doc.id) || !string(doc.title, 120) || !doc.title.trim() ||
+            !date(doc.createdAt) || !date(doc.updatedAt) || !['checked','confirmed','editing'].includes(doc.status) ||
+            !string(doc.originalText, historyLimits.text) || !string(doc.correctedText, historyLimits.text) ||
+            !Array.isArray(doc.corrections) || doc.corrections.length > historyLimits.issues ||
+            !Array.isArray(doc.highlights) || doc.highlights.length > historyLimits.issues * 4) fail();
+        ids.add(doc.id);
+        const issueIds = new Set();
+        const corrections = doc.corrections.map(issue => {
+          if (!record(issue) || !Number.isSafeInteger(issue.id) || issue.id < 1 || issue.id > 1000000000 || issueIds.has(issue.id) ||
+              !string(issue.category, 80) || !string(issue.before, historyLimits.text) || !string(issue.after, historyLimits.text) ||
+              !string(issue.note, 2000) || typeof issue.applied !== 'boolean' || !Array.isArray(issue.suggestions) ||
+              issue.suggestions.length > 10 || issue.suggestions.some(x => !string(x, historyLimits.text))) fail();
+          issueIds.add(issue.id);
+          const clean = {id:issue.id, category:issue.category, before:issue.before, after:issue.after, note:issue.note, applied:issue.applied, suggestions:[...issue.suggestions]};
+          if (issue.start !== undefined || issue.end !== undefined) {
+            if (!Number.isSafeInteger(issue.start) || !Number.isSafeInteger(issue.end) || issue.start < 0 ||
+                issue.end < issue.start || issue.end > doc.correctedText.length) fail();
+            clean.start = issue.start; clean.end = issue.end;
+          }
+          if (issue.reviewOnly === true) clean.reviewOnly = true;
+          if (issue.resolved === 'dismissed') clean.resolved = 'dismissed';
+          return clean;
+        });
+        const highlights = doc.highlights.map(mark => {
+          if (!record(mark) || !Number.isSafeInteger(mark.start) || !Number.isSafeInteger(mark.end) ||
+              mark.start < 0 || mark.end < mark.start || mark.end > doc.correctedText.length ||
+              !['error','format','suspect','context','issue-pin'].includes(mark.kind)) fail();
+          const clean = {start:mark.start, end:mark.end, kind:mark.kind};
+          if (mark.kind === 'issue-pin') { if (!issueIds.has(mark.issueId)) fail(); clean.issueId = mark.issueId; }
+          return clean;
+        });
+        if (doc.status === 'editing' && !string(doc.editorDraft, historyLimits.text)) fail();
+        return {id:doc.id, title:doc.title, createdAt:doc.createdAt, updatedAt:doc.updatedAt, status:doc.status,
+          originalText:doc.originalText, correctedText:doc.correctedText, corrections, highlights,
+          ...(doc.status === 'editing' ? {editorDraft:doc.editorDraft} : {})};
+      });
+      const dictionary = [...new Set(value.dictionary.map(word => {
+        if (!string(word, 80) || !/^[\p{L}]+(?:[-’'][\p{L}]+)*$/u.test(word)) fail();
+        return word.normalize('NFC').toLowerCase();
+      }))];
+      const clean = {format:'typograf-history', version:1, documents, dictionary};
+      if (JSON.stringify(clean).length > historyLimits.characters) throw new Error('История слишком большая. Лимит — 100 документов и 1,5 млн символов JSON.');
+      return clean;
+    }
+    function renderHistory() {
+      if (!historyPanel) return;
+      document.getElementById('history-count').textContent = historyDatabase.documents.length;
+      document.getElementById('dictionary-count').textContent = historyDatabase.dictionary.length;
+      const status = document.getElementById('history-storage-status');
+      status.classList.toggle('hidden', historyPersistent);
+      status.textContent = historyReadError
+        ? 'Сохранённую историю не удалось прочитать; она не перезаписывается. Новые документы доступны только до закрытия страницы. Скачайте JSON.'
+        : 'Браузер не сохранил историю на диск. Данные доступны в этой вкладке до её закрытия; скачайте JSON, чтобы их не потерять.';
+      document.getElementById('history-list').innerHTML = historyDatabase.documents.length
+        ? [...historyDatabase.documents].sort((a,b) => Date.parse(b.updatedAt) - Date.parse(a.updatedAt)).map(doc => {
+          const status = {checked:'На проверке', confirmed:'Подтверждён', editing:'Редактируется'}[doc.status];
+          const date = new Date(doc.updatedAt).toLocaleString('ru-RU', {dateStyle:'short',timeStyle:'short'});
+          return '<article class="history-card"><div class="history-copy"><h3>' + escapeHTML(doc.title) + '</h3><div class="history-meta"><span class="badge">' + status + '</span><time>' + escapeHTML(date) + '</time><span>' + doc.corrections.length + ' ' + plural(doc.corrections.length, ['правка','правки','правок']) + '</span></div><p>' + escapeHTML((doc.status === 'editing' ? doc.editorDraft : doc.correctedText).slice(0,140)) + '</p></div><div class="history-actions"><button class="secondary" type="button" data-open-document="' + doc.id + '">Открыть</button><button class="secondary" type="button" data-delete-document="' + doc.id + '" aria-label="Удалить документ ' + escapeHTML(doc.title) + '">Удалить</button></div></article>';
+        }).join('') : '<p class="history-empty">Здесь появятся сохранённые проверки. Подтверждённые результаты добавляются автоматически.</p>';
+      document.getElementById('dictionary-words').innerHTML = historyDatabase.dictionary.map(word => '<span class="dictionary-word">' + escapeHTML(word) + '<button type="button" data-remove-word="' + escapeHTML(word) + '" aria-label="Удалить из словаря: ' + escapeHTML(word) + '">×</button></span>').join('');
+    }
+    function commitHistory(next) {
+      const clean = validateHistory(next);
+      historyPersistent = false;
+      if (!historyReadError) {
+        try { window.localStorage.setItem(historyStorageKey, JSON.stringify(clean)); historyPersistent = true; }
+        catch { /* Keep the new data available for JSON export; report failed persistence. */ }
+      }
+      historyDatabase = clean;
+      personalWords = new Set(clean.dictionary);
+      renderHistory();
+      return historyPersistent;
+    }
+    function loadHistory() {
+      try {
+        const raw = window.localStorage.getItem(historyStorageKey);
+        if (raw) {
+          if (raw.length > historyLimits.characters) throw new Error('History limit');
+          historyDatabase = validateHistory(JSON.parse(raw));
+        }
+        const probe = historyStorageKey + ':probe';
+        window.localStorage.setItem(probe, '1'); window.localStorage.removeItem(probe);
+        historyPersistent = true;
+      } catch {
+        try { historyReadError = !!window.localStorage.getItem(historyStorageKey); }
+        catch { /* Storage is disabled. */ }
+      }
+      personalWords = new Set(historyDatabase.dictionary);
+      renderHistory();
+    }
+    function saveHistoryDocument(status = editingResult ? 'editing' : reviewed ? 'confirmed' : 'checked', silent = false) {
+      if (!hasResult) return false;
+      try {
+        const existing = historyDatabase.documents.find(doc => doc.id === activeHistoryId);
+        const now = new Date().toISOString();
+        const id = existing?.id || (globalThis.crypto?.randomUUID?.() || 'doc-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2));
+        const doc = {id, title:existing?.title || source.value.trim().split('\n')[0].slice(0,100) || 'Без названия',
+          createdAt:existing?.createdAt || now, updatedAt:now, status,
+          originalText:source.value, correctedText:preparedText, corrections:currentIssues, highlights:currentHighlights,
+          ...(status === 'editing' ? {editorDraft:resultEditor.value} : {})};
+        const next = {...historyDatabase, documents:[...historyDatabase.documents.filter(item => item.id !== id), doc]};
+        const persisted = commitHistory(next);
+        activeHistoryId = id;
+        saveResult();
+        if (!silent) {
+          if (historyPanel) historyPanel.open = true;
+          showToast(persisted ? 'Документ сохранён в истории.' : 'Документ доступен в этой вкладке. Скачайте JSON для сохранения.');
+        }
+        return persisted;
+      } catch (error) {
+        if (!silent) showToast(error.message);
+        return null;
+      }
+    }
+    function importHistoryJSON(raw) {
+      if (typeof raw !== 'string' || raw.length > 6000000) throw new Error('Файл слишком большой. Лимит импорта — 6 млн символов JSON.');
+      let parsed;
+      try { parsed = JSON.parse(raw); } catch { throw new Error('Не удалось прочитать JSON. Проверьте формат файла.'); }
+      const incoming = validateHistory(parsed);
+      const known = new Set(historyDatabase.documents.map(doc => doc.id));
+      const added = incoming.documents.filter(doc => !known.has(doc.id));
+      const next = {...historyDatabase, documents:[...historyDatabase.documents,...added], dictionary:[...new Set([...historyDatabase.dictionary,...incoming.dictionary])]};
+      const persisted = commitHistory(next);
+      return {added:added.length, persisted};
+    }
+    function openHistoryDocument(id) {
+      const stored = historyDatabase.documents.find(item => item.id === id);
+      if (!stored) return;
+      const doc = JSON.parse(JSON.stringify(stored));
+      closeLeaveModal();
+      clearTimeout(checkTimer); checkRun++;
+      applySavedResult({source:doc.originalText, text:doc.correctedText, issues:doc.corrections, highlights:doc.highlights,
+        historyId:doc.id, reviewed:doc.status === 'confirmed', editingResult:doc.status === 'editing', editorDraft:doc.editorDraft,
+        onlineEnabled:false, onlineAvailable:false, grammarAvailable:false});
+      window.scrollTo({top:0, behavior:'smooth'});
+      showToast('Документ открыт из истории.');
+    }
+    function performHistoryAction() {
+      const action = pendingHistoryAction;
+      pendingHistoryAction = null;
+      if (!action) return;
+      if (action.type === 'open') { openHistoryDocument(action.id); return; }
+      try {
+        const next = action.type === 'delete'
+          ? {...historyDatabase, documents:historyDatabase.documents.filter(doc => doc.id !== action.id)}
+          : {...historyDatabase, dictionary:historyDatabase.dictionary.filter(word => word !== action.word)};
+        const persisted = commitHistory(next);
+        if (action.id === activeHistoryId) { activeHistoryId = null; saveResult(); }
+        closeLeaveModal();
+        historyPanel?.querySelector?.('summary')?.focus();
+        showToast(persisted ? 'Изменение сохранено.' : 'Изменение только в этой вкладке. Скачайте JSON.');
+      } catch (error) { closeLeaveModal(); showToast(error.message); }
+    }
+    function isAllowedWord(word) { return spellingAllowlist.has(word) || personalWords.has(word); }
     const resultStorageKey = 'typograf-result-v1:' + window.location.pathname;
 
     function saveResult() {
       if (!hasResult) return;
       const snapshot = {
         source:source.value,
+        historyId:activeHistoryId,
         text:preparedText,
         issues:currentIssues,
         highlights:currentHighlights,
@@ -406,7 +620,10 @@ is-buffer/index.js:
       if (!saved) return;
       if (typeof saved.source !== 'string' || typeof saved.text !== 'string' ||
           !Array.isArray(saved.issues) || !Array.isArray(saved.highlights)) { clearSavedResult(); return; }
-      try {
+      try { applySavedResult(saved); } catch { clearSavedResult(); }
+    }
+    function applySavedResult(saved) {
+        activeHistoryId = typeof saved.historyId === 'string' ? saved.historyId : null;
         source.value = saved.source;
         acceptedSpelling = saved.acceptedSpelling && typeof saved.acceptedSpelling === 'object' ? saved.acceptedSpelling : {};
         onlineMatches = Array.isArray(saved.onlineMatches) ? saved.onlineMatches : [];
@@ -427,8 +644,9 @@ is-buffer/index.js:
         document.getElementById('page-title').textContent = 'Результат проверки';
         document.getElementById('intro-description').textContent = 'Просмотрите найденные правки и скопируйте текст после проверки.';
         hasResult = true;
+        nextIssueId = Math.max(nextIssueId, ...saved.issues.map(issue => issue.id || 0));
         protectResult();
-      } catch { clearSavedResult(); }
+        saveResult();
     }
 
     const demoTopics = [
@@ -771,7 +989,7 @@ is-buffer/index.js:
       for (const item of [...remoteMatches].sort((a, b) => a.pos - b.pos)) {
         if (![1, 3].includes(item.code) || item.pos < 0 || item.len <= 0 || item.pos + item.len > text.length) continue;
         const found = text.slice(item.pos, item.pos + item.len);
-        if (found !== item.word || spellingKeys.has(found.toLowerCase()) || spellingAllowlist.has(found.toLowerCase()) || getDictionarySpell().correct(found.toLowerCase())) continue;
+        if (found !== item.word || spellingKeys.has(found.toLowerCase()) || isAllowedWord(found.toLowerCase()) || getDictionarySpell().correct(found.toLowerCase())) continue;
         const candidates = Array.isArray(item.s) ? item.s.filter(value => typeof value === 'string' && /^[А-Яа-яЁё-]+$/u.test(value) && value.toLowerCase() !== found.toLowerCase()).slice(0, 5) : [];
         const safe = candidates.filter(value => isSafeOnlineCandidate(found, value));
         if (safe.length !== 1) {
@@ -815,6 +1033,7 @@ is-buffer/index.js:
       });
 
       for (const [wrong, right] of spelling) {
+        if (personalWords.has(wrong)) continue;
         const pattern = new RegExp('(?<![\\p{L}])' + wrong.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '(?![\\p{L}])', 'giu');
         replaceTracked(pattern, 'error', found => {
           const fixed = preserveCase(found, right);
@@ -857,7 +1076,7 @@ is-buffer/index.js:
       const suggestionCache = new Map();
       replaceTracked(/[А-Яа-яЁё]+(?:-[А-Яа-яЁё]+)*/gu, 'error', (found, offset) => {
         const word = found.toLowerCase();
-        if (word.length < 3 || spellingAllowlist.has(word) || dictionary.correct(word)) return found;
+        if (word.length < 3 || isAllowedWord(word) || dictionary.correct(word)) return found;
         if (accepted[word]) {
           const fixed = preserveCase(found, accepted[word]);
           addIssue(issues, 'Орфография', found, fixed, 'Вариант выбран редактором.');
@@ -1307,6 +1526,7 @@ is-buffer/index.js:
     });
     function startCheck() {
       if (!source.value.trim()) return;
+      activeHistoryId = null;
       resetIntroDescription();
       hasResult = false;
       unprotectResult();
@@ -1351,6 +1571,7 @@ is-buffer/index.js:
     });
     function finishResult() {
       const confirmedText = preparedText;
+      const historySaved = saveHistoryDocument('confirmed', true);
       closeLeaveModal();
       source.value = confirmedText;
       updateCount();
@@ -1376,17 +1597,26 @@ is-buffer/index.js:
       document.getElementById('intro-description').textContent = 'Подтверждённый исправленный текст готов к дальнейшей работе.';
       window.scrollTo({top:0, behavior:'smooth'});
       source.focus();
-      showToast('Подтверждённый текст перенесён на главный экран.');
+      showToast(historySaved ? 'Подтверждённый текст перенесён на главный экран.' : historySaved === null
+        ? 'Текст перенесён на главный экран. История не добавлена: превышены лимиты документа или хранилища.'
+        : 'Текст подтверждён. История не сохранена в браузере — скачайте JSON.');
     }
     document.getElementById('edit-button').addEventListener('click', () => openLeaveModal('edit'));
     function openLeaveModal(action) {
       leaveAction = action;
-      leaveDescription.textContent = action === 'edit'
+      leaveDescription.textContent = action === 'history'
+        ? pendingHistoryAction?.type === 'open'
+          ? 'Открыть сохранённый документ? Текущий текст и несохранённые изменения будут заменены.'
+          : pendingHistoryAction?.type === 'delete'
+          ? 'Удалить этот документ из истории? Он останется только в ранее скачанных JSON-копиях.'
+          : 'Удалить слово из личного словаря? При следующей проверке оно снова будет проверяться.'
+        : action === 'edit'
         ? 'Вы действительно хотите изменить исходный текст? Текущий результат будет потерян.'
         : action === 'finish'
         ? 'Вы действительно хотите подтвердить данный результат?'
         : 'Вы действительно хотите вернуться на главную страницу? Результат будет потерян.';
       confirmLeave.textContent = action === 'edit' ? 'Изменить текст' : action === 'finish' ? 'Подтвердить результат' : 'Перейти на главную';
+      if (action === 'history') confirmLeave.textContent = pendingHistoryAction?.type === 'open' ? 'Открыть документ' : 'Удалить';
       previousFocus = document.activeElement;
       previousOverflow = document.body.style.overflow;
       document.body.style.overflow = 'hidden';
@@ -1401,6 +1631,7 @@ is-buffer/index.js:
     }
     function resetToHome() {
       closeLeaveModal();
+      activeHistoryId = null;
       clearTimeout(checkTimer);
       checkRun++;
       checkTimer = null;
@@ -1435,6 +1666,7 @@ is-buffer/index.js:
     }
     function returnToEditor() {
       closeLeaveModal();
+      activeHistoryId = null;
       preparedText = '';
       currentIssues = [];
       currentHighlights = [];
@@ -1461,7 +1693,8 @@ is-buffer/index.js:
     });
     cancelLeave.addEventListener('click', closeLeaveModal);
     confirmLeave.addEventListener('click', () => {
-      if (leaveAction === 'edit') returnToEditor();
+      if (leaveAction === 'history') performHistoryAction();
+      else if (leaveAction === 'edit') returnToEditor();
       else if (leaveAction === 'finish') finishResult();
       else resetToHome();
     });
@@ -1488,6 +1721,73 @@ is-buffer/index.js:
         showToast(copied ? copiedMessage : 'Не удалось скопировать текст');
       }
     });
+    function initializeHistory() {
+      loadHistory();
+      if (!historyPanel) return;
+      document.getElementById('save-history-button').addEventListener('click', () => saveHistoryDocument());
+      document.getElementById('history-list').addEventListener('click', event => {
+        const open = event.target.closest('button[data-open-document]');
+        const remove = event.target.closest('button[data-delete-document]');
+        const id = open?.dataset.openDocument || remove?.dataset.deleteDocument;
+        if (!id || !historyDatabase.documents.some(doc => doc.id === id)) return;
+        pendingHistoryAction = {type:open ? 'open' : 'delete', id};
+        if (open && !hasResult && !source.value.trim() && loadingScreen.classList.contains('hidden')) performHistoryAction();
+        else openLeaveModal('history');
+      });
+      document.getElementById('export-history').addEventListener('click', () => {
+        let link, url;
+        try {
+          const payload = {...historyDatabase, exportedAt:new Date().toISOString()};
+          const blob = new Blob([JSON.stringify(payload, null, 2)], {type:'application/json;charset=utf-8'});
+          url = URL.createObjectURL(blob);
+          link = document.createElement('a'); link.href = url;
+          link.download = 'typograf-history-' + new Date().toISOString().slice(0,10) + '.json';
+          document.body.appendChild(link); link.click();
+          showToast('JSON подготовлен для скачивания. Он содержит тексты ваших документов.');
+        } catch { showToast('Не удалось скачать JSON в этом браузере.'); }
+        finally { link?.remove(); if (url) setTimeout(() => URL.revokeObjectURL(url), 1000); }
+      });
+      const fileInput = document.getElementById('history-file');
+      const importButton = document.getElementById('import-history');
+      importButton.addEventListener('click', () => fileInput.click());
+      fileInput.addEventListener('change', async () => {
+        const file = fileInput.files?.[0];
+        if (!file) return;
+        importButton.disabled = true;
+        try {
+          if (file.size > 8 * 1024 * 1024) throw new Error('JSON-файл слишком большой. Лимит — 8 МБ.');
+          const result = importHistoryJSON(await file.text());
+          showToast('Добавлено документов: ' + result.added + '. Существующие сохранены.' + (result.persisted ? '' : ' Скачайте JSON: хранилище недоступно.'));
+        } catch (error) { showToast(error.message); }
+        finally { fileInput.value = ''; importButton.disabled = false; }
+      });
+      document.getElementById('dictionary-form').addEventListener('submit', event => {
+        event.preventDefault();
+        const input = document.getElementById('dictionary-word');
+        const word = input.value.trim().normalize('NFC').toLowerCase();
+        if (!/^[\p{L}]+(?:[-’'][\p{L}]+)*$/u.test(word) || word.length > 80) { showToast('Введите одно слово: буквы, дефис или апостроф.'); return; }
+        if (personalWords.has(word)) { showToast('Это слово уже есть в личном словаре.'); return; }
+        try {
+          const persisted = commitHistory({...historyDatabase, dictionary:[...historyDatabase.dictionary,word]});
+          input.value = '';
+          showToast(persisted ? 'Слово добавлено. Оно учтётся при следующей проверке.' : 'Слово добавлено только в этой вкладке. Скачайте JSON.');
+        } catch (error) { showToast(error.message); }
+      });
+      document.getElementById('dictionary-words').addEventListener('click', event => {
+        const button = event.target.closest('button[data-remove-word]');
+        if (!button) return;
+        pendingHistoryAction = {type:'remove-word', word:button.dataset.removeWord};
+        openLeaveModal('history');
+      });
+      window.addEventListener('storage', event => {
+        if (event.key !== null && event.key !== historyStorageKey) return;
+        try {
+          historyDatabase = event.newValue ? validateHistory(JSON.parse(event.newValue)) : {format:'typograf-history',version:1,documents:[],dictionary:[]};
+          personalWords = new Set(historyDatabase.dictionary); historyPersistent = true; historyReadError = false; renderHistory();
+        } catch { historyPersistent = false; historyReadError = true; renderHistory(); }
+      });
+    }
+    initializeHistory();
     updateCount();
     restoreSavedResult();
   </script>

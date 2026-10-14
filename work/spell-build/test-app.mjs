@@ -8,6 +8,7 @@ const inline = scripts.at(-1);
 const dictionary = scripts.length > 1 ? scripts[0] : fs.readFileSync('../../outputs/typograf-prototype/spellcheck.js', 'utf8');
 const ids = ['source','input-screen','loading-screen','result-screen','check-button','issue-list','result-text','result-editor','result-title','result-status-title','pending-badge','review-status','edit-result-button','recheck-button','finish-button','toast','char-count','toast-message','issue-count','result-count','success-summary','page-title','intro-description','demo-button','edit-button','copy-button','home-link','leave-overlay','leave-description','cancel-leave','confirm-leave','online-toggle','online-info','online-info-button','online-tooltip','online-credit','grammar-credit','loading-detail'];
 const elements = {};
+ids.push('history-panel','history-count','dictionary-count','history-storage-status','history-list','dictionary-words','save-history-button','export-history','import-history','history-file','dictionary-form','dictionary-word');
 const document = {activeElement:null, body:{style:{overflow:''},appendChild(){}}, getElementById:id=>elements[id], createElement:id=>new Element(id), execCommand:()=>true};
 
 function Element(id) {
@@ -36,11 +37,13 @@ for (const id of ids) elements[id] = new Element(id);
 let timers = [];
 let nextTimer = 1;
 const storedResults = new Map();
+const storedHistory = new Map();
 const windowEvents = new Map();
 const mockWindow = {
   scrollX:0,
   scrollY:0,
   location:{pathname:'/typograf-prototype/index.html'},
+  localStorage:{getItem:key=>storedHistory.get(key) ?? null,setItem:(key,value)=>storedHistory.set(key,value),removeItem:key=>storedHistory.delete(key)},
   history:{state:null,replaceState(value){this.state=value;}},
   sessionStorage:{
     getItem:key=>storedResults.get(key) ?? null,
@@ -503,6 +506,7 @@ test('editor can confirm with unresolved notices after explicit modal confirmati
   assert.equal(windowEvents.get('beforeunload')?.size,0);
   assert.equal(elements['intro-description'].textContent,'Подтверждённый исправленный текст готов к дальнейшей работе.');
   assert.equal(elements['toast-message'].textContent,'Подтверждённый текст перенесён на главный экран.');
+  assert.ok(vm.runInContext('historyDatabase.documents.some(doc=>doc.status==="confirmed" && doc.correctedText===source.value)',context));
   assert.equal(elements['check-button'].disabled,false);
   elements.source.value=confirmedText+' Новый фрагмент.';
   elements.source.fire('input');
@@ -1015,6 +1019,160 @@ test('toast duration, hover pause, and reversible fade', () => {
   fadeTimer.fn();
   assert.ok(toast.classList.contains('hidden'));
 });
+
+test('history saves the source, corrected text, decisions and markers without duplicate saves', () => {
+  vm.runInContext("commitHistory({format:'typograf-history',version:1,documents:[],dictionary:[]}); activeHistoryId=null; hasResult=true",context);
+  elements.source.value='Прешол и упол на пал.';
+  context.historyCheck=check(elements.source.value);
+  vm.runInContext('updateResult(historyCheck.text,historyCheck.issues,historyCheck.highlights)',context);
+  elements['save-history-button'].fire('click');
+  elements['save-history-button'].fire('click');
+  const db=JSON.parse(vm.runInContext('JSON.stringify(historyDatabase)',context));
+  assert.equal(db.documents.length,1);
+  assert.equal(db.documents[0].originalText,elements.source.value);
+  assert.equal(db.documents[0].correctedText,'Пришёл и упал на\u00a0пол.');
+  assert.equal(db.documents[0].corrections.length,4);
+  assert.ok(db.documents[0].highlights.some(mark=>mark.kind==='issue-pin'));
+  assert.equal(vm.runInContext('historyPersistent',context),true);
+  assert.equal(elements['history-count'].textContent,1);
+});
+test('history JSON roundtrip merges documents, preserves existing copies and restores dictionary', () => {
+  const exported=vm.runInContext('JSON.stringify(historyDatabase,null,2)',context);
+  vm.runInContext("commitHistory({format:'typograf-history',version:1,documents:[],dictionary:['нейротипограф']})",context);
+  context.historyImport=exported;
+  assert.equal(vm.runInContext('importHistoryJSON(historyImport).added',context),1);
+  assert.equal(vm.runInContext('importHistoryJSON(historyImport).added',context),0);
+  assert.equal(vm.runInContext('historyDatabase.dictionary[0]',context),'нейротипограф');
+  const changed=JSON.parse(exported); changed.documents[0].correctedText='Чужой вариант'; changed.documents[0].highlights=[];
+  context.changedImport=JSON.stringify(changed);
+  vm.runInContext('importHistoryJSON(changedImport)',context);
+  assert.equal(vm.runInContext('historyDatabase.documents[0].correctedText',context),'Пришёл и упал на\u00a0пол.');
+});
+test('invalid, oversized and unsupported JSON imports are atomic and cannot inject HTML', () => {
+  const before=vm.runInContext('JSON.stringify(historyDatabase)',context);
+  for(const bad of ['{',JSON.stringify({format:'typograf-history',version:2,documents:[],dictionary:[]}),JSON.stringify({format:'typograf-history',version:1,documents:[{}],dictionary:[]})]) {
+    context.invalidHistory=bad;
+    assert.throws(()=>vm.runInContext('importHistoryJSON(invalidHistory)',context));
+    assert.equal(vm.runInContext('JSON.stringify(historyDatabase)',context),before);
+  }
+  const db=JSON.parse(before);
+  const injection=structuredClone(db.documents[0]); injection.id='injected'; injection.title='<img src=x onerror=alert(1)>'; injection.correctedText='<script>alert(1)</script>'; injection.highlights=[]; injection.corrections=[];
+  context.htmlHistory=JSON.stringify({format:db.format,version:1,documents:[injection],dictionary:[]});
+  vm.runInContext('importHistoryJSON(htmlHistory)',context);
+  assert.ok(elements['history-list'].innerHTML.includes('&lt;img'));
+  assert.ok(!elements['history-list'].innerHTML.includes('<img'));
+  vm.runInContext("openHistoryDocument('injected')",context);
+  assert.ok(elements['result-text'].innerHTML.includes('&lt;script&gt;'));
+  const invalidMark=structuredClone(db); invalidMark.documents[0].highlights[0].kind='error" onclick="alert(1)';
+  context.invalidHistory=JSON.stringify(invalidMark);
+  assert.throws(()=>vm.runInContext('importHistoryJSON(invalidHistory)',context));
+  assert.throws(()=>vm.runInContext("importHistoryJSON(' '.repeat(6000001))",context));
+});
+test('reopening a history record does not send text, reuse issue ids, or mutate the saved copy', () => {
+  const id=vm.runInContext('historyDatabase.documents[0].id',context);
+  context.openHistoryId=id;
+  const original=vm.runInContext('JSON.stringify(historyDatabase.documents[0])',context);
+  let requests=0; const previousFetch=context.fetch;
+  context.fetch=async()=>{requests++;throw new Error('Unexpected request');};
+  vm.runInContext('openHistoryDocument(openHistoryId)',context);
+  assert.equal(requests,0);
+  assert.equal(elements['online-toggle'].checked,false);
+  assert.ok(!elements['result-screen'].classList.contains('hidden'));
+  vm.runInContext("currentIssues[0].note='Unsaved change'",context);
+  assert.equal(vm.runInContext('JSON.stringify(historyDatabase.documents[0])',context),original);
+  const max=vm.runInContext('Math.max(...currentIssues.map(issue=>issue.id))',context);
+  assert.ok(vm.runInContext("addIssue([], 'Орфография','a','b','test').id",context)>max);
+  context.fetch=previousFetch;
+});
+test('history deletion requires confirmation; cancellation preserves records', () => {
+  const id=vm.runInContext('historyDatabase.documents[0].id',context);
+  const originalCount=vm.runInContext('historyDatabase.documents.length',context);
+  elements['history-list'].fire('click',{target:{closest:selector=>selector.includes('data-delete-document')?{dataset:{deleteDocument:id}}:null}});
+  assert.equal(vm.runInContext('historyDatabase.documents.length',context),originalCount);
+  elements['cancel-leave'].fire('click');
+  assert.equal(vm.runInContext('historyDatabase.documents.length',context),originalCount);
+  elements['history-list'].fire('click',{target:{closest:selector=>selector.includes('data-delete-document')?{dataset:{deleteDocument:id}}:null}});
+  elements['confirm-leave'].fire('click');
+  assert.equal(vm.runInContext('historyDatabase.documents.length',context),originalCount-1);
+});
+test('personal dictionary persists, affects spelling and rejects phrases and markup', () => {
+  elements['dictionary-word'].value='Нейротипограф';
+  elements['dictionary-form'].fire('submit',{preventDefault(){}});
+  assert.equal(check('Нейротипограф.').issues.some(issue=>issue.category==='Орфография'),false);
+  elements['dictionary-word'].value='подошол';
+  elements['dictionary-form'].fire('submit',{preventDefault(){}});
+  assert.equal(check('Он подошол.').text,'Он подошол.');
+  const original=vm.runInContext('JSON.stringify(historyDatabase.dictionary)',context);
+  for(const invalid of ['два слова','<script>','']) {
+    elements['dictionary-word'].value=invalid;
+    elements['dictionary-form'].fire('submit',{preventDefault(){}});
+    assert.equal(vm.runInContext('JSON.stringify(historyDatabase.dictionary)',context),original);
+  }
+  vm.runInContext('loadHistory()',context);
+  assert.equal(check('Нейротипограф.').issues.some(issue=>issue.category==='Орфография'),false);
+});
+test('quota failure retains an exportable in-memory copy and warns instead of claiming persistence', () => {
+  const setItem=mockWindow.localStorage.setItem;
+  mockWindow.localStorage.setItem=()=>{throw new Error('QuotaExceededError');};
+  vm.runInContext("commitHistory({...historyDatabase,dictionary:[...historyDatabase.dictionary,'экспортируемоеимя']})",context);
+  assert.equal(vm.runInContext('historyPersistent',context),false);
+  assert.ok(!elements['history-storage-status'].classList.contains('hidden'));
+  assert.ok(vm.runInContext('JSON.stringify(historyDatabase)',context).includes('экспортируемоеимя'));
+  mockWindow.localStorage.setItem=setItem;
+  vm.runInContext('commitHistory(historyDatabase)',context);
+});
+test('corrupt stored history is not overwritten by subsequent saves', () => {
+  const key=vm.runInContext('historyStorageKey',context);
+  const original=storedHistory.get(key);
+  storedHistory.set(key,'{broken');
+  vm.runInContext('loadHistory(); commitHistory(historyDatabase)',context);
+  assert.equal(storedHistory.get(key),'{broken');
+  assert.equal(vm.runInContext('historyReadError',context),true);
+  storedHistory.set(key,original);
+  vm.runInContext('historyReadError=false; loadHistory()',context);
+});
+
+test('schema example imports and capacity, offsets and id limits reject changes atomically', () => {
+  context.exampleHistory=fs.readFileSync('../../examples/history-example.json','utf8');
+  assert.equal(vm.runInContext('validateHistory(JSON.parse(exampleHistory)).documents[0].correctedText',context),'Он подошёл.');
+  const example=JSON.parse(context.exampleHistory);
+  const original=vm.runInContext('JSON.stringify(historyDatabase)',context);
+  for(const change of [
+    db=>{db.documents=Array.from({length:101},(_,i)=>({...db.documents[0],id:'limit-'+i}));},
+    db=>{db.documents[0].highlights[0].end=1000;},
+    db=>{db.documents[0].corrections[0].id=Number.MAX_SAFE_INTEGER;},
+    db=>{db.documents[0].originalText='я'.repeat(200001);}
+  ]) {
+    const invalid=structuredClone(example); change(invalid); context.invalidHistory=JSON.stringify(invalid);
+    assert.throws(()=>vm.runInContext('importHistoryJSON(invalidHistory)',context));
+    assert.equal(vm.runInContext('JSON.stringify(historyDatabase)',context),original);
+  }
+});
+
+let downloadedBlob, downloadedLink, clickedDownload=false;
+context.Blob=Blob;
+context.URL={createObjectURL:blob=>{downloadedBlob=blob;return 'blob:history-test';},revokeObjectURL(){}};
+const createElement=document.createElement;
+document.createElement=id=>{const item=new Element(id);if(id==='a'){downloadedLink=item;item.click=()=>{clickedDownload=true;};}return item;};
+elements['export-history'].fire('click');
+assert.equal(clickedDownload,true);
+assert.match(downloadedLink.download,/^typograf-history-\d{4}-\d{2}-\d{2}\.json$/);
+const downloaded=JSON.parse(await downloadedBlob.text());
+assert.equal(downloaded.format,'typograf-history');
+context.downloadedText=JSON.stringify(downloaded);
+assert.equal(vm.runInContext('importHistoryJSON(downloadedText).added',context),0);
+document.createElement=createElement;
+console.log('PASS export button downloads valid reimportable JSON with the correct filename');
+
+elements['history-file'].files=[{size:10,text:async()=>'{bad json'}];
+await elements['history-file'].fire('change');
+assert.equal(elements['import-history'].disabled,false);
+assert.equal(elements['history-file'].value,'');
+assert.match(elements['toast-message'].textContent,/JSON/);
+elements['history-file'].files=[{size:9*1024*1024,text:async()=>{throw new Error('Must not read an oversized file');}}];
+await elements['history-file'].fire('change');
+assert.match(elements['toast-message'].textContent,/8 МБ/);
+console.log('PASS import file control handles invalid and oversized files and resets for retry');
 
 if (process.env.LIVE_SPELL === '1') {
   context.fetch=fetch;

@@ -1,0 +1,67 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "История документов Типографа, версия 1",
+  "type": "object",
+  "required": ["format", "version", "documents", "dictionary"],
+  "properties": {
+    "format": {"const": "typograf-history"},
+    "version": {"const": 1},
+    "exportedAt": {"type": "string", "format": "date-time"},
+    "documents": {"type": "array", "maxItems": 100, "items": {"$ref": "#/$defs/document"}},
+    "dictionary": {"type": "array", "maxItems": 2000, "uniqueItems": true, "items": {"type": "string", "minLength": 1, "maxLength": 80}}
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "text": {"type": "string", "maxLength": 200000},
+    "document": {
+      "type": "object",
+      "required": ["id", "title", "createdAt", "updatedAt", "status", "originalText", "correctedText", "corrections", "highlights"],
+      "properties": {
+        "id": {"type": "string", "pattern": "^[a-zA-Z0-9_-]{1,80}$"},
+        "title": {"type": "string", "minLength": 1, "maxLength": 120},
+        "createdAt": {"type": "string", "format": "date-time"},
+        "updatedAt": {"type": "string", "format": "date-time"},
+        "status": {"enum": ["checked", "confirmed", "editing"]},
+        "originalText": {"$ref": "#/$defs/text"},
+        "correctedText": {"$ref": "#/$defs/text"},
+        "editorDraft": {"$ref": "#/$defs/text"},
+        "corrections": {"type": "array", "maxItems": 5000, "items": {"$ref": "#/$defs/correction"}},
+        "highlights": {"type": "array", "maxItems": 20000, "items": {"$ref": "#/$defs/highlight"}}
+      },
+      "allOf": [{"if": {"properties": {"status": {"const": "editing"}}}, "then": {"required": ["editorDraft"]}}],
+      "additionalProperties": false
+    },
+    "correction": {
+      "type": "object",
+      "required": ["id", "category", "before", "after", "note", "applied", "suggestions"],
+      "properties": {
+        "id": {"type": "integer", "minimum": 1, "maximum": 1000000000},
+        "category": {"type": "string", "maxLength": 80},
+        "before": {"$ref": "#/$defs/text"},
+        "after": {"$ref": "#/$defs/text"},
+        "note": {"type": "string", "maxLength": 2000},
+        "applied": {"type": "boolean"},
+        "suggestions": {"type": "array", "maxItems": 10, "items": {"$ref": "#/$defs/text"}},
+        "start": {"type": "integer", "minimum": 0},
+        "end": {"type": "integer", "minimum": 0},
+        "reviewOnly": {"type": "boolean"},
+        "resolved": {"const": "dismissed"}
+      },
+      "dependentRequired": {"start": ["end"], "end": ["start"]},
+      "additionalProperties": false
+    },
+    "highlight": {
+      "type": "object",
+      "required": ["start", "end", "kind"],
+      "properties": {
+        "start": {"type": "integer", "minimum": 0},
+        "end": {"type": "integer", "minimum": 0},
+        "kind": {"enum": ["error", "format", "suspect", "context", "issue-pin"]},
+        "issueId": {"type": "integer", "minimum": 1}
+      },
+      "allOf": [{"if": {"properties": {"kind": {"const": "issue-pin"}}}, "then": {"required": ["issueId"]}}],
+      "additionalProperties": false
+    }
+  },
+  "$comment": "Приложение дополнительно проверяет уникальность ID документов и правок, границы фрагментов, ссылки issueId, допустимость слов словаря и общий размер компактного JSON. Неизвестные поля при импорте отбрасываются."
+}
