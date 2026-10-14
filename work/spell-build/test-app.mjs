@@ -9,7 +9,6 @@ const dictionary = scripts.length > 1 ? scripts[0] : fs.readFileSync('../../outp
 const ids = ['source','input-screen','loading-screen','result-screen','check-button','issue-list','result-text','result-editor','result-title','result-status-title','pending-badge','review-status','edit-result-button','recheck-button','finish-button','toast','char-count','toast-message','issue-count','result-count','success-summary','page-title','intro-description','demo-button','edit-button','copy-button','home-link','leave-overlay','leave-description','cancel-leave','confirm-leave','online-toggle','online-info','online-info-button','online-tooltip','online-credit','grammar-credit','loading-detail'];
 const elements = {};
 ids.push('history-panel','history-count','dictionary-count','history-storage-status','history-list','dictionary-words','save-history-button','export-history','import-history','history-file','dictionary-form','dictionary-word');
-ids.push('neural-check-button','neural-status');
 const document = {activeElement:null, body:{style:{overflow:''},appendChild(){}}, getElementById:id=>elements[id], createElement:id=>new Element(id), execCommand:()=>true};
 
 function Element(id) {

@@ -44,6 +44,10 @@ try {
 
   const missing = await fetch(base + '/missing');
   assert.equal(missing.status, 404);
+  for (const route of ['/api/neural','/api/neural/status']) {
+    assert.equal((await fetch(base + route)).status,404);
+    assert.equal((await fetch(base + route,{method:'POST',body:new URLSearchParams({text:'Тест.'})})).status,404);
+  }
   console.log('PASS local service static page, dictionary, proxy, limits and routing');
 } finally {
   server.close();

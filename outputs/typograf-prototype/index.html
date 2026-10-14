@@ -69,10 +69,6 @@
     .feature strong { display:block; font-size:15px; font-weight:680; margin-bottom:4px; }
     .feature span:last-child { display:block; font-size:13px; color:#79837a; line-height:1.4; }
     .fineprint { margin:18px 4px 0; color:#78847b; font-size:13px; line-height:1.55; }
-    .neural-review { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:16px; margin-top:18px; padding:18px 22px; border:1px solid var(--line); border-radius:14px; background:#f1f5ed; }
-    .neural-review p { flex:1 1 300px; margin:0; font-size:13px; line-height:1.6; color:#53624f; }
-    .neural-review strong { display:block; color:#2a3a21; font-size:15px; }
-    .neural-review button { white-space:normal; }
     .hidden { display:none !important; }
     .loading { padding:60px 28px 67px; text-align:center; min-height:320px; display:flex; flex-direction:column; align-items:center; justify-content:center; }
     .loader-art { position:relative; height:80px; width:80px; margin-bottom:22px; }
@@ -234,7 +230,6 @@
           <section class="result-panel" aria-labelledby="result-title"><div class="panel-head"><div class="panel-title"><span id="result-title">Текст на проверке</span><span class="pending-badge hidden" id="pending-badge"></span></div><div class="result-head-right"><span class="counter" id="result-count"></span><button class="copy" id="copy-button" type="button" aria-label="Скопировать черновик" title="Скопировать черновик"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="8" y="8" width="11" height="11" rx="1.5" stroke="currentColor" stroke-width="1.7"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2" stroke="currentColor" stroke-width="1.7"/></svg></button></div></div><div class="result-text" id="result-text" tabindex="0"></div><textarea class="result-editor hidden" id="result-editor" aria-label="Редактирование проверенного текста" spellcheck="true"></textarea><div class="review-bar"><p id="review-status" role="status">Проверьте замечания и текст.</p><div class="review-actions"><button class="secondary" id="edit-result-button" type="button">Редактировать текст</button><button class="secondary hidden" id="recheck-button" type="button">Повторно проверить</button><button class="secondary" id="save-history-button" type="button">В историю</button><button class="primary" id="finish-button" type="button" disabled>Подтвердить результат</button></div></div></section>
         </div>
         <div class="bottom-bar"><p>Проверьте смысл и авторские формулировки перед публикацией.</p><button class="secondary" id="edit-button" type="button">Изменить исходный текст</button></div>
-        <div class="neural-review"><p><strong>Нейросетевая проверка на этом Mac</strong><span id="neural-status" role="status">Для локальной модели запустите start-neural.command и откройте http://127.0.0.1:4173. Текст остаётся на компьютере; онлайн-переключатель выше работает отдельно.</span></p><button class="secondary" type="button" id="neural-check-button" disabled>Проверить нейросетью</button></div>
         <div class="online-credits"><div class="online-credit hidden" id="online-credit"><a href="https://yandex.ru/dev/speller/" target="_blank" rel="noopener noreferrer">Проверка правописания: Яндекс.Спеллер</a></div><div class="online-credit hidden" id="grammar-credit"><a href="https://languagetool.org/" target="_blank" rel="noopener noreferrer">Пунктуация и грамматика: LanguageTool</a></div></div>
       </section>
       <details class="workspace history-panel" id="history-panel">
@@ -289,8 +284,6 @@
     const onlineTooltip = document.getElementById('online-tooltip');
     const onlineCredit = document.getElementById('online-credit');
     const grammarCredit = document.getElementById('grammar-credit');
-    const neuralButton = document.getElementById('neural-check-button');
-    const neuralStatus = document.getElementById('neural-status');
     let preparedText = '';
     let currentIssues = [];
     let currentHighlights = [];
@@ -630,75 +623,6 @@
     const useLocalService = /^https?:$/.test(window.location.protocol || '');
     const spellingEndpoint = useLocalService ? '/api/spelling' : 'https://speller.yandex.net/services/spellservice.json/checkText';
     const grammarEndpoint = useLocalService ? '/api/grammar' : 'https://api.languagetool.org/v2/check';
-    const localNeuralMode = useLocalService && ['127.0.0.1','localhost'].includes(window.location.hostname);
-    let neuralController = null;
-    async function refreshNeuralStatus() {
-      if (!localNeuralMode) return;
-      const controller = new AbortController();
-      const timer = setTimeout(() => controller.abort(), 4000);
-      try {
-        const response = await fetch('/api/neural/status', {signal:controller.signal});
-        const data = response.ok ? await response.json() : null;
-        neuralStatus.textContent = data?.available
-          ? 'Локальная модель ' + data.model + '. До 8 000 символов за запуск. Правки появятся в списке для вашего выбора; текст не отправляется внешним сервисам этой кнопкой.'
-          : 'Локальная модель пока недоступна. Запустите start-neural.command. Кнопка позволяет повторить подключение.';
-      } catch { neuralStatus.textContent = 'Нет соединения с локальной моделью. Запустите start-neural.command и повторите проверку.'; }
-      finally { clearTimeout(timer); neuralButton.disabled = editingResult; }
-    }
-    function appendNeuralEdits(result, remote) {
-      if (!remote || !Array.isArray(remote.edits) || remote.edits.length > 200 || remote.local !== true) throw new Error('Некорректный ответ нейросетевой проверки.');
-      const issues = result.issues.map(item => ({...item}));
-      const highlights = result.highlights.map(item => ({...item}));
-      let added = 0;
-      const protectedRanges = [...result.text.matchAll(protectedPattern)].map(m => [m.index,m.index + m[0].length]);
-      for (const edit of remote.edits) {
-        const {start,end,before,after,category,reason} = edit || {};
-        if (!Number.isInteger(start) || !Number.isInteger(end) || start < 0 || end <= start || end > result.text.length ||
-          typeof before !== 'string' || result.text.slice(start,end) !== before || typeof after !== 'string' || !after.trim() || after === before || after.length > 1300 ||
-          !['Орфография','Пунктуация','Грамматика'].includes(category) || typeof reason !== 'string' || reason.length > 500 ||
-          protectedRanges.some(([a,b]) => start < b && end > a)) continue;
-        const duplicate = issues.some(item => !item.applied && !item.resolved && item.start === start && item.end === end && item.suggestions.includes(after));
-        if (duplicate) continue;
-        const issue = addIssue(issues,category,before,after,'Локальная нейросеть: ' + reason + ' Проверьте смысл перед применением.',false,[after]);
-        Object.assign(issue,{start,end,reviewOnly:true});
-        highlights.push({start,end,kind:'context'},{start,end:start,kind:'issue-pin',issueId:issue.id});
-        added++;
-      }
-      return {...result,issues,highlights,added};
-    }
-    async function checkWithNeural() {
-      if (neuralController) { neuralController.abort(); return; }
-      if (!localNeuralMode || !hasResult || editingResult) return;
-      const snapshot = preparedText, run = checkRun;
-      if (snapshot.length > 8000) { neuralStatus.textContent = 'Лимит локальной модели — 8 000 символов. Разделите большую статью на части.'; return; }
-      const controller = new AbortController();
-      neuralController = controller;
-      const timer = setTimeout(() => controller.abort(), 600000);
-      neuralButton.textContent = 'Отменить нейропроверку';
-      neuralStatus.textContent = 'Модель читает текст на вашем Mac. Первый запуск может занять несколько минут. Вы можете отменить проверку.';
-      try {
-        const response = await fetch('/api/neural', {method:'POST',body:new URLSearchParams({text:snapshot}),signal:controller.signal});
-        const data = await response.json();
-        if (!response.ok) throw new Error(data.error || 'Локальная нейросеть недоступна.');
-        if (run !== checkRun || !hasResult || editingResult || snapshot !== preparedText) {
-          neuralStatus.textContent = 'Текст изменился во время проверки. Запустите её снова для актуального текста.'; return;
-        }
-        const result = appendNeuralEdits({text:snapshot,issues:currentIssues,highlights:currentHighlights}, data);
-        updateResult(result.text,result.issues,result.highlights,true);
-        neuralStatus.textContent = result.added
-          ? 'Нейросеть предложила ' + result.added + ' ' + plural(result.added,['правку','правки','правок']) + '. Выберите варианты в списке замечаний. Текст пока не изменён.'
-          : 'Новых предложений нейросети нет. Это не гарантирует отсутствие ошибок — перечитайте текст.';
-        if (data.rejected) neuralStatus.textContent += ' Часть предложений отброшена: не прошла проверку соответствия исходному тексту.';
-        if (data.cpuMode) neuralStatus.textContent += ' Использован резервный режим CPU — он медленнее GPU.';
-      } catch (error) {
-        neuralStatus.textContent = controller.signal.aborted ? 'Нейропроверка остановлена. Текст сохранён без изменений.' : error.message + ' Текст сохранён без изменений.';
-      } finally {
-        clearTimeout(timer); neuralController = null;
-        neuralButton.textContent = 'Проверить нейросетью';
-        neuralButton.disabled = !localNeuralMode || editingResult;
-      }
-    }
-    neuralButton.addEventListener('click',checkWithNeural);
     let nextIssueId = 0;
     const addIssue = (issues, category, before, after, note, applied = true, suggestions = []) => {
       const issue = {id:++nextIssueId, category, before, after, note, applied, suggestions};
@@ -1301,7 +1225,6 @@
       return html + wrap(escapeHTML(value.slice(cursor)));
     }
     function syncReviewUI() {
-      neuralButton.disabled = !localNeuralMode || (editingResult && !neuralController);
       const pending = currentIssues.filter(item => !item.applied && !item.resolved).length;
       const ready = reviewed && !editingResult;
       resultTitle.textContent = ready ? 'Готовый текст' : 'Текст на проверке';
@@ -1486,7 +1409,6 @@
     });
     function startCheck() {
       if (!source.value.trim()) return;
-      if (neuralController) neuralController.abort();
       activeHistoryId = null;
       resetIntroDescription();
       hasResult = false;
@@ -1751,7 +1673,6 @@
     initializeHistory();
     updateCount();
     restoreSavedResult();
-    refreshNeuralStatus();
   </script>
 </body>
 </html>

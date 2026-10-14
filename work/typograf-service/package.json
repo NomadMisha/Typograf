@@ -2,6 +2,11 @@
   "name": "typograf-local-service",
   "private": true,
   "type": "module",
-  "engines": {"node": ">=20"},
-  "scripts": {"start": "node server.mjs", "test": "node test-service.mjs && node test-neural.mjs"}
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "start": "node server.mjs",
+    "test": "node test-service.mjs"
+  }
 }
