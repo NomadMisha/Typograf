@@ -21,6 +21,9 @@ try {
   assert.equal(page.status, 200);
   assert.ok((await page.text()).includes('Типограф'));
   assert.ok(page.headers.get('content-security-policy').includes("connect-src 'self'"));
+  const review=await fetch(base+'/editorial-review.html');
+  assert.equal(review.status,200);
+  assert.ok((await review.text()).includes('Редакторская проверка примеров'));
 
   const dictionary = await fetch(base + '/spellcheck.js');
   assert.equal(dictionary.status, 200);

@@ -1,0 +1,256 @@
+{
+  "corpusDigest": "ecfd25ce1031fdf4c3b1a0819853a84701ebb33e3a1a965ea0ee52c49cbfe7fb",
+  "humanReviewed": false,
+  "provenance": "Forty short Russian-language fragments from twenty public MDN documentation pages. Original punctuation is retained, not certified as error-free. Mutations and draft references authored by AI; no human editorial review. Development and source-disjoint holdout partitions frozen before implementation changes.",
+  "baselineCommit": "84ebb47",
+  "summary": {
+    "fragments": 20,
+    "sourceControlsUnchanged": 20,
+    "sourceControlsWithNotices": 2,
+    "introducedErrorsDetected": 20,
+    "introducedErrorsRestoredAutomatically": 7,
+    "introducedErrorsWithCorrectOption": 20,
+    "byCategory": {
+      "spelling": {
+        "cases": 7,
+        "detected": 7,
+        "restored": 0,
+        "offered": 7
+      },
+      "punctuation": {
+        "cases": 6,
+        "detected": 6,
+        "restored": 0,
+        "offered": 6
+      },
+      "typography": {
+        "cases": 7,
+        "detected": 7,
+        "restored": 7,
+        "offered": 7
+      }
+    }
+  },
+  "cases": [
+    {
+      "id": "mdn-21",
+      "split": "holdout",
+      "category": "typography",
+      "controlUnchanged": true,
+      "controlNotices": 0,
+      "restored": true,
+      "detected": true,
+      "offeredCorrectChoice": true,
+      "inputHash": "802fff129d917c4273e86f1939e84effc10f2cd150f446d7eeee6e5c309d5a62"
+    },
+    {
+      "id": "mdn-22",
+      "split": "holdout",
+      "category": "spelling",
+      "controlUnchanged": true,
+      "controlNotices": 0,
+      "restored": false,
+      "detected": true,
+      "offeredCorrectChoice": true,
+      "inputHash": "671aa9c98408085675c75b677eda6b5918d9a47caf6d6c6ac7cc1b86f607f84d"
+    },
+    {
+      "id": "mdn-23",
+      "split": "holdout",
+      "category": "punctuation",
+      "controlUnchanged": true,
+      "controlNotices": 0,
+      "restored": false,
+      "detected": true,
+      "offeredCorrectChoice": true,
+      "inputHash": "7455b6bac7feac023c8772c1ab4f12fedfabd4f029b8ecbfb80d5ddb82fc23f7"
+    },
+    {
+      "id": "mdn-24",
+      "split": "holdout",
+      "category": "typography",
+      "controlUnchanged": true,
+      "controlNotices": 2,
+      "restored": true,
+      "detected": true,
+      "offeredCorrectChoice": true,
+      "inputHash": "695b05a61c3ffb972373d1d7dd2c058cdfb3065a4d216b5db169bc8c28abe756"
+    },
+    {
+      "id": "mdn-25",
+      "split": "holdout",
+      "category": "spelling",
+      "controlUnchanged": true,
+      "controlNotices": 0,
+      "restored": false,
+      "detected": true,
+      "offeredCorrectChoice": true,
+      "inputHash": "154cb94d8c27164d59271aec10fd4ba7177b0d2ba6f1e646d16d11c5724f56bf"
+    },
+    {
+      "id": "mdn-26",
+      "split": "holdout",
+      "category": "punctuation",
+      "controlUnchanged": true,
+      "controlNotices": 0,
+      "restored": false,
+      "detected": true,
+      "offeredCorrectChoice": true,
+      "inputHash": "99b6c71c783ea0387c229ac19c69411470622e0cdd867ee07cd22a07f038836c"
+    },
+    {
+      "id": "mdn-27",
+      "split": "holdout",
+      "category": "typography",
+      "controlUnchanged": true,
+      "controlNotices": 1,
+      "restored": true,
+      "detected": true,
+      "offeredCorrectChoice": true,
+      "inputHash": "ea15a8f4d592b6ac8b6634397e7d7b626b49edc69467f1e44bcacb613492e11f"
+    },
+    {
+      "id": "mdn-28",
+      "split": "holdout",
+      "category": "spelling",
+      "controlUnchanged": true,
+      "controlNotices": 0,
+      "restored": false,
+      "detected": true,
+      "offeredCorrectChoice": true,
+      "inputHash": "36ca98c7da127026f318ebefc07212c0ec1ae44629cc18d89d91749ef1c778d5"
+    },
+    {
+      "id": "mdn-29",
+      "split": "holdout",
+      "category": "punctuation",
+      "controlUnchanged": true,
+      "controlNotices": 0,
+      "restored": false,
+      "detected": true,
+      "offeredCorrectChoice": true,
+      "inputHash": "c4e5e96dc235bd5f4c27ca603e33e0dac5b496c2a179b1173af76f1abc1ad0a0"
+    },
+    {
+      "id": "mdn-30",
+      "split": "holdout",
+      "category": "typography",
+      "controlUnchanged": true,
+      "controlNotices": 0,
+      "restored": true,
+      "detected": true,
+      "offeredCorrectChoice": true,
+      "inputHash": "efb833c2b254fe130658b023f90046cefc6122af8c39ee33aa5b4a79ac72d0db"
+    },
+    {
+      "id": "mdn-31",
+      "split": "holdout",
+      "category": "spelling",
+      "controlUnchanged": true,
+      "controlNotices": 0,
+      "restored": false,
+      "detected": true,
+      "offeredCorrectChoice": true,
+      "inputHash": "c49d6f87813430b864e9fac09f2838052de865617a4cf28cc31eeeef0e0774a0"
+    },
+    {
+      "id": "mdn-32",
+      "split": "holdout",
+      "category": "punctuation",
+      "controlUnchanged": true,
+      "controlNotices": 0,
+      "restored": false,
+      "detected": true,
+      "offeredCorrectChoice": true,
+      "inputHash": "5d398c6b8a8620bf99c2f994ac8c722675f4f4ff7f7e575d526c7807233a6e9a"
+    },
+    {
+      "id": "mdn-33",
+      "split": "holdout",
+      "category": "typography",
+      "controlUnchanged": true,
+      "controlNotices": 0,
+      "restored": true,
+      "detected": true,
+      "offeredCorrectChoice": true,
+      "inputHash": "37d851ce2c9a7c521df0777c7386fd12f79b15ad3df65e7cdb048497b4320ce0"
+    },
+    {
+      "id": "mdn-34",
+      "split": "holdout",
+      "category": "spelling",
+      "controlUnchanged": true,
+      "controlNotices": 0,
+      "restored": false,
+      "detected": true,
+      "offeredCorrectChoice": true,
+      "inputHash": "5f8ccd06f8871ab12957accc9cef1b10fa6e2cebe08c737e3d3dbd57ffd9d92f"
+    },
+    {
+      "id": "mdn-35",
+      "split": "holdout",
+      "category": "punctuation",
+      "controlUnchanged": true,
+      "controlNotices": 0,
+      "restored": false,
+      "detected": true,
+      "offeredCorrectChoice": true,
+      "inputHash": "441d38c8b4694698c22e55f929de0e2d8b525dd794b3e1081865621b440b1531"
+    },
+    {
+      "id": "mdn-36",
+      "split": "holdout",
+      "category": "typography",
+      "controlUnchanged": true,
+      "controlNotices": 0,
+      "restored": true,
+      "detected": true,
+      "offeredCorrectChoice": true,
+      "inputHash": "8577e118cc39abe169a576e55dadc0faa1a45315558bf7a08104cf376511de0b"
+    },
+    {
+      "id": "mdn-37",
+      "split": "holdout",
+      "category": "spelling",
+      "controlUnchanged": true,
+      "controlNotices": 0,
+      "restored": false,
+      "detected": true,
+      "offeredCorrectChoice": true,
+      "inputHash": "580e1adb2c1b23632a151665cd75f88196aac8187a4a1f41040e6745bd12a0be"
+    },
+    {
+      "id": "mdn-38",
+      "split": "holdout",
+      "category": "punctuation",
+      "controlUnchanged": true,
+      "controlNotices": 0,
+      "restored": false,
+      "detected": true,
+      "offeredCorrectChoice": true,
+      "inputHash": "f1540d12ba4bfe60b41ff3c431cb9a821a8a40082c114baf2e312c7bf3c11925"
+    },
+    {
+      "id": "mdn-39",
+      "split": "holdout",
+      "category": "typography",
+      "controlUnchanged": true,
+      "controlNotices": 0,
+      "restored": true,
+      "detected": true,
+      "offeredCorrectChoice": true,
+      "inputHash": "a4b8d886dee44f0010fbc0a6b9b7e64c239898f2b2c796699cf5486b37c99598"
+    },
+    {
+      "id": "mdn-40",
+      "split": "holdout",
+      "category": "spelling",
+      "controlUnchanged": true,
+      "controlNotices": 0,
+      "restored": false,
+      "detected": true,
+      "offeredCorrectChoice": true,
+      "inputHash": "bd4bda8b5e03f7f5338d241fd2cb5cbec9e880c9b2acda48dc7bc8600a4d600f"
+    }
+  ]
+}

@@ -74,6 +74,19 @@ vm.runInContext(inline, context);
 function check(input) {
   return vm.runInContext(`checkText(${JSON.stringify(input)})`, context);
 }
+// Simulate an editor explicitly accepting context-rule suggestions. Legacy
+// language examples verify selected corrections; automatic behavior is tested separately.
+function acceptContext(result) {
+  context.selectedResult=result;
+  vm.runInContext('updateResult(selectedResult.text,selectedResult.issues,selectedResult.highlights)',context);
+  for(let count=0;count<30;count++) {
+    const index=vm.runInContext('currentIssues.findIndex(i=>!i.applied && !i.resolved && i.note.startsWith("Возможная правка по контексту.") && i.suggestions.length && Number.isInteger(i.start))',context);
+    if(index<0)break;
+    assert.ok(vm.runInContext('applyChosenSuggestion(currentIssues['+index+'],currentIssues['+index+'].suggestions[0])',context));
+  }
+  return vm.runInContext('({text:preparedText,issues:currentIssues,highlights:currentHighlights})',context);
+}
+function checkAndAccept(input) { return acceptContext(check(input)); }
 function shownResult() {
   return elements['result-text'].innerHTML.replace(/<[^>]*>/g, '').replace(/&amp;|&lt;|&gt;|&quot;|&#39;/g, entity => ({'&amp;':'&','&lt;':'<','&gt;':'>','&quot;':'"','&#39;':"'"}[entity]));
 }
@@ -81,6 +94,84 @@ function test(name, fn) {
   fn();
   console.log('PASS', name);
 }
+test('Russian quotation marks, prose dash and measured numbers are formatted idempotently',()=>{
+  const input='Сервис - это "новый продукт" на 10-20 минут и 50%.';
+  const expected='Сервис — это «новый продукт» на\u00a010–20\u00a0минут и 50\u00a0%.';
+  const result=check(input);
+  assert.equal(result.text,expected);
+  assert.equal(check(result.text).text,expected);
+  assert.equal(check('Он написал: «Название “новый сервис” готово».').text,'Он написал: «Название „новый сервис“ готово».');
+});
+test('code, JSON, filenames, HTML attributes, mathematical minus and identifiers survive typography',()=>{
+  for(const input of ['Код: `"текст" - 50%`.','Данные: {"текст": "значение"}.','<code>вообщем - 50%</code>',
+    '<pre>подошол  и  упол</pre>','Файл server.mjs и .env.local.',
+    'Версия 1.2.3, адрес 127.0.0.1, дата 2026-10-14, телефон +7-999-123-45-67.',
+    'x - y = -10.','Число 1234567890.','Он сказал: "один" и "другой".']) {
+    assert.equal(check(input).text,input,input);
+  }
+  assert.equal(check('Объём 1,5 ГБ, масса -10 кг.').text,'Объём 1,5\u00a0ГБ, масса -10\u00a0кг.');
+});
+test('mixed alphabets are warned about and never silently transliterated',()=>{
+  const result=check('ВОOБЩЕМ, мoдуль готов.');
+  assert.equal(result.text,'ВОOБЩЕМ, мoдуль готов.');
+  assert.ok(result.issues.some(i=>i.before==='ВОOБЩЕМ' && !i.applied && i.suggestions.includes('В ОБЩЕМ')));
+  assert.ok(result.issues.some(i=>i.before==='мoдуль' && !i.applied && i.suggestions.includes('модуль')));
+});
+test('cached dictionary suggestions preserve the case of every occurrence',()=>{
+  const issues=check('Машна машна МАШНА.').issues.filter(i=>i.category==='Орфография');
+  assert.equal(issues.length,3);
+  assert.ok(issues[0].suggestions.every(s=>s[0]===s[0].toUpperCase()));
+  assert.ok(issues[1].suggestions.every(s=>s===s.toLowerCase()));
+  assert.ok(issues[2].suggestions.every(s=>s===s.toUpperCase()));
+});
+test('context punctuation remains pending and adjacent suggestions can be selected in either order',()=>{
+  for(const reverse of [false,true]) {
+    const result=check('Подошёл увидел как она присела на лавочку.');
+    assert.equal(result.text,'Подошёл увидел как она присела на\u00a0лавочку.');
+    assert.equal(result.issues.filter(i=>i.category==='Пунктуация' && !i.applied).length,2);
+    context.pendingContext=result;
+    vm.runInContext('updateResult(pendingContext.text,pendingContext.issues,pendingContext.highlights)',context);
+    for(let n=0;n<2;n++) {
+      const index=vm.runInContext(`currentIssues.findIndex(i=>!i.applied && i.category===punctuationLabel && i.before.startsWith(${JSON.stringify(n===0?!reverse?'Подошёл':'увидел':!reverse?'увидел':'Подошёл')}))`,context);
+      assert.ok(index>=0);
+      assert.ok(vm.runInContext(`applyChosenSuggestion(currentIssues[${index}],currentIssues[${index}].suggestions[0])`,context));
+    }
+    assert.equal(vm.runInContext('preparedText',context),'Подошёл, увидел, как она присела на\u00a0лавочку.');
+  }
+});
+test('introductory and relative proposals are deduplicated and participles are review-only',()=>{
+  assert.equal(check('Конечно всё готово.').issues.filter(i=>i.category==='Пунктуация').length,1);
+  assert.equal(check('Он сказал как есть. Потом ушёл.').issues.filter(i=>i.category==='Пунктуация').length,0);
+  assert.equal(check('Это работает только если сервис доступен.').issues.filter(i=>i.category==='Пунктуация').length,0);
+  const result=check('Значение представляющее число.');
+  assert.equal(result.text,'Значение представляющее число.');
+  assert.ok(result.issues.some(i=>i.before==='Значение представляющее' && !i.applied && i.suggestions.includes('Значение, представляющее')));
+});
+test('final-point position follows restored protected text',()=>{
+  const result=check('Код `const veryLongIdentifier = "значение";` готов');
+  const issue=result.issues.find(i=>i.before==='' && i.suggestions.includes('.'));
+  assert.equal(issue.start,result.text.length);assert.equal(issue.end,result.text.length);
+});
+test('spelling and punctuation proposals sharing context remain selectable in either order',()=>{
+  for(const spellingFirst of [true,false]) {
+    context.sharedContext=check('Машна которая приехала.');
+    vm.runInContext('updateResult(sharedContext.text,sharedContext.issues,sharedContext.highlights)',context);
+    for(const category of spellingFirst?['Орфография','Пунктуация']:['Пунктуация','Орфография']) {
+      context.chosenCategory=category;
+      const ok=vm.runInContext('(()=>{const issue=currentIssues.find(i=>!i.applied&&i.category===chosenCategory);return issue&&applyChosenSuggestion(issue,chosenCategory==="Орфография"?issue.suggestions.find(s=>s==="Машина"):issue.suggestions[0]);})()',context);
+      assert.ok(ok);
+    }
+    assert.equal(vm.runInContext('preparedText',context),'Машина, которая приехала.');
+  }
+});
+test('remote zero-length punctuation insertion is manual and protected spans stay untouched',()=>{
+  const text='Он пришёл но ушёл.';
+  context.remoteInsertion={masked:text,matches:[{offset:9,length:0,rule:{category:{id:'PUNCTUATION'}},replacements:[{value:','}]}]};
+  const result=vm.runInContext('applyGrammarMatches({text:"Он пришёл но ушёл.",issues:[],highlights:[]},remoteInsertion)',context);
+  assert.equal(result.text,text);assert.equal(result.issues.length,1);assert.equal(result.issues[0].applied,false);
+  context.protectedInsertion={masked:'      ',matches:[{offset:3,length:0,rule:{category:{id:'PUNCTUATION'}},replacements:[{value:','}]}]};
+  assert.equal(vm.runInContext('applyGrammarMatches({text:"`code`",issues:[],highlights:[]},protectedInsertion).issues.length',context),0);
+});
 test('known typo', () => {
   const result=check('Он подошол к дому.');
   assert.equal(result.text,'Он подошёл к\u00a0дому.');
@@ -119,21 +210,21 @@ test('new user example is corrected in the final text', () => {
   assert.ok(result.highlights.some(item=>item.kind==='error'));
 });
 test('vocative and relative clause commas are fixed in the user example', () => {
-  const result=check('приведи мой дорогой друг которой маячит.');
+  const result=checkAndAccept('приведи мой дорогой друг которой маячит.');
   assert.equal(result.text,'приведи, мой дорогой друг, который маячит.');
-  assert.equal(result.issues.filter(item=>item.applied).length,3);
+  assert.equal(result.issues.filter(item=>item.applied).length,2);
   assert.ok(result.issues.some(item=>item.category==='Пунктуация' && item.after==='приведи, мой дорогой друг'));
-  assert.ok(result.issues.some(item=>item.category==='Грамматика' && item.before==='которой' && item.after==='который'));
+  assert.ok(result.issues.some(item=>item.after==='друг, который'));
   assert.ok(result.highlights.some(mark=>mark.kind==='format' && result.text.slice(mark.start,mark.end)===','));
-  assert.equal(check('приведи мой дорогой друг который маячит.').text,'приведи, мой дорогой друг, который маячит.');
-  assert.equal(check('приведи, мой дорогой друг, который маячит.').text,'приведи, мой дорогой друг, который маячит.');
+  assert.equal(checkAndAccept('приведи мой дорогой друг который маячит.').text,'приведи, мой дорогой друг, который маячит.');
+  assert.equal(checkAndAccept('приведи, мой дорогой друг, который маячит.').text,'приведи, мой дорогой друг, который маячит.');
 });
 test('comma separates adjacent actions and the subordinate clause with как', () => {
-  const result=check('Подошёл увидел как она присела на\u00a0лавочку.');
+  const result=checkAndAccept('Подошёл увидел как она присела на\u00a0лавочку.');
   assert.equal(result.text,'Подошёл, увидел, как она присела на\u00a0лавочку.');
   assert.equal(result.issues.filter(item=>item.category==='Пунктуация').length,2);
   assert.ok(result.highlights.filter(item=>item.kind==='format').length>=2);
-  assert.equal(check('Она подошла заметила как он присел.').text,'Она подошла, заметила, как он присел.');
+  assert.equal(checkAndAccept('Она подошла заметила как он присел.').text,'Она подошла, заметила, как он присел.');
 });
 test('comma rules do not add duplicates or alter unrelated как', () => {
   assert.equal(check('Подошёл, увидел, как она присела.').text,'Подошёл, увидел, как она присела.');
@@ -148,16 +239,16 @@ test('action chain with an object pronoun exposes the missing comma for review',
   assert.ok(result.issues.some(item=>item.category==='Пунктуация' && !item.applied && item.reviewOnly && item.after==='открыл файл, проверил'));
 });
 test('comma is added before clear как subordinate clauses in reported and imperative phrases', () => {
-  const result=check('В статье мы рассказали как устроена проверка. «Посмотрите как это работает».');
+  const result=checkAndAccept('В статье мы рассказали как устроена проверка. «Посмотрите как это работает».');
   assert.equal(result.text,'В\u00a0статье мы рассказали, как устроена проверка. «Посмотрите, как это работает».');
   assert.equal(result.issues.filter(item=>item.category==='Пунктуация' && item.applied).length,2);
-  assert.equal(check('Мы рассказали как эксперты о проекте.').text,'Мы рассказали как эксперты о\u00a0проекте.');
-  assert.equal(check('Я рассказал как эксперт об этом.').text,'Я рассказал как эксперт об\u00a0этом.');
-  assert.equal(check('Мы расскажем как эксперты о проекте.').text,'Мы расскажем как эксперты о\u00a0проекте.');
-  assert.equal(check('Покажем как образец для команды.').text,'Покажем как образец для\u00a0команды.');
-  assert.equal(check('В статье расскажем как работает проверка.').text,'В\u00a0статье расскажем, как работает проверка.');
-  assert.equal(check('Объясним почему процесс замедлился.').text,'Объясним, почему процесс замедлился.');
-  assert.equal(check('Посмотрите как специалист на этот экран.').text,'Посмотрите как специалист на\u00a0этот экран.');
+  assert.equal(checkAndAccept('Мы рассказали как эксперты о проекте.').text,'Мы рассказали как эксперты о\u00a0проекте.');
+  assert.equal(checkAndAccept('Я рассказал как эксперт об этом.').text,'Я рассказал как эксперт об\u00a0этом.');
+  assert.equal(checkAndAccept('Мы расскажем как эксперты о проекте.').text,'Мы расскажем как эксперты о\u00a0проекте.');
+  assert.equal(checkAndAccept('Покажем как образец для команды.').text,'Покажем как образец для\u00a0команды.');
+  assert.equal(checkAndAccept('В статье расскажем как работает проверка.').text,'В\u00a0статье расскажем, как работает проверка.');
+  assert.equal(checkAndAccept('Объясним почему процесс замедлился.').text,'Объясним, почему процесс замедлился.');
+  assert.equal(checkAndAccept('Посмотрите как специалист на этот экран.').text,'Посмотрите как специалист на\u00a0этот экран.');
 });
 test('deep Russian grammar: как means manner, comparison, or subordinate clause', () => {
   const expected = [
@@ -174,7 +265,7 @@ test('deep Russian grammar: как means manner, comparison, or subordinate clau
     ['Как только редактор закончил, статья ушла автору.','Как только редактор закончил, статья ушла автору.'],
     ['Казнить нельзя помиловать.','Казнить нельзя помиловать.']
   ];
-  for (const [input, output] of expected) assert.equal(check(input).text.replace(/\u00a0/g,' '),output,input);
+  for (const [input, output] of expected) assert.equal(checkAndAccept(input).text.replace(/\u00a0/g,' '),output,input);
 });
 test('deep Russian text: particles, homophones, abbreviations, and protected spans survive', () => {
   const expected = [
@@ -204,18 +295,18 @@ test('common stable expressions are preserved and their safe comma rule is appli
     ['Лучше поздно чем никогда.','Лучше поздно, чем никогда.'],
     ['Лучше поздно, чем никогда.','Лучше поздно, чем никогда.']
   ];
-  for (const [input, output] of expected) assert.equal(check(input).text.replace(/\u00a0/g,' '),output,input);
-  const fixed=check('Лучше поздно чем никогда.');
+  for (const [input, output] of expected) assert.equal(checkAndAccept(input).text.replace(/\u00a0/g,' '),output,input);
+  const fixed=checkAndAccept('Лучше поздно чем никогда.');
   assert.ok(fixed.issues.some(item=>item.category==='Пунктуация' && item.applied && item.after==='Лучше поздно, чем'));
-  assert.equal(check('Лучше поздно, чем никогда.').issues.filter(item=>item.category==='Пунктуация' && item.applied).length,0);
+  assert.equal(checkAndAccept('Лучше поздно, чем никогда.').issues.filter(item=>item.category==='Пунктуация' && item.applied).length,0);
 });
 test('deeply flawed draft fixes multiple common typo, agreement, comma, and duration errors', () => {
   const input='Вообщем, редактор подошол к автору, а Таня ответила что орфаграфия храмает, пунктуацыя тоже а запетые потерялись. В течении недели команда проверяла тексты. В этой статье раскажем как работает проверка.';
-  const result=check(input);
+  const result=checkAndAccept(input);
   assert.equal(result.text.replace(/\u00a0/g,' '),'В общем, редактор подошёл к автору, а Таня ответила, что орфография храмает, пунктуацыя тоже а запятые потерялись. В течение недели команда проверяла тексты. В этой статье расскажем, как работает проверка.');
-  assert.ok(result.issues.some(item=>item.category==='Грамматика' && item.before==='В течении' && item.applied));
+  assert.ok(result.issues.some(item=>item.category==='Грамматика' && item.before.replace(/\u00a0/g,' ')==='В течении' && item.applied));
   assert.ok(result.issues.some(item=>item.category==='Орфография' && item.before==='запетые' && item.applied));
-  assert.equal(check('Лодка плыла в течении реки.').text.replace(/\u00a0/g,' '),'Лодка плыла в течении реки.');
+  assert.equal(checkAndAccept('Лодка плыла в течении реки.').text.replace(/\u00a0/g,' '),'Лодка плыла в течении реки.');
 });
 test('past-tense corrections respect an explicit feminine subject', () => {
   const result=check('Таня подошол к автору. Она ушол домой.');
@@ -264,11 +355,11 @@ test('deep Russian syntax: nested clauses, direct speech, ellipsis, and coordina
   for (const input of expected) assert.equal(check(input).text.replace(/\u00a0/g,' '),input,input);
   assert.equal(
     check('Он не заметил, что в примере «Он сказал как это работает» запятая пропущена.').text,
-    'Он не заметил, что в примере «Он сказал, как это работает» запятая пропущена.'
+    'Он не заметил, что в примере «Он сказал как это работает» запятая пропущена.'
   );
   assert.equal(
     check('«Он сказал как это работает» — в этом примере перед «как» нужна запятая.').text.replace(/\u00a0/g,' '),
-    '«Он сказал, как это работает» — в этом примере перед «как» нужна запятая.'
+    '«Он сказал как это работает» — в этом примере перед «как» нужна запятая.'
   );
 });
 test('ambiguous action chain waits for editor review', () => {
@@ -313,7 +404,7 @@ test('punctuation corpus: representative edits and sentences left intact', () =>
     ['После проверки мы исправили текст.','После проверки мы исправили текст.'],
     ['Он подошёл к двери и увидел результат.','Он подошёл к двери и увидел результат.']
   ];
-  for(const [input,expected] of cases) assert.equal(check(input).text.replace(/\u00a0/g,' '),expected,input);
+  for(const [input,expected] of cases) assert.equal(checkAndAccept(input).text.replace(/\u00a0/g,' '),expected,input);
   console.log('  Corpus:',cases.length,'representative fragments');
 });
 test('uncertain introductory comma is flagged without changing the text', () => {
@@ -358,16 +449,16 @@ test('punctuation change beyond one inserted comma waits for review', () => {
   assert.equal(result.text,base.text);
   assert.ok(result.issues.some(item=>item.category==='Пунктуация' && item.reviewOnly && !item.applied));
 });
-test('automatic LanguageTool comma removes a duplicate local punctuation warning', () => {
+test('LanguageTool proposal is deduplicated against the same local insertion', () => {
   const base=check('Пунктуация тоже а некоторые слова потерялись.');
   assert.ok(base.issues.some(item=>!item.applied && item.before==='тоже а'));
   const phrase='тоже а';
   context.duplicateBase=base;
   context.duplicateRemote={masked:base.text,matches:[{offset:base.text.indexOf(phrase),length:phrase.length,rule:{category:{id:'PUNCTUATION'}},replacements:[{value:'тоже, а'}]}]};
   const result=vm.runInContext('applyGrammarMatches(duplicateBase,duplicateRemote)',context);
-  assert.equal(result.text,'Пунктуация тоже, а некоторые слова потерялись.');
+  assert.equal(result.text,'Пунктуация тоже а некоторые слова потерялись.');
   assert.equal(result.issues.filter(item=>item.before==='тоже а').length,1);
-  assert.ok(result.issues.some(item=>item.before==='тоже а' && item.applied));
+  assert.ok(result.issues.some(item=>item.before==='тоже а' && !item.applied));
 });
 test('online close candidate requires approval and valid words stay untouched', () => {
   const result=vm.runInContext('checkText("Это машна. Он пал.", {}, [{code:1,pos:4,len:5,word:"машна",s:["машина"]},{code:1,pos:14,len:3,word:"пал",s:["пол"]}])',context);
@@ -742,12 +833,14 @@ const grammarTimer=timers.findLast(item=>!item.canceled && item.ms===150);
 grammarTimer.canceled=true;
 await grammarTimer.fn();
 assert.equal(grammarRequests,1);
+assert.equal(shownResult(),'Он подошёл к\u00a0окну посмотрел на\u00a0улицу.');
+assert.ok(vm.runInContext('currentIssues.some(item => item.onlinePunctuation && !item.applied && item.reviewOnly)',context));
+assert.ok(vm.runInContext('applyChosenSuggestion(currentIssues.find(i=>i.onlinePunctuation),currentIssues.find(i=>i.onlinePunctuation).suggestions[0])',context));
 assert.equal(shownResult(),'Он подошёл к\u00a0окну, посмотрел на\u00a0улицу.');
-assert.ok(vm.runInContext('currentIssues.some(item => item.onlinePunctuation && item.applied && !item.reviewOnly)',context));
 assert.ok(!elements['grammar-credit'].classList.contains('hidden'));
 assert.ok(!elements['online-credit'].classList.contains('hidden'));
 assert.ok(elements['issue-list'].innerHTML.includes('LanguageTool'));
-console.log('PASS combined switch auto-applies a single comma-only LanguageTool correction and credits both sources');
+console.log('PASS combined switch proposes a comma-only LanguageTool correction and editor applies it');
 
 context.fetch=async (url, options) => {
   if (url.includes('speller.yandex.net')) return {ok:true,json:async()=>[]};
@@ -789,13 +882,13 @@ context.twoRemote={masked:twoBase.text,matches:[
   {offset:twoBase.text.indexOf(secondPhrase),length:secondPhrase.length,rule:{category:{id:'PUNCTUATION'}},replacements:[{value:'вышла из дома, заметила'}]}
 ]};
 const twoFixed=vm.runInContext('applyGrammarMatches(twoBase,twoRemote)',context);
-assert.equal(twoFixed.text,'Он подошёл к\u00a0окну, посмотрел. Она вышла из\u00a0дома, заметила.');
-assert.equal(twoFixed.issues.filter(item=>item.note.includes('LanguageTool') && item.applied).length,2);
+assert.equal(twoFixed.text,'Он подошёл к\u00a0окну посмотрел. Она вышла из\u00a0дома заметила.');
+assert.equal(twoFixed.issues.filter(item=>item.note.includes('LanguageTool') && !item.applied).length,2);
 assert.ok(twoFixed.issues.every(issue=>twoFixed.highlights.some(pin=>pin.kind==='issue-pin' && pin.issueId===issue.id)));
 context.twoFixed=twoFixed;
-vm.runInContext('updateResult(twoFixed.text, twoFixed.issues, twoFixed.highlights)',context);
+vm.runInContext('updateResult(twoFixed.text, twoFixed.issues, twoFixed.highlights); for(let n=0;n<2;n++){const issue=currentIssues.find(i=>i.onlinePunctuation && !i.applied);applyChosenSuggestion(issue,issue.suggestions[0]);}',context);
 assert.equal(vm.runInContext('preparedText',context),'Он подошёл к\u00a0окну, посмотрел. Она вышла из\u00a0дома, заметила.');
-console.log('PASS two safe LanguageTool comma corrections keep offsets and no-break spaces');
+console.log('PASS two editor-selected LanguageTool corrections keep offsets and no-break spaces');
 
 const twoPendingBase=check('Он подошёл к окну посмотрел. Она вышла из дома заметила.');
 context.twoPendingBase=twoPendingBase;
@@ -825,7 +918,8 @@ elements['check-button'].fire('click');
 const offlineGrammarTimer=timers.findLast(item=>!item.canceled && item.ms===150);
 offlineGrammarTimer.canceled=true;
 await offlineGrammarTimer.fn();
-assert.equal(shownResult(),'Подошёл, увидел, как она присела на\u00a0лавочку.');
+assert.equal(shownResult(),'Подошёл увидел как она присела на\u00a0лавочку.');
+assert.equal(vm.runInContext('currentIssues.filter(i=>i.category===punctuationLabel && !i.applied).length',context),2);
 assert.ok(elements['success-summary'].textContent.includes('Онлайн-проверка пунктуации недоступна'));
 console.log('PASS punctuation service failure keeps local corrections');
 
@@ -845,12 +939,14 @@ elements['check-button'].fire('click');
 const combinedTimer=timers.findLast(item=>!item.canceled && item.ms===150);
 combinedTimer.canceled=true;
 await combinedTimer.fn();
+assert.equal(shownResult(),'Он пришёл к\u00a0окну посмотрел на\u00a0улицу.');
+assert.ok(vm.runInContext('currentIssues.some(item => item.onlinePunctuation && !item.applied && item.reviewOnly)',context));
+assert.ok(vm.runInContext('applyChosenSuggestion(currentIssues.find(i=>i.onlinePunctuation),currentIssues.find(i=>i.onlinePunctuation).suggestions[0])',context));
 assert.equal(shownResult(),'Он пришёл к\u00a0окну, посмотрел на\u00a0улицу.');
-assert.ok(vm.runInContext('currentIssues.some(item => item.onlinePunctuation && item.applied && !item.reviewOnly)',context));
 assert.equal(services.length,2);
 assert.ok(!elements['online-credit'].classList.contains('hidden'));
 assert.ok(!elements['grammar-credit'].classList.contains('hidden'));
-console.log('PASS spelling and automatic comma correction compose safely');
+console.log('PASS automatic spelling and editor-selected punctuation compose safely');
 
 elements['online-toggle'].checked=false;
 elements['online-toggle'].fire('change');
@@ -1045,7 +1141,7 @@ test('fixed expressions and river-flow context are not damaged by broad comma or
     'Измерения в течении этой реки завершены.','Щас проверю файл.']) {
     assert.equal(check(input).text.replace(/\u00a0/g,' '),input,input);
   }
-  assert.equal(check('Я знаю что попало в отчёт.').text.replace(/\u00a0/g,' '),'Я знаю, что попало в отчёт.');
+  assert.equal(checkAndAccept('Я знаю что попало в отчёт.').text.replace(/\u00a0/g,' '),'Я знаю, что попало в отчёт.');
   assert.equal(check('В течении следующей недели он придёт.').text.replace(/\u00a0/g,' '),'В течение следующей недели он придёт.');
 });
 test('a title is not silently punctuated and the editor can accept an end-of-text insertion', () => {
@@ -1242,9 +1338,9 @@ if (process.env.LIVE_SPELL === '1') {
   const grammar=await vm.runInContext('getGrammarMatches('+JSON.stringify(sentence)+')',context);
   context.liveGrammar=grammar;
   const corrected=vm.runInContext('applyGrammarMatches({text:'+JSON.stringify(sentence)+',issues:[],highlights:[]},liveGrammar)',context);
-  assert.equal(corrected.text,'Сегодня я пошёл в магазин, но ничего не купил.');
-  assert.ok(corrected.issues.some(item=>item.category==='Пунктуация' && item.applied && item.before.includes('но')));
-  console.log('PASS live LanguageTool safe comma correction is applied');
+  assert.equal(corrected.text,sentence);
+  assert.ok(corrected.issues.some(item=>item.category==='Пунктуация' && !item.applied && item.before.includes('но')));
+  console.log('PASS live LanguageTool comma correction requires editor selection');
   const contextSentence='Когда загрузка закончится появится результат.';
   const contextMatches=await vm.runInContext('getGrammarMatches('+JSON.stringify(contextSentence)+')',context);
   context.liveContextMatches=contextMatches;

@@ -53,10 +53,42 @@
       }
     }
   },
+  "technicalDiagnostics": {
+    "fragments": 40,
+    "sourceControlsUnchanged": 40,
+    "sourceControlsWithNotices": 2,
+    "introducedErrorsDetected": 40,
+    "introducedErrorsRestoredAutomatically": 13,
+    "introducedErrorsWithCorrectOption": 38,
+    "byCategory": {
+      "spelling": {
+        "cases": 14,
+        "detected": 14,
+        "restored": 0,
+        "offered": 12
+      },
+      "punctuation": {
+        "cases": 13,
+        "detected": 13,
+        "restored": 0,
+        "offered": 13
+      },
+      "typography": {
+        "cases": 13,
+        "detected": 13,
+        "restored": 13,
+        "offered": 13
+      }
+    },
+    "humanReviewed": false,
+    "regressed": [],
+    "passed": true
+  },
   "criteria": [
     "Ни одной ложной автоматической правки в регрессионных фрагментах.",
     "Все намеренно внесённые ошибки исправлены или отмечены.",
-    "Не менее 100 проверенных редактором черновиков, без ложных правок и незамеченных ошибок."
+    "Ни одной новой автоматической правки публичных контролей и ни одного ухудшения обнаружения по сравнению с зафиксированным состоянием.",
+    "Не менее 100 проверенных редактором примеров, без ложных правок и незамеченных ошибок."
   ],
   "note": "Прохождение этого ограниченного набора не гарантирует 100% правильность любого нового текста."
 }

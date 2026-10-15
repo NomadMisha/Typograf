@@ -42,8 +42,8 @@ export function createTypografServer({
         reply(res, 200, JSON.stringify({status:'ok', languageToolConfigured:!!languageToolUrl}));
         return;
       }
-      if (req.method === 'GET' && ['/', '/index.html', '/spellcheck.js'].includes(pathname)) {
-        const name = pathname === '/spellcheck.js' ? 'spellcheck.js' : 'index.html';
+      if (req.method === 'GET' && ['/', '/index.html', '/spellcheck.js', '/editorial-review.html'].includes(pathname)) {
+        const name = pathname === '/spellcheck.js' ? 'spellcheck.js' : pathname === '/editorial-review.html' ? 'editorial-review.html' : 'index.html';
         const contents = await readFile(path.join(frontendDir, name));
         reply(res, 200, contents, name.endsWith('.js') ? 'text/javascript; charset=utf-8' : 'text/html; charset=utf-8');
         return;

@@ -1,0 +1,256 @@
+{
+  "corpusDigest": "ecfd25ce1031fdf4c3b1a0819853a84701ebb33e3a1a965ea0ee52c49cbfe7fb",
+  "humanReviewed": false,
+  "provenance": "Forty short Russian-language fragments from twenty public MDN documentation pages. Original punctuation is retained, not certified as error-free. Mutations and draft references authored by AI; no human editorial review. Development and source-disjoint holdout partitions frozen before implementation changes.",
+  "baselineCommit": "84ebb47",
+  "summary": {
+    "fragments": 20,
+    "sourceControlsUnchanged": 20,
+    "sourceControlsWithNotices": 0,
+    "introducedErrorsDetected": 20,
+    "introducedErrorsRestoredAutomatically": 6,
+    "introducedErrorsWithCorrectOption": 18,
+    "byCategory": {
+      "spelling": {
+        "cases": 7,
+        "detected": 7,
+        "restored": 0,
+        "offered": 5
+      },
+      "punctuation": {
+        "cases": 7,
+        "detected": 7,
+        "restored": 0,
+        "offered": 7
+      },
+      "typography": {
+        "cases": 6,
+        "detected": 6,
+        "restored": 6,
+        "offered": 6
+      }
+    }
+  },
+  "cases": [
+    {
+      "id": "mdn-01",
+      "split": "development",
+      "category": "spelling",
+      "controlUnchanged": true,
+      "controlNotices": 0,
+      "restored": false,
+      "detected": true,
+      "offeredCorrectChoice": false,
+      "inputHash": "dd2572136386a80af3740f7d8f3b94b40c9e0e737cb7fa8ed96f29fdd7f1617c"
+    },
+    {
+      "id": "mdn-02",
+      "split": "development",
+      "category": "punctuation",
+      "controlUnchanged": true,
+      "controlNotices": 0,
+      "restored": false,
+      "detected": true,
+      "offeredCorrectChoice": true,
+      "inputHash": "6dda5d94637d8c6a4bd2ce3e0e77345280f6e671267494b5cd7bf924926e716b"
+    },
+    {
+      "id": "mdn-03",
+      "split": "development",
+      "category": "typography",
+      "controlUnchanged": true,
+      "controlNotices": 0,
+      "restored": true,
+      "detected": true,
+      "offeredCorrectChoice": true,
+      "inputHash": "e31f2f64b9b00b3602a6cc897571cfb8965134d821151c0b8cd26a24a7cba706"
+    },
+    {
+      "id": "mdn-04",
+      "split": "development",
+      "category": "spelling",
+      "controlUnchanged": true,
+      "controlNotices": 0,
+      "restored": false,
+      "detected": true,
+      "offeredCorrectChoice": true,
+      "inputHash": "0605ab4736831365cfc5f1a283ca9f23c9f4431dd3ed13ac538eb3a5e3421198"
+    },
+    {
+      "id": "mdn-05",
+      "split": "development",
+      "category": "punctuation",
+      "controlUnchanged": true,
+      "controlNotices": 0,
+      "restored": false,
+      "detected": true,
+      "offeredCorrectChoice": true,
+      "inputHash": "4932ec0943ec249dc5963978fb0517b4db9793b45c899550504c066eed4e84c6"
+    },
+    {
+      "id": "mdn-06",
+      "split": "development",
+      "category": "typography",
+      "controlUnchanged": true,
+      "controlNotices": 0,
+      "restored": true,
+      "detected": true,
+      "offeredCorrectChoice": true,
+      "inputHash": "67005c78685f8330e5c675b189ffbb3bc1e94d48ade9447430ff8cb0a0801b63"
+    },
+    {
+      "id": "mdn-07",
+      "split": "development",
+      "category": "spelling",
+      "controlUnchanged": true,
+      "controlNotices": 0,
+      "restored": false,
+      "detected": true,
+      "offeredCorrectChoice": true,
+      "inputHash": "3d85aae9a721417fa7c6bafd711d33baba6682fae17dbb788ed9005c4dc6e255"
+    },
+    {
+      "id": "mdn-08",
+      "split": "development",
+      "category": "punctuation",
+      "controlUnchanged": true,
+      "controlNotices": 0,
+      "restored": false,
+      "detected": true,
+      "offeredCorrectChoice": true,
+      "inputHash": "842a16fe4ae28bcf4a730e8f353531a331af876a8677df52962943661fe33d07"
+    },
+    {
+      "id": "mdn-09",
+      "split": "development",
+      "category": "typography",
+      "controlUnchanged": true,
+      "controlNotices": 0,
+      "restored": true,
+      "detected": true,
+      "offeredCorrectChoice": true,
+      "inputHash": "689472d297ced118f30cc060bfd29840e4c1f119b961cf3e69752d67ed8ce228"
+    },
+    {
+      "id": "mdn-10",
+      "split": "development",
+      "category": "spelling",
+      "controlUnchanged": true,
+      "controlNotices": 0,
+      "restored": false,
+      "detected": true,
+      "offeredCorrectChoice": true,
+      "inputHash": "8639636cadebdcedafe7b79b02104d57d245bbd2e3e58841c49ca35b3fed8cfb"
+    },
+    {
+      "id": "mdn-11",
+      "split": "development",
+      "category": "punctuation",
+      "controlUnchanged": true,
+      "controlNotices": 0,
+      "restored": false,
+      "detected": true,
+      "offeredCorrectChoice": true,
+      "inputHash": "d7af94ad0256f952043092950fafbd1c3a6eb33683bf35663967fbdaa6dddd14"
+    },
+    {
+      "id": "mdn-12",
+      "split": "development",
+      "category": "typography",
+      "controlUnchanged": true,
+      "controlNotices": 0,
+      "restored": true,
+      "detected": true,
+      "offeredCorrectChoice": true,
+      "inputHash": "61734114eff1b18f4efaf9a54ac2e93a5ea01ed41688d94768a3e4d84cc8d529"
+    },
+    {
+      "id": "mdn-13",
+      "split": "development",
+      "category": "spelling",
+      "controlUnchanged": true,
+      "controlNotices": 0,
+      "restored": false,
+      "detected": true,
+      "offeredCorrectChoice": false,
+      "inputHash": "c488a8fd1e63ec32c7c659e476f46f469a28ea25b58a8e19df4adb26e98f4a53"
+    },
+    {
+      "id": "mdn-14",
+      "split": "development",
+      "category": "punctuation",
+      "controlUnchanged": true,
+      "controlNotices": 0,
+      "restored": false,
+      "detected": true,
+      "offeredCorrectChoice": true,
+      "inputHash": "ba3379b9479b57e12f2e8c314e55456b73ec92da3e0ddc5ffe4dd21154c9239d"
+    },
+    {
+      "id": "mdn-15",
+      "split": "development",
+      "category": "typography",
+      "controlUnchanged": true,
+      "controlNotices": 0,
+      "restored": true,
+      "detected": true,
+      "offeredCorrectChoice": true,
+      "inputHash": "c7237b73d181035ccd955513265ef9139117846c2e4ddf578e31f70e7c743343"
+    },
+    {
+      "id": "mdn-16",
+      "split": "development",
+      "category": "spelling",
+      "controlUnchanged": true,
+      "controlNotices": 0,
+      "restored": false,
+      "detected": true,
+      "offeredCorrectChoice": true,
+      "inputHash": "b3368655247812ee80381281c1b48dceb231781838e7b0bb613886d8325d514f"
+    },
+    {
+      "id": "mdn-17",
+      "split": "development",
+      "category": "punctuation",
+      "controlUnchanged": true,
+      "controlNotices": 0,
+      "restored": false,
+      "detected": true,
+      "offeredCorrectChoice": true,
+      "inputHash": "7566224b1d7dd4f7d4546ceca7b247d64c120ba4eb9bbaad2e7eef8422ac1696"
+    },
+    {
+      "id": "mdn-18",
+      "split": "development",
+      "category": "typography",
+      "controlUnchanged": true,
+      "controlNotices": 0,
+      "restored": true,
+      "detected": true,
+      "offeredCorrectChoice": true,
+      "inputHash": "d1dc604e4897ef924e7c95e72810ab25267fa5e7696ccdfc03cc4f920087e848"
+    },
+    {
+      "id": "mdn-19",
+      "split": "development",
+      "category": "spelling",
+      "controlUnchanged": true,
+      "controlNotices": 0,
+      "restored": false,
+      "detected": true,
+      "offeredCorrectChoice": true,
+      "inputHash": "5a4491c92d369b2ee603957192e9cf14bab12ffef7a4d62ae733a03199b1cb62"
+    },
+    {
+      "id": "mdn-20",
+      "split": "development",
+      "category": "punctuation",
+      "controlUnchanged": true,
+      "controlNotices": 0,
+      "restored": false,
+      "detected": true,
+      "offeredCorrectChoice": true,
+      "inputHash": "96c719a2e559cb466bcb73c541451d116950f9f9a79947027b38ed2d9a92e3e8"
+    }
+  ]
+}

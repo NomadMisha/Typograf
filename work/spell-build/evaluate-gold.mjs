@@ -26,8 +26,10 @@ export function evaluateGold(file = 'gold-cases.json') {
     const targetsDetected = item.expectedIssues?.length > 0 && item.expectedIssues.every(target => result.issues.some(issue =>
       issue.category === target.category && normalized(issue.before).toLowerCase() === normalized(target.before).toLowerCase()));
     const clean = original === expected;
+    const offeredCorrectChoice = result.issues.some(issue=>!issue.applied && Number.isInteger(issue.start) && Number.isInteger(issue.end) &&
+      issue.suggestions.some(choice=>normalized(result.text.slice(0,issue.start)+choice+result.text.slice(issue.end))===expected));
     return {id:item.id, category:item.category, clean, exact:actual === expected,
-      detected:actual === expected || targetsDetected,
+      detected:actual === expected || targetsDetected || offeredCorrectChoice,
       falseChange:clean && actual !== expected,
       pending, actual};
   });
@@ -43,4 +45,4 @@ export function evaluateGold(file = 'gold-cases.json') {
     byCategory};
 }
 
-if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) console.log(JSON.stringify(evaluateGold(), null, 2));
+if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) console.log(JSON.stringify(evaluateGold(process.argv[2]), null, 2));

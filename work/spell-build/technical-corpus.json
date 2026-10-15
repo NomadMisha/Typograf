@@ -1,0 +1,492 @@
+{
+  "schemaVersion": 1,
+  "createdAt": "2026-10-14",
+  "provenance": "Forty short Russian-language fragments from twenty public MDN documentation pages. Original punctuation is retained, not certified as error-free. Mutations and draft references authored by AI; no human editorial review. Development and source-disjoint holdout partitions frozen before implementation changes.",
+  "reviewedBy": null,
+  "attribution": "MDN contributors. Excerpts adapted for diagnostics; source pages linked per fragment.",
+  "license": "CC-BY-SA-2.5 (MDN prose); original test code licensed separately.",
+  "sourceLicense": "https://developer.mozilla.org/en-US/docs/MDN/Writing_guidelines/Attrib_copyright_license",
+  "baselineCommit": "84ebb47",
+  "fragments": [
+    {
+      "id": "mdn-01",
+      "source": "https://developer.mozilla.org/ru/docs/Web/JavaScript/Reference/Global_Objects/Array",
+      "text": "Ни размер JavaScript-массива, ни типы его элементов не являются фиксированными.",
+      "split": "development",
+      "mutation": {
+        "category": "spelling",
+        "start": 3,
+        "before": "размер",
+        "after": "разер"
+      }
+    },
+    {
+      "id": "mdn-02",
+      "source": "https://developer.mozilla.org/ru/docs/Web/JavaScript/Reference/Global_Objects/Array",
+      "text": "Это не особенность массивов или их свойств.",
+      "split": "development",
+      "mutation": {
+        "category": "punctuation",
+        "start": 42,
+        "before": ".",
+        "after": ""
+      }
+    },
+    {
+      "id": "mdn-03",
+      "source": "https://developer.mozilla.org/ru/docs/Web/JavaScript/Reference/Global_Objects/Promise",
+      "text": "Объект Promise используется для отложенных и асинхронных вычислений.",
+      "split": "development",
+      "mutation": {
+        "category": "typography",
+        "start": 6,
+        "before": " ",
+        "after": "  "
+      }
+    },
+    {
+      "id": "mdn-04",
+      "source": "https://developer.mozilla.org/ru/docs/Web/JavaScript/Reference/Global_Objects/Promise",
+      "text": "Обратите внимание, что возвращаемое значение функции executor игнорируется.",
+      "split": "development",
+      "mutation": {
+        "category": "spelling",
+        "start": 0,
+        "before": "Обратите",
+        "after": "Обраите"
+      }
+    },
+    {
+      "id": "mdn-05",
+      "source": "https://developer.mozilla.org/ru/docs/Web/JavaScript/Reference/Global_Objects/Set",
+      "text": "Вы можете перебирать элементы набора в порядке вставки.",
+      "split": "development",
+      "mutation": {
+        "category": "punctuation",
+        "start": 54,
+        "before": ".",
+        "after": ""
+      }
+    },
+    {
+      "id": "mdn-06",
+      "source": "https://developer.mozilla.org/ru/docs/Web/JavaScript/Reference/Global_Objects/Set",
+      "text": "Создаёт новый объект Set.",
+      "split": "development",
+      "mutation": {
+        "category": "typography",
+        "start": 7,
+        "before": " ",
+        "after": "  "
+      }
+    },
+    {
+      "id": "mdn-07",
+      "source": "https://developer.mozilla.org/ru/docs/Web/JavaScript/Reference/Global_Objects/Date",
+      "text": "Объекты Date в JavaScript представляют момент времени в независимом от платформы формате.",
+      "split": "development",
+      "mutation": {
+        "category": "spelling",
+        "start": 0,
+        "before": "Объекты",
+        "after": "Объкты"
+      }
+    },
+    {
+      "id": "mdn-08",
+      "source": "https://developer.mozilla.org/ru/docs/Web/JavaScript/Reference/Global_Objects/Date",
+      "text": "Целое значение, представляющее день месяца.",
+      "split": "development",
+      "mutation": {
+        "category": "punctuation",
+        "start": 14,
+        "before": ",",
+        "after": ""
+      }
+    },
+    {
+      "id": "mdn-09",
+      "source": "https://developer.mozilla.org/ru/docs/Web/JavaScript/Reference/Global_Objects/JSON",
+      "text": "Смотрите также статью JSON: подмножество JavaScript, которым он не является (на английском).",
+      "split": "development",
+      "mutation": {
+        "category": "typography",
+        "start": 8,
+        "before": " ",
+        "after": "  "
+      }
+    },
+    {
+      "id": "mdn-10",
+      "source": "https://developer.mozilla.org/ru/docs/Web/JavaScript/Reference/Global_Objects/JSON",
+      "text": "Объект JSON не поддерживается старыми браузерами.",
+      "split": "development",
+      "mutation": {
+        "category": "spelling",
+        "start": 0,
+        "before": "Объект",
+        "after": "Объкт"
+      }
+    },
+    {
+      "id": "mdn-11",
+      "source": "https://developer.mozilla.org/ru/docs/Web/JavaScript/Reference/Global_Objects/Math",
+      "text": "Math не работает с числами типа BigInt.",
+      "split": "development",
+      "mutation": {
+        "category": "punctuation",
+        "start": 38,
+        "before": ".",
+        "after": ""
+      }
+    },
+    {
+      "id": "mdn-12",
+      "source": "https://developer.mozilla.org/ru/docs/Web/JavaScript/Reference/Global_Objects/Math",
+      "text": "Все свойства и методы объекта Math являются статическими.",
+      "split": "development",
+      "mutation": {
+        "category": "typography",
+        "start": 3,
+        "before": " ",
+        "after": "  "
+      }
+    },
+    {
+      "id": "mdn-13",
+      "source": "https://developer.mozilla.org/ru/docs/Web/JavaScript/Reference/Global_Objects/String",
+      "text": "Строки полезны для хранения данных, которые можно представить в текстовой форме.",
+      "split": "development",
+      "mutation": {
+        "category": "spelling",
+        "start": 0,
+        "before": "Строки",
+        "after": "Стрки"
+      }
+    },
+    {
+      "id": "mdn-14",
+      "source": "https://developer.mozilla.org/ru/docs/Web/JavaScript/Reference/Global_Objects/String",
+      "text": "Существует два способа добраться до конкретного символа в строке.",
+      "split": "development",
+      "mutation": {
+        "category": "punctuation",
+        "start": 64,
+        "before": ".",
+        "after": ""
+      }
+    },
+    {
+      "id": "mdn-15",
+      "source": "https://developer.mozilla.org/ru/docs/Web/JavaScript/Reference/Global_Objects/Number",
+      "text": "Конструктор Number содержит константы и методы для работы с числами.",
+      "split": "development",
+      "mutation": {
+        "category": "typography",
+        "start": 11,
+        "before": " ",
+        "after": "  "
+      }
+    },
+    {
+      "id": "mdn-16",
+      "source": "https://developer.mozilla.org/ru/docs/Web/JavaScript/Reference/Global_Objects/Number",
+      "text": "Нет отдельного типа для представления целых значений.",
+      "split": "development",
+      "mutation": {
+        "category": "spelling",
+        "start": 4,
+        "before": "отдельного",
+        "after": "отделного"
+      }
+    },
+    {
+      "id": "mdn-17",
+      "source": "https://developer.mozilla.org/ru/docs/Web/JavaScript/Reference/Global_Objects/Boolean",
+      "text": "Объект Boolean представляет значения истинности: true или false.",
+      "split": "development",
+      "mutation": {
+        "category": "punctuation",
+        "start": 63,
+        "before": ".",
+        "after": ""
+      }
+    },
+    {
+      "id": "mdn-18",
+      "source": "https://developer.mozilla.org/ru/docs/Web/JavaScript/Reference/Global_Objects/Boolean",
+      "text": "Не используйте объект Boolean вместо примитива логического типа.",
+      "split": "development",
+      "mutation": {
+        "category": "typography",
+        "start": 2,
+        "before": " ",
+        "after": "  "
+      }
+    },
+    {
+      "id": "mdn-19",
+      "source": "https://developer.mozilla.org/ru/docs/Web/JavaScript/Reference/Global_Objects/Object",
+      "text": "Тип Object представляет один из типов данных JavaScript.",
+      "split": "development",
+      "mutation": {
+        "category": "spelling",
+        "start": 11,
+        "before": "представляет",
+        "after": "предствляет"
+      }
+    },
+    {
+      "id": "mdn-20",
+      "source": "https://developer.mozilla.org/ru/docs/Web/JavaScript/Reference/Global_Objects/Object",
+      "text": "Создаёт новый объект с указанными объектом прототипа и свойствами.",
+      "split": "development",
+      "mutation": {
+        "category": "punctuation",
+        "start": 65,
+        "before": ".",
+        "after": ""
+      }
+    },
+    {
+      "id": "mdn-21",
+      "source": "https://developer.mozilla.org/ru/docs/Web/JavaScript/Reference/Global_Objects/Function",
+      "text": "На самом деле каждая JavaScript-функция является объектом Function.",
+      "split": "holdout",
+      "mutation": {
+        "category": "typography",
+        "start": 2,
+        "before": " ",
+        "after": "  "
+      }
+    },
+    {
+      "id": "mdn-22",
+      "source": "https://developer.mozilla.org/ru/docs/Web/JavaScript/Reference/Global_Objects/Function",
+      "text": "Вызов конструктора напрямую позволяет создавать функции программным путём.",
+      "split": "holdout",
+      "mutation": {
+        "category": "spelling",
+        "start": 6,
+        "before": "конструктора",
+        "after": "констрктора"
+      }
+    },
+    {
+      "id": "mdn-23",
+      "source": "https://developer.mozilla.org/ru/docs/Web/JavaScript/Reference/Global_Objects/RegExp",
+      "text": "Конструктор RegExp создаёт объект регулярного выражения для сопоставления текста с шаблоном.",
+      "split": "holdout",
+      "mutation": {
+        "category": "punctuation",
+        "start": 91,
+        "before": ".",
+        "after": ""
+      }
+    },
+    {
+      "id": "mdn-24",
+      "source": "https://developer.mozilla.org/ru/docs/Web/JavaScript/Reference/Global_Objects/RegExp",
+      "text": "Используйте литеральную запись если регулярное выражение будет неизменным.",
+      "split": "holdout",
+      "mutation": {
+        "category": "typography",
+        "start": 11,
+        "before": " ",
+        "after": "  "
+      }
+    },
+    {
+      "id": "mdn-25",
+      "source": "https://developer.mozilla.org/ru/docs/Web/JavaScript/Reference/Global_Objects/Error",
+      "text": "Экземпляры объекта Error выбрасываются при возникновении ошибок во время выполнения.",
+      "split": "holdout",
+      "mutation": {
+        "category": "spelling",
+        "start": 0,
+        "before": "Экземпляры",
+        "after": "Экземляры"
+      }
+    },
+    {
+      "id": "mdn-26",
+      "source": "https://developer.mozilla.org/ru/docs/Web/JavaScript/Reference/Global_Objects/Error",
+      "text": "Смотрите ниже стандартные встроенные типы ошибок.",
+      "split": "holdout",
+      "mutation": {
+        "category": "punctuation",
+        "start": 48,
+        "before": ".",
+        "after": ""
+      }
+    },
+    {
+      "id": "mdn-27",
+      "source": "https://developer.mozilla.org/ru/docs/Web/API/Document",
+      "text": "Каждая веб-страница, которая загружается в браузер, имеет свой собственный объект document.",
+      "split": "holdout",
+      "mutation": {
+        "category": "typography",
+        "start": 6,
+        "before": " ",
+        "after": "  "
+      }
+    },
+    {
+      "id": "mdn-28",
+      "source": "https://developer.mozilla.org/ru/docs/Web/API/Document",
+      "text": "Обеспечивает доступ ко всем элементам с идентификаторами (id).",
+      "split": "holdout",
+      "mutation": {
+        "category": "spelling",
+        "start": 0,
+        "before": "Обеспечивает",
+        "after": "Обеспеивает"
+      }
+    },
+    {
+      "id": "mdn-29",
+      "source": "https://developer.mozilla.org/ru/docs/Web/API/Window",
+      "text": "Окно текущего документа может быть получено с помощью свойства document.defaultView.",
+      "split": "holdout",
+      "mutation": {
+        "category": "punctuation",
+        "start": 83,
+        "before": ".",
+        "after": ""
+      }
+    },
+    {
+      "id": "mdn-30",
+      "source": "https://developer.mozilla.org/ru/docs/Web/API/Window",
+      "text": "Данный интерфейс наследует свойства из интерфейса EventTarget.",
+      "split": "holdout",
+      "mutation": {
+        "category": "typography",
+        "start": 6,
+        "before": " ",
+        "after": "  "
+      }
+    },
+    {
+      "id": "mdn-31",
+      "source": "https://developer.mozilla.org/ru/docs/Web/API/Fetch_API",
+      "text": "Чтобы создать запрос и получить данные, используется метод GlobalFetch.fetch.",
+      "split": "holdout",
+      "mutation": {
+        "category": "spelling",
+        "start": 6,
+        "before": "создать",
+        "after": "созать"
+      }
+    },
+    {
+      "id": "mdn-32",
+      "source": "https://developer.mozilla.org/ru/docs/Web/API/Fetch_API",
+      "text": "Это позволяет использовать его практически в любом контексте для получения данных.",
+      "split": "holdout",
+      "mutation": {
+        "category": "punctuation",
+        "start": 81,
+        "before": ".",
+        "after": ""
+      }
+    },
+    {
+      "id": "mdn-33",
+      "source": "https://developer.mozilla.org/ru/docs/Web/API/URL",
+      "text": "Интерфейс URL используется для разбора, создания, нормализации и кодирования URL-адресов.",
+      "split": "holdout",
+      "mutation": {
+        "category": "typography",
+        "start": 9,
+        "before": " ",
+        "after": "  "
+      }
+    },
+    {
+      "id": "mdn-34",
+      "source": "https://developer.mozilla.org/ru/docs/Web/API/URL",
+      "text": "Содержит схему (протокол), доменное имя и номера порта.",
+      "split": "holdout",
+      "mutation": {
+        "category": "spelling",
+        "start": 0,
+        "before": "Содержит",
+        "after": "Содежит"
+      }
+    },
+    {
+      "id": "mdn-35",
+      "source": "https://developer.mozilla.org/ru/docs/Web/API/Storage",
+      "text": "Возвращает число, представляющее количество элементов в объекте Storage.",
+      "split": "holdout",
+      "mutation": {
+        "category": "punctuation",
+        "start": 16,
+        "before": ",",
+        "after": ""
+      }
+    },
+    {
+      "id": "mdn-36",
+      "source": "https://developer.mozilla.org/ru/docs/Web/API/Storage",
+      "text": "Приняв имя ключа, метод вернёт для него значение.",
+      "split": "holdout",
+      "mutation": {
+        "category": "typography",
+        "start": 6,
+        "before": " ",
+        "after": "  "
+      }
+    },
+    {
+      "id": "mdn-37",
+      "source": "https://developer.mozilla.org/ru/docs/Web/CSS/margin",
+      "text": "CSS свойство margin определяет внешний отступ на всех четырёх сторонах элемента.",
+      "split": "holdout",
+      "mutation": {
+        "category": "spelling",
+        "start": 4,
+        "before": "свойство",
+        "after": "свойтво"
+      }
+    },
+    {
+      "id": "mdn-38",
+      "source": "https://developer.mozilla.org/ru/docs/Web/CSS/margin",
+      "text": "Браузер выбирает подходящее значение для использования.",
+      "split": "holdout",
+      "mutation": {
+        "category": "punctuation",
+        "start": 54,
+        "before": ".",
+        "after": ""
+      }
+    },
+    {
+      "id": "mdn-39",
+      "source": "https://developer.mozilla.org/ru/docs/Web/CSS/padding",
+      "text": "Область отступов это пространство между содержанием элемента и его границей.",
+      "split": "holdout",
+      "mutation": {
+        "category": "typography",
+        "start": 7,
+        "before": " ",
+        "after": "  "
+      }
+    },
+    {
+      "id": "mdn-40",
+      "source": "https://developer.mozilla.org/ru/docs/Web/CSS/padding",
+      "text": "Отрицательные значения не допускаются.",
+      "split": "holdout",
+      "mutation": {
+        "category": "spelling",
+        "start": 0,
+        "before": "Отрицательные",
+        "after": "Отрицаельные"
+      }
+    }
+  ]
+}

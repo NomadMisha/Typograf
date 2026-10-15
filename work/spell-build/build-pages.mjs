@@ -16,4 +16,5 @@ const published = html
 fs.mkdirSync(docs, { recursive: true });
 fs.writeFileSync(new URL('index.html', docs), published);
 fs.writeFileSync(new URL('.nojekyll', docs), '');
+fs.copyFileSync(new URL('outputs/typograf-prototype/editorial-review.html',root),new URL('editorial-review.html',docs));
 console.log(`Built ${fileURLToPath(new URL('index.html', docs))} (${Buffer.byteLength(published)} bytes)`);

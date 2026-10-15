@@ -214,9 +214,9 @@
         <div class="feature-row" aria-label="Что проверяет Типограф">
           <div class="feature"><span class="feature-icon" aria-hidden="true">Аа</span><div><strong>Орфография</strong><span>Локальный словарь и онлайн-проверка</span></div></div>
           <div class="feature"><span class="feature-icon" aria-hidden="true">,;</span><div><strong>Пунктуация</strong><span>Локальные правила и онлайн-проверка по выбору</span></div></div>
-          <div class="feature"><span class="feature-icon" aria-hidden="true">↳</span><div><strong>Висячие предлоги</strong><span>Неразрывные пробелы после коротких слов</span></div></div>
+          <div class="feature"><span class="feature-icon" aria-hidden="true">↳</span><div><strong>Типографика</strong><span>Кавычки, тире и висячие предлоги</span></div></div>
         </div>
-        <p class="fineprint">Неоднозначные слова и словарные подсказки требуют вашего выбора. Проверенные опечатки исправляются автоматически.</p>
+        <p class="fineprint">Пробелы, оформление и проверенные опечатки исправляются автоматически. Контекстные запятые и неоднозначные слова предлагаются на выбор; их можно оставить без изменения.</p>
       </section>
 
       <section id="loading-screen" class="workspace hidden" aria-live="polite" aria-label="Проверка текста">
@@ -610,7 +610,7 @@
     ]);
     const ambiguousSpelling = new Map([['крипис', ['крепись', 'кризис']]]);
     const spellingKeys = new Set([...spelling.map(([wrong]) => wrong), ...ambiguousSpelling.keys()]);
-    const protectedPattern = /(```[\s\S]*?```|~~~[\s\S]*?~~~|<pre\b[^>]*>[\s\S]*?<\/pre>|<code\b[^>]*>[\s\S]*?<\/code>|`[^`\n]*`|(?:https?:\/\/|mailto:|www\.)[^\s<>()]+|[A-Za-zА-Яа-яЁё0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}|[A-Za-zА-Яа-яЁё0-9]+(?:_[A-Za-zА-Яа-яЁё0-9]+)+|[A-Za-zА-Яа-яЁё0-9_-]+\.(?:json|js|ts|jsx|tsx|py|html|css|md|yaml|yml|sql|txt)(?![A-Za-z0-9]))/gi;
+    const protectedPattern = /(\{[^\n{}]*\}|(?<![\p{L}\p{N}])\.(?:env(?:\.[A-Za-z0-9_-]+)?|gitignore|npmrc)(?![\p{L}\p{N}])|```[\s\S]*?```|~~~[\s\S]*?~~~|<pre\b[^>]*>[\s\S]*?<\/pre>|<code\b[^>]*>[\s\S]*?<\/code>|`[^`\n]*`|(?:https?:\/\/|mailto:|www\.)[^\s<>()]+|[A-Za-zА-Яа-яЁё0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}|[A-Za-zА-Яа-яЁё0-9]+(?:_[A-Za-zА-Яа-яЁё0-9]+)+|[A-Za-zА-Яа-яЁё0-9_-]+\.(?:json|js|mjs|cjs|ts|jsx|tsx|py|html|css|md|yaml|yml|sql|txt|csv|xml)(?![A-Za-z0-9])|<[^>\n]+>)/giu;
     let dictionarySpell;
     function getDictionarySpell() {
       if (!dictionarySpell) {
@@ -681,116 +681,44 @@
       } finally { clearTimeout(timeout); }
     }
 
+    function replacementChange(before, after, start = 0) {
+      let prefix = 0, suffix = 0;
+      while (prefix < Math.min(before.length, after.length) && before[prefix] === after[prefix]) prefix++;
+      while (suffix < Math.min(before.length, after.length) - prefix && before[before.length - 1 - suffix] === after[after.length - 1 - suffix]) suffix++;
+      return {start:start + prefix, end:start + before.length - suffix, replacement:after.slice(prefix, after.length - suffix)};
+    }
     function applyGrammarMatches(result, remote) {
-      const {text, issues} = result;
+      const {text} = result;
+      const issues = result.issues.map(item => ({...item}));
       const highlights = result.highlights.map(mark => ({...mark}));
-      const edits = [];
-      const pending = [];
-      let lastEnd = 0;
-      const letters = value => value.replace(/[^\p{L}\p{N}]/gu, '');
+      const protectedRanges = [...text.matchAll(protectedPattern)].map(m => [m.index,m.index + m[0].length]);
+      const words = value => JSON.stringify(value.match(/[\p{L}\p{N}]+/gu) || []);
       const marks = value => value.replace(/[\p{L}\p{N}\s]/gu, '');
-      const isSingleCommaInsertion = (before, after) => {
-        const oldMarks = marks(before), newMarks = marks(after);
-        if (newMarks.length !== oldMarks.length + 1) return false;
-        for (let index = 0; index < newMarks.length; index++) {
-          if (newMarks[index] === ',' && newMarks.slice(0, index) + newMarks.slice(index + 1) === oldMarks) return true;
-        }
-        return false;
-      };
       const prepositions = new Set(['в','во','на','к','ко','с','со','у','о','об','обо','от','до','из','за','по','под','над','при','без','для','про']);
-      const restorePrepositions = value => value.replace(/(?<![\p{L}])([А-Яа-яЁё]{1,4})[ \t]+(?=[А-Яа-яЁё])/gu, (found, word) => prepositions.has(word.toLowerCase()) ? word + '\u00a0' : found);
-      const removeResolvedLocalWarning = (before, after) => {
-        const duplicateIds = new Set(issues.filter(issue => issue.category === punctuationLabel && !issue.applied && issue.before === before && (issue.after === after || issue.suggestions.includes(after))).map(issue => issue.id));
-        if (!duplicateIds.size) return;
-        const pinStarts = new Set(highlights.filter(mark => mark.kind === 'issue-pin' && duplicateIds.has(mark.issueId)).map(mark => mark.start));
-        for (const id of duplicateIds) {
-          const index = issues.findIndex(issue => issue.id === id);
-          if (index >= 0) issues.splice(index, 1);
-        }
-        for (let index = highlights.length - 1; index >= 0; index--) {
-          const mark = highlights[index];
-          if (mark.kind === 'issue-pin' && duplicateIds.has(mark.issueId)) highlights.splice(index, 1);
-          else if (mark.kind === 'context' && pinStarts.has(mark.start) && mark.end - mark.start === before.length) highlights.splice(index, 1);
-        }
-      };
-      for (const match of [...remote.matches].sort((a, b) => a.offset - b.offset)) {
-        const category = match.rule?.category?.id;
-        if (!['PUNCTUATION', 'GRAMMAR'].includes(category) || !Number.isInteger(match.offset) || !Number.isInteger(match.length) || match.length <= 0) continue;
+      const restoreSpaces = value => value.replace(/(?<![\p{L}])([А-Яа-яЁё]{1,4})[ \t]+(?=[А-Яа-яЁё])/gu, (found, word) => prepositions.has(word.toLowerCase()) ? word + '\u00a0' : found);
+      for (const match of [...remote.matches].sort((a,b)=>a.offset-b.offset)) {
+        const kind = match.rule?.category?.id;
+        if (!['PUNCTUATION','GRAMMAR'].includes(kind) || !Number.isInteger(match.offset) || !Number.isInteger(match.length) || match.length < 0) continue;
         const start = match.offset, end = start + match.length;
-        if (start < lastEnd || end > text.length) continue;
-        const before = text.slice(start, end);
-        if (before !== remote.masked.slice(start, end)) continue;
-        const candidates = [...new Set((match.replacements || []).map(item => typeof item.value === 'string' ? restorePrepositions(item.value) : '').filter(value => value && value !== before && value.length <= 180))].slice(0, 3);
-        if (category === 'GRAMMAR') {
-          pending.push({start, end, before, candidates, category:'Грамматика', reviewOnly:true,
-            note:'LanguageTool заметил возможную грамматическую ошибку. Проверьте контекст, затем выберите вариант или оставьте текст без изменения.'});
-          lastEnd = end;
-          continue;
-        }
-        const punctuationCandidates = candidates.filter(value => letters(value) === letters(before) && marks(value) !== marks(before));
-        const commaCandidates = punctuationCandidates.filter(value => isSingleCommaInsertion(before, value));
-        if (punctuationCandidates.length === 1 && commaCandidates.length === 1) {
-          removeResolvedLocalWarning(before, commaCandidates[0]);
-          edits.push({start, end, before, after:commaCandidates[0]});
-        } else if (punctuationCandidates.length) {
-          pending.push({start, end, before, candidates:punctuationCandidates, category:punctuationLabel,
-            reviewOnly:true, note:'LanguageTool предлагает несколько вариантов пунктуации. Проверьте контекст и выберите подходящий.'});
-        }
-        lastEnd = end;
+        if (start < 0 || end > text.length || protectedRanges.some(([a,b]) => start === end ? start >= a && start < b : start < b && end > a)) continue;
+        const before = text.slice(start,end);
+        if (before !== remote.masked.slice(start,end)) continue;
+        const candidates = [...new Set((match.replacements || []).map(item => typeof item.value === 'string' ? restoreSpaces(item.value) : '').filter(value => value && value !== before && value.length <= 180))].slice(0,3)
+          .filter(value => kind !== 'PUNCTUATION' || (words(value) === words(before) && marks(value) !== marks(before)));
+        if (!candidates.length && kind === 'PUNCTUATION') continue;
+        const category = kind === 'PUNCTUATION' ? punctuationLabel : 'Грамматика';
+        const duplicated = candidates.length && candidates.every(choice => {
+          const proposed = replacementChange(before,choice,start);
+          return issues.some(issue => issue.category === category && !issue.applied && !issue.resolved && Number.isInteger(issue.start) &&
+            issue.suggestions.some(existing => JSON.stringify(replacementChange(issue.before,existing,issue.start)) === JSON.stringify(proposed)));
+        });
+        if (duplicated) continue;
+        const issue = addIssue(issues,category,before,candidates.join(' / '),
+          'LanguageTool: возможная ' + (kind === 'PUNCTUATION' ? 'пунктуационная' : 'грамматическая') + ' правка. Проверьте контекст и выберите вариант или оставьте как есть.',false,candidates);
+        Object.assign(issue,{reviewOnly:true,onlinePunctuation:kind === 'PUNCTUATION',start,end});
+        highlights.push({start,end:start,kind:'issue-pin',issueId:issue.id},{start,end,kind:'context'});
       }
-      let next = '', cursor = 0, delta = 0;
-      for (const edit of edits) {
-        next += text.slice(cursor, edit.start);
-        edit.newStart = next.length;
-        next += edit.after;
-        edit.newEnd = next.length;
-        let prefix = 0, suffix = 0;
-        while (prefix < Math.min(edit.before.length, edit.after.length) && edit.before[prefix] === edit.after[prefix]) prefix++;
-        while (suffix < Math.min(edit.before.length, edit.after.length) - prefix && edit.before[edit.before.length - 1 - suffix] === edit.after[edit.after.length - 1 - suffix]) suffix++;
-        edit.prefix = prefix;
-        edit.suffix = suffix;
-        delta += edit.after.length - edit.before.length;
-        edit.deltaAfter = delta;
-        cursor = edit.end;
-        const issue = addIssue(issues, punctuationLabel, edit.before, edit.after, 'LanguageTool предложил добавить одну запятую; слова и остальные знаки не менялись. Проверьте правку в контексте.', true, [edit.after]);
-        Object.assign(issue, {onlinePunctuation:true, start:edit.newStart + edit.prefix, end:edit.newEnd - edit.suffix});
-        edit.issueId = issue.id;
-      }
-      next += text.slice(cursor);
-      function mapPoint(position, edge) {
-        let lo = 0, hi = edits.length;
-        while (lo < hi) {
-          const mid = (lo + hi) >> 1;
-          if (edits[mid].end <= position) lo = mid + 1; else hi = mid;
-        }
-        const previousDelta = lo ? edits[lo - 1].deltaAfter : 0;
-        const edit = edits[lo];
-        if (!edit || position < edit.start) return position + previousDelta;
-        if (position <= edit.start + edit.prefix) return edit.newStart + position - edit.start;
-        if (position >= edit.end - edit.suffix) return edit.newEnd - (edit.end - position);
-        return edge === 'start' ? edit.newStart + edit.prefix : edit.newEnd - edit.suffix;
-      }
-      for (const mark of highlights) {
-        mark.start = mapPoint(mark.start, 'start');
-        mark.end = mapPoint(mark.end, 'end');
-      }
-      for (const issue of issues) if (issue.onlinePunctuation) {
-        issue.start = mapPoint(issue.start, 'start');
-        issue.end = mapPoint(issue.end, 'end');
-      }
-      for (const edit of edits) {
-        highlights.push({start:edit.newStart + edit.prefix, end:edit.newEnd - edit.suffix, kind:'format'});
-        highlights.push({start:edit.newStart + edit.prefix, end:edit.newStart + edit.prefix, kind:'issue-pin', issueId:edit.issueId});
-      }
-      for (const item of pending) {
-        const start = mapPoint(item.start, 'start'), end = mapPoint(item.end, 'end');
-        if (next.slice(start, end) !== item.before) continue;
-        const issue = addIssue(issues, item.category, item.before, item.candidates.join(' / '), item.note, false, item.candidates);
-        Object.assign(issue, {reviewOnly:item.reviewOnly, onlinePunctuation:item.category === punctuationLabel, start, end});
-        highlights.push({start, end:start, kind:'issue-pin', issueId:issue.id});
-        highlights.push({start, end, kind:'context'});
-      }
-      return {text:next, issues, highlights};
+      return {text,issues,highlights};
     }
 
     function checkText(input, accepted = {}, remoteMatches = []) {
@@ -804,6 +732,20 @@
           const offset = args[args.length - 2];
           const issueStart = issues.length;
           const after = replacer(...args);
+          if (kind === 'review' && after !== before) {
+            for (const issue of issues.slice(issueStart)) {
+              Object.assign(issue,{before,after,applied:false,reviewOnly:true,suggestions:[after]});
+              const explanation = issue.note.replace(/^Добавлена запятая/,'Предлагается запятая')
+                .replace(/^Обращение отделено/,'Обращение предлагается отделить')
+                .replace(/^Придаточная часть отделена/,'Придаточную часть предлагается отделить')
+                .replace(/^Разделены однородные действия/,'Предлагается разделить однородные действия')
+                .replace(/^Придаточная часть с «как» отделена/,'Придаточную часть с «как» предлагается отделить');
+              issue.note = 'Возможная правка по контексту. ' + explanation + ' Примените вариант, только если он соответствует смыслу.';
+              highlights.push({start:offset,end:offset,kind:'issue-pin',issueId:issue.id});
+            }
+            highlights.push({start:offset,end:offset + before.length,kind:'context'});
+            return before;
+          }
           const pins = [];
           for (const issue of issues.slice(issueStart)) {
             const leading = before.match(/^[\s(«„]+/u)?.[0].length || 0;
@@ -845,6 +787,10 @@
           mark.start = mapPoint(mark.start, 'start');
           mark.end = mapPoint(mark.end, 'end');
         }
+        for (const issue of issues) if (!issue.applied && Number.isInteger(issue.start)) {
+          issue.start = mapPoint(issue.start,'start');
+          issue.end = mapPoint(issue.end,'end');
+        }
         if (kind) for (const edit of edits) {
           const [start, end] = markRange ? markRange(edit) : [0, edit.after.length];
           highlights.push({start:edit.newStart + start, end:edit.newStart + end, kind});
@@ -870,7 +816,7 @@
         });
       }
       function fixedExpressionWithoutComma(verb, connector, rest) {
-        const tail = rest.trimStart();
+        const tail = rest.replace(/\u00a0/g,' ').trimStart().split(/(?<=[.!?])\s+|\n/)[0];
         if (connector.toLowerCase() === 'что') {
           return /^(?:угодно|к[ \t]+чему)(?![\p{L}])/iu.test(tail) || /^попало[.!?]*$/iu.test(tail);
         }
@@ -891,7 +837,7 @@
         const found = text.slice(item.pos,item.pos + item.len);
         if (found !== item.word || spellingKeys.has(found.toLowerCase()) || isAllowedWord(found.toLowerCase()) || getDictionarySpell().correct(found.toLowerCase())) continue;
         const candidates = Array.isArray(item.s) ? item.s.filter(value => typeof value === 'string' && /^[А-Яа-яЁё-]+$/u.test(value) && value.toLowerCase() !== found.toLowerCase()).slice(0,3) : [];
-        if (candidates.length) remoteSuggestions.set(found.toLowerCase(),candidates.map(value => preserveCase(found,value)));
+        if (candidates.length) remoteSuggestions.set(found.toLowerCase(),candidates);
       }
       const protectedFragments = [];
       let markerStart = '\uE000';
@@ -936,27 +882,21 @@
         addIssue(issues, 'Грамматика', 'на пал', 'на пол', 'После «упал на» здесь нужно слово «пол».');
         return found.slice(0, -3) + 'пол';
       }, edit => [edit.after.length - 'пол'.length, edit.after.length]);
-      replaceTracked(/(^|[.!?][ \t]+)(приведи)([ \t]+)(мой)([ \t]+)(дорогой)([ \t]+)(друг)(?=[ \t]+котор(?:ой|ый)[ \t]+маячит)/gimu, 'format', (found, prefix, verb, gap1, possessive, gap2, adjective, gap3, noun) => {
-        addIssue(issues, punctuationLabel, verb + ' ' + possessive + ' ' + adjective + ' ' + noun, verb + ', ' + possessive + ' ' + adjective + ' ' + noun, 'Обращение отделено запятой.');
-        return prefix + verb + ',' + gap1 + possessive + gap2 + adjective + gap3 + noun;
-      }, edit => [edit.after.indexOf(','), edit.after.indexOf(',') + 1]);
-      replaceTracked(/(?<![\p{L}])(друг)([ \t]+)который(?=[ \t]+маячит)/giu, 'format', (found, noun, gap) => {
-        addIssue(issues, punctuationLabel, 'друг который', 'друг, который', 'Придаточная часть отделена запятой.');
-        return noun + ',' + gap + 'который';
-      }, edit => [edit.after.indexOf(','), edit.after.indexOf(',') + 1]);
-      replaceTracked(/(?<![\p{L}])(друг)([ \t]+)которой(?=[ \t]+маячит)/giu, 'format', (found, noun, gap) => {
-        addIssue(issues, 'Грамматика', 'которой', 'который', 'Местоимение согласовано со словом «друг».');
-        addIssue(issues, punctuationLabel, 'друг которой', 'друг, который', 'Придаточная часть отделена запятой.');
-        return noun + ',' + gap + 'который';
-      }, edit => [edit.after.indexOf(','), edit.after.indexOf(',') + 1]);
-      for (const match of text.matchAll(/(?<![\p{L}])друг,[ \t]+(который)(?=[ \t]+маячит)/giu)) {
-        highlights.push({start:match.index + match[0].lastIndexOf('который'), end:match.index + match[0].lastIndexOf('который') + 'который'.length, kind:'error'});
-      }
+      const lookalikes = {A:'А',a:'а',B:'В',C:'С',c:'с',E:'Е',e:'е',H:'Н',K:'К',k:'к',M:'М',m:'м',O:'О',o:'о',P:'Р',p:'р',T:'Т',X:'Х',x:'х',Y:'У',y:'у'};
+      replaceTracked(/[A-Za-zА-Яа-яЁё]{3,}/gu, null, (found,offset) => {
+        if (!/[A-Za-z]/.test(found) || !/[А-Яа-яЁё]/.test(found) || personalWords.has(found.toLowerCase())) return found;
+        const converted = found.replace(/[A-Za-z]/g,letter => lookalikes[letter] || letter);
+        const known = spelling.find(([wrong])=>wrong === converted.toLowerCase());
+        const suggestions = known ? [preserveCase(found,known[1])] : !/[A-Za-z]/.test(converted) && getDictionarySpell().correct(converted.toLowerCase()) ? [preserveCase(found,converted)] : [];
+        addIssue(issues,'Орфография',found,suggestions.join(', '),'В слове смешаны кириллица и латиница. Это может быть опечатка или техническое имя; проверьте написание.',false,suggestions);
+        highlights.push({start:offset,end:offset + found.length,kind:'suspect'}); return found;
+      });
 
       const dictionary = getDictionarySpell();
       const suggestionCache = new Map();
       replaceTracked(/[А-Яа-яЁё]+(?:-[А-Яа-яЁё]+)*/gu, 'error', (found, offset) => {
         const word = found.toLowerCase();
+        if (/[A-Za-z]/.test(text[offset - 1] || '') || /[A-Za-z]/.test(text[offset + found.length] || '')) return found;
         if (word.length < 3 || isAllowedWord(word) || dictionary.correct(word)) return found;
         if (accepted[word]) {
           const fixed = preserveCase(found, accepted[word]);
@@ -964,8 +904,8 @@
           return fixed;
         }
         if (!suggestionCache.has(word)) suggestionCache.set(word,
-          (ambiguousSpelling.get(word) || remoteSuggestions.get(word) || dictionary.suggest(word).filter(item => /^[А-Яа-яЁё-]+$/.test(item)).slice(0,3)).map(item => preserveCase(found,item)));
-        const suggestions = suggestionCache.get(word);
+          (ambiguousSpelling.get(word) || remoteSuggestions.get(word) || dictionary.suggest(word).filter(item => /^[А-Яа-яЁё-]+$/.test(item)).slice(0,3)));
+        const suggestions = suggestionCache.get(word).map(item => preserveCase(found,item));
         addIssue(issues, 'Орфография', found, suggestions.join(', '), ambiguousSpelling.has(word)
           ? 'Возможны разные слова с разным смыслом. Выберите вариант по контексту.'
           : 'Слово не найдено в словаре. Предложение требует подтверждения редактора; оно не заменяет слово автоматически.', false, suggestions);
@@ -974,88 +914,143 @@
       });
 
       replaceTracked(/[ \t]{2,}/g, 'format', found => {
-        addIssue(issues, punctuationLabel, 'несколько пробелов', 'один пробел', 'Убраны лишние пробелы.');
+        addIssue(issues, 'Типографика', 'несколько пробелов', 'один пробел', 'Убраны лишние пробелы.');
         return ' ';
       });
       replaceTracked(/[ \t]+([,.;:!?])/g, 'format', (found, mark) => {
-        addIssue(issues, punctuationLabel, 'пробел перед «' + mark + '»', mark, 'Перед знаком препинания пробел не нужен.');
+        addIssue(issues, 'Типографика', 'пробел перед «' + mark + '»', mark, 'Перед знаком препинания пробел не нужен.');
         return mark;
       });
       replaceTracked(/([,;:!?])(?=[А-Яа-яЁё])/g, 'format', mark => {
-        addIssue(issues, punctuationLabel, mark + 'слово', mark + ' слово', 'После знака препинания добавлен пробел.');
+        addIssue(issues, 'Типографика', mark + 'слово', mark + ' слово', 'После знака препинания добавлен пробел.');
         return mark + ' ';
       });
-      suggestPunctuation(/(?<![\p{L}])([А-Яа-яЁё]{2,})([ \t]+)(который|которая|которое|которые|если|чтобы|но|а|однако|потому что)(?=\s)/giu,
-        (found, last, space, word) => last + ',' + space + word,
+      // Formatting changes preserve letters and numbers; technical spans are masked.
+      const quoteLines = [];
+      let lineOffset = 0;
+      for (const line of text.split('\n')) {
+        quoteLines.push({start:lineOffset,text:line,ascii:(line.match(/"/g) || []).length,curly:(line.match(/[“”]/g) || []).length});
+        lineOffset += line.length + 1;
+      }
+      replaceTracked(/"([^"\n]+)"|“([^“”\n]+)”/gu, 'format', (found, ascii, curly, offset) => {
+        const content = ascii === undefined ? curly : ascii;
+        let low=0,high=quoteLines.length;
+        while(low+1<high){const mid=(low+high)>>1;if(quoteLines[mid].start<=offset)low=mid;else high=mid;}
+        const lineInfo=quoteLines[low];
+        if (!/[А-Яа-яЁё]/u.test(content) || (ascii !== undefined ? lineInfo.ascii !== 2 : lineInfo.curly !== 2)) return found;
+        const prefix = lineInfo.text.slice(0,offset-lineInfo.start);
+        const nested = (prefix.match(/«/g) || []).length > (prefix.match(/»/g) || []).length;
+        const after = (nested ? '„' : '«') + content.trim() + (nested ? '“' : '»');
+        addIssue(issues,'Типографика',found,after,'Парные кавычки оформлены для русского текста; вложенная пара имеет другой рисунок.');
+        return after;
+      });
+      replaceTracked(/(?<![\p{L}])([А-Яа-яЁё]{2,})[ \t]+-[ \t]+(?=[А-Яа-яЁё]{2,}(?![\p{L}]))/gu, 'format', (found,word) => {
+        const after = word + ' — ';
+        addIssue(issues,'Типографика',found,after,'Дефис между словами с пробелами заменён на тире.'); return after;
+      });
+      const units = '(?:руб\\.|₽|€|\\$|%|°C|°С|ГБ|МБ|КБ|кг|км|см|мм|мс|минут(?:а|ы)?|час(?:а|ов)?|секунд(?:а|ы)?)';
+      replaceTracked(new RegExp('(?<![\\p{L}\\p{N}.,/-])(\\d+)-(\\d+)(?=[ \\t\\u00a0]+' + units + '(?![\\p{L}]))','gu'), 'format', (found,a,b) => {
+        const after = a + '–' + b;
+        addIssue(issues,'Типографика',found,after,'В числовом диапазоне перед единицей измерения использовано короткое тире.'); return after;
+      });
+      replaceTracked(new RegExp('(?<![\\p{L}\\p{N}.,])(\\d+(?:[.,]\\d+)?)(?:[ \\t]+|(?=' + units + '))(' + units + ')(?![\\p{L}])','gu'), 'format', (found,digit,unit) => {
+        const after = digit + '\u00a0' + unit;
+        addIssue(issues,'Типографика',found,after,'Число связано с единицей измерения неразрывным пробелом.'); return after;
+      });
+
+      const prepositions = new Set(['в','во','на','к','ко','с','со','у','о','об','обо','от','до','из','за','по','под','над','при','без','для','про']);
+      replaceTracked(/(^|[\s(«„])([А-Яа-яЁё]{1,4})([ \t]+)([A-Za-zА-Яа-яЁё0-9][A-Za-zА-Яа-яЁё0-9-]*)/gmu, 'format', (found, prefix, word, gap, next) => {
+        if (!prepositions.has(word.toLowerCase())) return found;
+        addIssue(issues, 'Висячие предлоги', word + ' ' + next, word + '\u00a0' + next, 'Добавлен неразрывный пробел: предлог останется со следующим словом.');
+        return prefix + word + '\u00a0' + next;
+      }, edit => [/^[\s(«„]/.test(edit.before) ? 1 : 0, edit.after.length]);
+      replaceTracked(/(^|[.!?][ \t\u00a0]+)(приведи)([ \t\u00a0]+)(мой)([ \t\u00a0]+)(дорогой)([ \t\u00a0]+)(друг)(?=[ \t\u00a0]+котор(?:ой|ый)[ \t\u00a0]+маячит)/gimu, 'review', (found, prefix, verb, gap1, possessive, gap2, adjective, gap3, noun) => {
+        addIssue(issues, punctuationLabel, verb + ' ' + possessive + ' ' + adjective + ' ' + noun, verb + ', ' + possessive + ' ' + adjective + ' ' + noun, 'Обращение отделено запятой.');
+        return prefix + verb + ',' + gap1 + possessive + gap2 + adjective + gap3 + noun;
+      }, edit => [edit.after.indexOf(','), edit.after.indexOf(',') + 1]);
+      replaceTracked(/(?<![\p{L}])(друг)([ \t\u00a0]+)который(?=[ \t\u00a0]+маячит)/giu, 'review', (found, noun, gap) => {
+        addIssue(issues, punctuationLabel, 'друг который', 'друг, который', 'Придаточная часть отделена запятой.');
+        return noun + ',' + gap + 'который';
+      }, edit => [edit.after.indexOf(','), edit.after.indexOf(',') + 1]);
+      replaceTracked(/(?<![\p{L}])(друг)([ \t\u00a0]+)которой(?=[ \t\u00a0]+маячит)/giu, 'review', (found, noun, gap) => {
+        addIssue(issues, 'Грамматика', 'которой', 'который', 'Местоимение согласовано со словом «друг».');
+        addIssue(issues, punctuationLabel, 'друг которой', 'друг, который', 'Придаточная часть отделена запятой.');
+        return noun + ',' + gap + 'который';
+      }, edit => [edit.after.indexOf(','), edit.after.indexOf(',') + 1]);
+      suggestPunctuation(/(?<![\p{L}])([A-Za-zА-Яа-яЁё][A-Za-zА-Яа-яЁё0-9_-]{1,})([ \t\u00a0]+)(котор(?:ый|ая|ое|ые|ого|ой|ому|ым|ыми|ых|ую)|если|чтобы|но|а|однако|потому что)(?=\s)/giu,
+        (found,last,space,word) => /^(?:только|даже|лишь|именно)$/iu.test(last) && /^(?:если|чтобы)$/iu.test(word) ? found : last + ',' + space + word,
         'Возможна запятая перед союзом или придаточной частью. Проверьте смысл.');
-      suggestPunctuation(/(?<![\p{L}])(настройки)([ \t]+)(тесты)(?=[,;])/giu,
+      suggestPunctuation(/(?<![\p{L}])([А-Яа-яЁё]{3,})([ \t\u00a0]+)((?:представляющ|использующ|возвращающ|содержащ|выполняющ|вызывающ|определяющ|обеспечивающ|позволяющ)(?:ий|ая|ее|ие|его|ей|ему|им|ими|их|ую))(?![\p{L}])/giu,
+        (found,noun,space,participle) => noun + ',' + space + participle,
+        'Возможно, после определяемого слова начинается причастный оборот. Проверьте обособление всего оборота, включая закрывающую запятую.');
+      suggestPunctuation(/(?<![\p{L}])(настройки)([ \t\u00a0]+)(тесты)(?=[,;])/giu,
         (found, first, space, second) => first + ',' + space + second,
         'Возможно, перечисление нужно разделить запятой. Проверьте структуру фразы.');
-      suggestPunctuation(/(?<![\p{L}])([А-Яа-яЁё-]+)([ \t]+)(зачастую)(?=[ \t]+(?:даже[ \t]+)?не[ \t]+)/giu,
+      suggestPunctuation(/(?<![\p{L}])([А-Яа-яЁё-]+)([ \t\u00a0]+)(зачастую)(?=[ \t\u00a0]+(?:даже[ \t\u00a0]+)?не[ \t\u00a0]+)/giu,
         (found, previous, space, adverb) => previous + ',' + space + adverb,
         'Возможно, здесь нужна запятая перед присоединительной частью. Проверьте смысл.');
-      replaceTracked(/(?<![\p{L}])(сказал|сказала|сказали|ответил|ответила|ответили|написал|написала|написали|сообщил|сообщила|сообщили|спросил|спросила|спросили|уточнил|уточнила|уточнили|отметил|отметила|отметили|добавил|добавила|добавили|знаю|знает|знаем|думаю|думает|думали|понял|поняла|поняли|объяснил|объяснила|объяснили|выяснил|выяснила|выяснили|решил|решила|решили)([ \t]+)(что|почему|когда|где)(?=[ \t]+)/giu, 'format', (found, verb, space, word, offset) => {
+      replaceTracked(/(?<![\p{L}])(сказал|сказала|сказали|ответил|ответила|ответили|написал|написала|написали|сообщил|сообщила|сообщили|спросил|спросила|спросили|уточнил|уточнила|уточнили|отметил|отметила|отметили|добавил|добавила|добавили|знаю|знает|знаем|думаю|думает|думали|понял|поняла|поняли|объяснил|объяснила|объяснили|выяснил|выяснила|выяснили|решил|решила|решили)([ \t\u00a0]+)(что|почему|когда|где)(?=[ \t\u00a0]+)/giu, 'review', (found, verb, space, word, offset) => {
         if (fixedExpressionWithoutComma(verb, word, text.slice(offset + found.length))) return found;
         addIssue(issues, punctuationLabel, verb + ' ' + word, verb + ', ' + word, 'Добавлена запятая перед придаточной частью.');
         return verb + ',' + space + word;
       }, edit => [edit.after.indexOf(','), edit.after.indexOf(',') + 1]);
-      replaceTracked(/(^|[.!?][ \t]+)(Пожалуйста|Например|Конечно|Итак|Во-первых|Во-вторых)([ \t]+)(?=[А-Яа-яЁё])/gmu, 'format', (found, prefix, word, space, offset) => {
+      replaceTracked(/(^|[.!?][ \t\u00a0]+)(Пожалуйста|Например|Конечно|Итак|Во-первых|Во-вторых)([ \t\u00a0]+)(?=[А-Яа-яЁё])/gmu, 'review', (found, prefix, word, space, offset) => {
         if (/^же(?![\p{L}])/iu.test(text.slice(offset + found.length))) return found;
         addIssue(issues, punctuationLabel, word + ' слово', word + ', слово', 'Вводное слово отделено запятой.');
         return prefix + word + ',' + space;
       }, edit => [edit.after.indexOf(','), edit.after.indexOf(',') + 1]);
-      replaceTracked(/(?<![\p{L}])(подош[её]л|подошла|подошли|приш[её]л|пришла|пришли|вош[её]л|вошла|вошли)([ \t]+)(увидел|увидела|увидели|заметил|заметила|заметили|услышал|услышала|услышали)(?![\p{L}])/giu, 'format', (found, first, space, second) => {
+      replaceTracked(/(?<![\p{L}])(подош[её]л|подошла|подошли|приш[её]л|пришла|пришли|вош[её]л|вошла|вошли)([ \t\u00a0]+)(увидел|увидела|увидели|заметил|заметила|заметили|услышал|услышала|услышали)(?![\p{L}])/giu, 'review', (found, first, space, second) => {
         addIssue(issues, punctuationLabel, first + ' ' + second, first + ', ' + second, 'Разделены однородные действия.');
         return first + ',' + space + second;
       }, edit => [edit.after.indexOf(','), edit.after.indexOf(',') + 1]);
       const firstAction = '(?:пропи|купи|откры|прочита|написа|провери|исправи|подня|урони|сдела|созда|увиде|замети|посмотре)';
       const nextAction = '(?:упа|вста|посмотре|провери|исправи|отправи|улыба|засмея|верну|продолжи|закры|откры)';
       for (const [past, reflexive] of [['л','лся'], ['ла','лась'], ['ли','лись']]) {
-        const pattern = new RegExp('(?<![\\p{L}])(' + firstAction + past + ')([ \\t]+)([А-Яа-яЁё-]+)([ \\t]+)(' + nextAction + '(?:' + past + '|' + reflexive + '))(?=[ \\t]+(?:(?:его|её|ее|их)[ \\t]+)?и[ \\t]+' + nextAction + '(?:' + past + '|' + reflexive + ')(?![\\p{L}]))', 'giu');
+        const pattern = new RegExp('(?<![\\p{L}])(' + firstAction + past + ')([ \\t\\u00a0]+)([А-Яа-яЁё-]+)([ \\t\\u00a0]+)(' + nextAction + '(?:' + past + '|' + reflexive + '))(?=[ \\t\\u00a0]+(?:(?:его|её|ее|их)[ \\t\\u00a0]+)?и[ \\t\\u00a0]+' + nextAction + '(?:' + past + '|' + reflexive + ')(?![\\p{L}]))', 'giu');
         suggestPunctuation(pattern, (found, first, gap, object, space, second) => first + gap + object + ',' + space + second,
           'Возможна запятая между однородными сказуемыми. Проверьте контекст.');
       }
-      replaceTracked(/(?<![\p{L}])(увидел|увидела|увидели|заметил|заметила|заметили|услышал|услышала|услышали)([ \t]+)(как)(?=[ \t]+(?:я|ты|он|она|оно|мы|вы|они)(?![\p{L}]))/giu, 'format', (found, verb, space, word, offset) => {
+      replaceTracked(/(?<![\p{L}])(увидел|увидела|увидели|заметил|заметила|заметили|услышал|услышала|услышали)([ \t\u00a0]+)(как)(?=[ \t\u00a0]+(?:я|ты|он|она|оно|мы|вы|они)(?![\p{L}]))/giu, 'review', (found, verb, space, word, offset) => {
         if (fixedExpressionWithoutComma(verb, word, text.slice(offset + found.length))) return found;
         addIssue(issues, punctuationLabel, verb + ' ' + word, verb + ', ' + word, 'Придаточная часть с «как» отделена запятой.');
         return verb + ',' + space + word;
       }, edit => [edit.after.indexOf(','), edit.after.indexOf(',') + 1]);
-      replaceTracked(/(?<![\p{L}])крепись([ \t]+)это(?![\p{L}])/giu, 'format', (found, space) => {
+      replaceTracked(/(?<![\p{L}])крепись([ \t\u00a0]+)это(?![\p{L}])/giu, 'review', (found, space) => {
         addIssue(issues, punctuationLabel, 'крепись это', 'крепись, это', 'Добавлена запятая между частями предложения.');
         return found.slice(0, -space.length - 3) + ',' + space + 'это';
       });
-      replaceTracked(/(?<![\p{L}])([вВ])([ \t]+)течении(?=[ \t]+(?:(?:следующ(?:ей|его)|прошл(?:ой|ого)|этой|всей|целой|одной|двух|трёх|нескольких)[ \t]+)?(?:недел[июяь]|месяц[аев]?|год[ауы]?|дн[еяй]|суток|час[аов]?)(?![\p{L}]))/giu, 'error', (found, preposition, gap) => {
+      replaceTracked(/(?<![\p{L}])([вВ])([ \t\u00a0]+)течении(?=[ \t\u00a0]+(?:(?:следующ(?:ей|его)|прошл(?:ой|ого)|этой|всей|целой|одной|двух|трёх|нескольких)[ \t\u00a0]+)?(?:недел[июяь]|месяц[аев]?|год[ауы]?|дн[еяй]|суток|час[аов]?)(?![\p{L}]))/giu, 'error', (found, preposition, gap) => {
         const fixed = preposition + gap + 'течение';
         addIssue(issues, 'Грамматика', found, fixed, 'В значении длительности используется предлог «в течение».');
         return fixed;
       });
-      replaceTracked(/(?<![\p{L}])(лучше)([ \t]+)(поздно)([ \t]+)(чем)(?=[ \t]+никогда(?![\p{L}]))/giu, 'format', (found, better, gap1, late, gap2, than) => {
+      replaceTracked(/(?<![\p{L}])(лучше)([ \t\u00a0]+)(поздно)([ \t\u00a0]+)(чем)(?=[ \t\u00a0]+никогда(?![\p{L}]))/giu, 'review', (found, better, gap1, late, gap2, than) => {
         const before = better + gap1 + late + gap2 + than;
         const after = better + gap1 + late + ',' + gap2 + than;
         addIssue(issues, punctuationLabel, before, after, 'В устойчивом выражении «лучше поздно, чем никогда» нужна запятая перед «чем».');
         return after;
       }, edit => [edit.after.indexOf(','), edit.after.indexOf(',') + 1]);
-      replaceTracked(/(расскажем|покажем|объясним|разберём)([ \t]+)(почему)(?=\s)/giu, 'format', (found, verb, space, word, offset) => {
+      replaceTracked(/(расскажем|покажем|объясним|разберём)([ \t\u00a0]+)(почему)(?=\s)/giu, 'review', (found, verb, space, word, offset) => {
         if (fixedExpressionWithoutComma(verb, word, text.slice(offset + found.length))) return found;
         addIssue(issues, punctuationLabel, verb + ' ' + word, verb + ', ' + word, 'Добавлена запятая перед придаточной частью.');
         return verb + ',' + space + word;
       });
-      replaceTracked(/(?<![\p{L}])(рассказал|рассказала|рассказали)([ \t]+)(почему)(?=\s)/giu, 'format', (found, verb, space, word, offset) => {
+      replaceTracked(/(?<![\p{L}])(рассказал|рассказала|рассказали)([ \t\u00a0]+)(почему)(?=\s)/giu, 'review', (found, verb, space, word, offset) => {
         if (fixedExpressionWithoutComma(verb, word, text.slice(offset + found.length))) return found;
         addIssue(issues, punctuationLabel, verb + ' ' + word, verb + ', ' + word, 'Добавлена запятая перед придаточной частью.');
         return verb + ',' + space + word;
       });
-      replaceTracked(/(?<![\p{L}])(сказал|сказала|сказали|знаю|знает|знаем|думаю|думает|думали|понял|поняла|поняли|объяснил|объяснила|объяснили|выяснил|выяснила|выяснили|решил|решила|решили|расскажем|покажем|объясним|разберём|рассказал|рассказала|рассказали|проверил|проверила|проверили|показал|показала|показали|описал|описала|описали|изучил|изучила|изучили|обнаружил|обнаружила|обнаружили)([ \t]+)(как)(?=[ \t]+(?:(?:будто|это|он|она|оно|они|мы|вы|я|ты|не|ни|можно|нужно|следует)(?![\p{L}])|[А-Яа-яЁё-]+(?:ет|ит|ют|ут|ат|ят|ется|ются|илась|илось|ились|ился|лась|лось|лись|ена|ено|ены|ть|ться|ал|ял|ел|ёл|ил|ол|ул|али|яли|ели|или|оли|ули)(?![\p{L}])|[А-Яа-яЁё-]+[ \t]+[А-Яа-яЁё-]+(?:ет|ит|ют|ут|ат|ят|ется|ются|илась|илось|ились|ился|лась|лось|лись|ена|ено|ены|ть|ться|ал|ял|ел|ёл|ил|ол|ул|али|яли|ели|или|оли|ули)(?![\p{L}])))/giu, 'format', (found, verb, space, word, offset) => {
+      replaceTracked(/(?<![\p{L}])(сказал|сказала|сказали|знаю|знает|знаем|думаю|думает|думали|понял|поняла|поняли|объяснил|объяснила|объяснили|выяснил|выяснила|выяснили|решил|решила|решили|расскажем|покажем|объясним|разберём|рассказал|рассказала|рассказали|проверил|проверила|проверили|показал|показала|показали|описал|описала|описали|изучил|изучила|изучили|обнаружил|обнаружила|обнаружили)([ \t\u00a0]+)(как)(?=[ \t\u00a0]+(?:(?:будто|это|он|она|оно|они|мы|вы|я|ты|не|ни|можно|нужно|следует)(?![\p{L}])|[А-Яа-яЁё-]+(?:ет|ит|ют|ут|ат|ят|ется|ются|илась|илось|ились|ился|лась|лось|лись|ена|ено|ены|ть|ться|ал|ял|ел|ёл|ил|ол|ул|али|яли|ели|или|оли|ули)(?![\p{L}])|[А-Яа-яЁё-]+[ \t\u00a0]+[А-Яа-яЁё-]+(?:ет|ит|ют|ут|ат|ят|ется|ются|илась|илось|ились|ился|лась|лось|лись|ена|ено|ены|ть|ться|ал|ял|ел|ёл|ил|ол|ул|али|яли|ели|или|оли|ули)(?![\p{L}])))/giu, 'review', (found, verb, space, word, offset) => {
         if (fixedExpressionWithoutComma(verb, word, text.slice(offset + found.length))) return found;
         addIssue(issues, punctuationLabel, verb + ' ' + word, verb + ', ' + word, 'Добавлена запятая перед придаточной частью.');
         return verb + ',' + space + word;
       });
-      replaceTracked(/(?<![\p{L}])(посмотри|посмотрите)([ \t]+)(как)(?=[ \t]+(?:это|он|она|оно|они|мы|вы|я|ты)(?![\p{L}]))/giu, 'format', (found, verb, space, word, offset) => {
+      replaceTracked(/(?<![\p{L}])(посмотри|посмотрите)([ \t\u00a0]+)(как)(?=[ \t\u00a0]+(?:это|он|она|оно|они|мы|вы|я|ты)(?![\p{L}]))/giu, 'review', (found, verb, space, word, offset) => {
         if (fixedExpressionWithoutComma(verb, word, text.slice(offset + found.length))) return found;
         addIssue(issues, punctuationLabel, verb + ' ' + word, verb + ', ' + word, 'Придаточная часть с «как» отделена запятой.');
         return verb + ',' + space + word;
       });
-      for (const match of text.matchAll(/(?<![\p{L}])(конечно|возможно)(?=[ \t]+[А-Яа-яЁё])/giu)) {
+      for (const match of text.matchAll(/(?<![\p{L}])(конечно|возможно)(?=[ \t\u00a0]+[А-Яа-яЁё])/giu)) {
         const word = match[1];
         const rest = text.slice(match.index + word.length).trimStart();
         if (/^же(?![\p{L}])/iu.test(rest)) continue;
@@ -1065,18 +1060,13 @@
         highlights.push({start:match.index, end:match.index, kind:'issue-pin', issueId:issue.id});
         highlights.push({start:match.index, end:match.index + word.length, kind:'context'});
       }
-      if (/[А-Яа-яЁё\d]$/.test(text)) {
+      if (/[A-Za-zА-Яа-яЁё\d]$/.test(text)) {
         const issue = addIssue(issues, punctuationLabel, '', '.', 'Если это законченное предложение, добавьте точку. Заголовок или подпись могут оставаться без неё.', false, ['.']);
         Object.assign(issue, {reviewOnly:true, start:text.length, end:text.length});
         highlights.push({start:text.length, end:text.length, kind:'issue-pin', issueId:issue.id});
       }
 
-      const prepositions = new Set(['в','во','на','к','ко','с','со','у','о','об','обо','от','до','из','за','по','под','над','при','без','для','про']);
-      replaceTracked(/(^|[\s(«„])([А-Яа-яЁё]{1,4})([ \t]+)([А-Яа-яЁё][А-Яа-яЁё-]*)/gmu, 'format', (found, prefix, word, gap, next) => {
-        if (!prepositions.has(word.toLowerCase())) return found;
-        addIssue(issues, 'Висячие предлоги', word + ' ' + next, word + '\u00a0' + next, 'Добавлен неразрывный пробел: предлог останется со следующим словом.');
-        return prefix + word + '\u00a0' + next;
-      }, edit => [/^[\s(«„]/.test(edit.before) ? 1 : 0, edit.after.length]);
+
       replaceTracked(new RegExp(markerStart + '(\\d+)' + markerEnd, 'g'), null, (marker, index) => protectedFragments[Number(index)]);
       for (const issue of issues) if (!issue.applied && !Number.isInteger(issue.start)) {
         const pin = highlights.find(mark => mark.kind === 'issue-pin' && mark.issueId === issue.id);
@@ -1085,6 +1075,13 @@
           issue.end = pin.start + issue.before.length;
         }
       }
+      const seen = new Set(), duplicateIds = new Set();
+      for (const issue of issues) if (!issue.applied && Number.isInteger(issue.start) && issue.suggestions.length) {
+        const key = issue.category + JSON.stringify(issue.suggestions.map(choice=>replacementChange(issue.before,choice,issue.start)));
+        if (seen.has(key)) duplicateIds.add(issue.id); else seen.add(key);
+      }
+      for (let index=issues.length-1;index>=0;index--) if (duplicateIds.has(issues[index].id)) issues.splice(index,1);
+      for (let index=highlights.length-1;index>=0;index--) if (duplicateIds.has(highlights[index].issueId)) highlights.splice(index,1);
       return {text, issues, highlights};
     }
 
@@ -1151,7 +1148,7 @@
       }
       issueList.innerHTML = issues.map((item, index) => {
         const className = (item.reviewOnly ? 'review' : item.category === 'Орфография' || item.category === 'Грамматика' ? 'spelling' : item.category === punctuationLabel ? 'punctuation' : 'preposition') + (item.resolved ? ' dismissed' : item.applied ? '' : ' pending');
-        const before = item.category === 'Висячие предлоги' ? item.before.replace(' ', '␠') : item.before || 'конец текста';
+        const before = item.category === 'Висячие предлоги' ? item.before.replace(' ', '␠') : item.before || (item.start === preparedText.length ? 'конец текста' : 'место вставки');
         const after = item.category === 'Висячие предлоги' ? item.after.replace('\u00a0', '⍽') : item.after;
         const options = item.suggestions.map((option, choice) => item.resolved
           ? ''
@@ -1355,29 +1352,52 @@
     function applyChosenSuggestion(issue, choice) {
       const {start, end} = issue;
       if (!Number.isInteger(start) || !Number.isInteger(end) || preparedText.slice(start, end) !== issue.before) return false;
-      const delta = choice.length - (end - start);
-      const nextText = preparedText.slice(0, start) + choice + preparedText.slice(end);
-      const nextIssues = currentIssues.filter(item => item !== issue).map(item => {
-        if (!Number.isInteger(item.start) || !Number.isInteger(item.end)) return item;
-        if (item.start >= end) return {...item, start:item.start + delta, end:item.end + delta};
-        return item;
-      }).filter(item => !Number.isInteger(item.start) || item.end <= start || item.start >= start + choice.length);
+      const change = replacementChange(issue.before,choice,start);
+      const from = change.start, to = change.end, replacement = change.replacement;
+      const delta = replacement.length - (to - from);
+      const nextText = preparedText.slice(0,from) + replacement + preparedText.slice(to);
+      const nextIssues = [];
+      for (const item of currentIssues) {
+        if (item === issue) continue;
+        if (!Number.isInteger(item.start) || item.end <= from) { nextIssues.push(item); continue; }
+        if (item.start >= to) { nextIssues.push({...item,start:item.start + delta,end:item.end + delta}); continue; }
+        const fulfilled = item.suggestions.some(option => JSON.stringify(replacementChange(item.before,option,item.start)) === JSON.stringify(change));
+        if (fulfilled) continue;
+        const nextStart = item.start <= from ? item.start : from;
+        const nextEnd = item.end >= to ? item.end + delta : from + replacement.length;
+        const before = nextText.slice(nextStart,nextEnd);
+        const suggestions = [];
+        if (from >= item.start && to <= item.end) for (const option of item.suggestions) {
+          const own = replacementChange(item.before,option,item.start);
+          const ownDelta = own.replacement.length - (own.end - own.start);
+          // Rebase a disjoint change inside shared context, e.g. a spelling
+          // correction before the proposed comma. Intersecting edits need review.
+          let shift;
+          if (to <= own.start && !(from === to && to === own.start)) shift = 0;
+          else if (from >= own.end && !(from === to && from === own.end)) shift = ownDelta;
+          else continue;
+          const a = from - item.start + shift, b = to - item.start + shift;
+          suggestions.push(option.slice(0,a) + replacement + option.slice(b));
+        }
+        nextIssues.push({...item,start:nextStart,end:nextEnd,before,suggestions,
+          after:suggestions.join(' / '),note:suggestions.length ? item.note : 'Фрагмент изменился после другой правки. Проверьте его вручную или запустите повторную проверку.'});
+      }
       const nextHighlights = [];
       for (const mark of currentHighlights) {
-        if (mark.issueId === issue.id || (mark.kind === 'context' && mark.start === start && mark.end === end)) continue;
+        if (mark.issueId === issue.id || (['context','suspect'].includes(mark.kind) && mark.start === start && mark.end === end)) continue;
         const copy = {...mark};
-        if (copy.start >= end) { copy.start += delta; copy.end += delta; }
-        else if (copy.end > start) {
-          if (copy.start < start && copy.end > end) copy.end += delta;
-          else if (copy.start < start) copy.end = start;
-          else if (copy.end > end) { copy.start = start + choice.length; copy.end += delta; }
+        if (copy.start >= to) { copy.start += delta; copy.end += delta; }
+        else if (copy.end > from) {
+          if (copy.start < from && copy.end > to) copy.end += delta;
+          else if (copy.start < from) copy.end = from;
+          else if (copy.end > to) { copy.start = from + replacement.length; copy.end += delta; }
           else continue;
         }
         nextHighlights.push(copy);
       }
-      const applied = addIssue(nextIssues, issue.category, issue.before, choice, 'Вариант выбран редактором.');
-      nextHighlights.push({start, end:start, kind:'issue-pin', issueId:applied.id});
-      nextHighlights.push({start, end:start + choice.length, kind:issue.category === punctuationLabel ? 'format' : 'error'});
+      const applied = addIssue(nextIssues,issue.category,issue.before,choice,issue.note + ' Вариант выбран редактором.');
+      nextHighlights.push({start:from,end:from,kind:'issue-pin',issueId:applied.id});
+      if (replacement.length) nextHighlights.push({start:from,end:from + replacement.length,kind:issue.category === punctuationLabel ? 'format' : 'error'});
       updateResult(nextText, nextIssues, nextHighlights, true);
       return true;
     }
