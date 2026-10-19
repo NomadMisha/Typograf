@@ -48,6 +48,10 @@ out/
 coverage/
 playwright-report/
 test-results/
+# Release packages belong in GitHub Releases, not the source tree
+/outputs/*.zip
+/outputs/typograf-single-file-*/
+/work/spell-build/spellcheck.bundle.js
 
 # Tool caches
 .vite/

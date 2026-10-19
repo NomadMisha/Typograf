@@ -21,5 +21,6 @@ function save(event){if(event.target.matches('[data-expected]'))event.target.clo
 document.addEventListener('input',save);document.addEventListener('change',save);
 button.addEventListener('click',()=>{try{const data=buildReviewedGold(corpus,collect(),reviewer.value),blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json;charset=utf-8'}),url=URL.createObjectURL(blob),link=document.createElement('a');link.href=url;link.download='gold-cases-reviewed.json';link.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}catch(error){status.textContent=error.message;}});sync();
 </script></body></html>`;
-fs.writeFileSync(new URL('../../outputs/typograf-prototype/editorial-review.html',import.meta.url),html);
+fs.mkdirSync(new URL('../../docs/',import.meta.url),{recursive:true});
+fs.writeFileSync(new URL('../../docs/editorial-review.html',import.meta.url),html);
 console.log('Built editorial review worksheet. No cases are pre-approved.');

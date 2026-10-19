@@ -1,12 +1,20 @@
 import fs from 'node:fs';
 import { fileURLToPath } from 'node:url';
+import './build-review-sheet.mjs';
 
-// Publish the current standalone prototype, preserving its original files.
+// The only generated application build lives in docs/. Modular sources stay intact.
 const root = new URL('../../', import.meta.url);
-const source = new URL('outputs/typograf-single-file-v20/index.html', root);
+const project = new URL('outputs/typograf-prototype/', root);
 const docs = new URL('docs/', root);
+const modular = fs.readFileSync(new URL('index.html', project), 'utf8');
+const dictionary = fs.readFileSync(new URL('spellcheck.js', project), 'utf8').trimEnd();
+const license = name => fs.readFileSync(new URL('licenses/' + name, project), 'utf8').trimEnd();
+const dictionaryMarker = '  <script src="./spellcheck.js"></script>';
+if (modular.split(dictionaryMarker).length !== 2) throw new Error('Expected one dictionary script tag');
+if (dictionary.toLowerCase().includes('</script')) throw new Error('Dictionary bundle would close its script tag');
+const licenses = `<script type="text/plain" id="third-party-licenses">\n\n===== nspell =====\n${license('nspell.txt')}\n\n\n===== dictionary-ru =====\n${license('dictionary-ru.txt')}\n</script>`;
+const html = modular.replace(dictionaryMarker, `  ${licenses}\n  <script>\n${dictionary}\n  </script>`);
 const marker = "    const useLocalService = /^https?:$/.test(window.location.protocol || '');";
-const html = fs.readFileSync(source, 'utf8');
 if (html.split(marker).length !== 2) {
   throw new Error('Expected exactly one runtime mode declaration in the standalone prototype');
 }
@@ -16,5 +24,4 @@ const published = html
 fs.mkdirSync(docs, { recursive: true });
 fs.writeFileSync(new URL('index.html', docs), published);
 fs.writeFileSync(new URL('.nojekyll', docs), '');
-fs.copyFileSync(new URL('outputs/typograf-prototype/editorial-review.html',root),new URL('editorial-review.html',docs));
 console.log(`Built ${fileURLToPath(new URL('index.html', docs))} (${Buffer.byteLength(published)} bytes)`);

@@ -42,6 +42,6 @@
 
 ## Команды воспроизведения
 
-Из `work/spell-build`: `node test.mjs`, `node test-app.mjs`, `node evaluate-corpus.mjs`, `node quality-gate.mjs`. Чтобы прогнать тест приложения по собранному файлу, задайте `TYPOGRAF_HTML=../../outputs/typograf-single-file-v20/index.html node test-app.mjs`.
+Из `work/spell-build`: `node test.mjs`, `node test-app.mjs`, `node evaluate-corpus.mjs`, `node quality-gate.mjs`. Чтобы прогнать тест приложения по собранному файлу, задайте `TYPOGRAF_HTML=../../docs/index.html node test-app.mjs`.
 
 Из `work/typograf-service`: `node test-service.mjs` и `node test-frontend-mode.mjs`. Текущий локальный запуск: `../../work/typograf-service/start-local.command`.

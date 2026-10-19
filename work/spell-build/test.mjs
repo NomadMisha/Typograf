@@ -3,7 +3,7 @@ import vm from 'node:vm';
 import {performance} from 'node:perf_hooks';
 
 const sandbox = {atob, TextDecoder, Uint8Array};
-const bundle = fs.readFileSync('spellcheck.bundle.js', 'utf8');
+const bundle = fs.readFileSync(new URL('../../outputs/typograf-prototype/spellcheck.js', import.meta.url), 'utf8');
 const loadStart = performance.now();
 vm.runInNewContext(bundle, sandbox);
 const spell = sandbox.typografSpell.ready();

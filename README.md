@@ -35,8 +35,6 @@ node evaluate-gold.mjs /путь/к/gold-cases-reviewed.json
 Локальные проверки (Node.js 20+, из `work/spell-build`):
 
 ```sh
-node build-review-sheet.mjs
-node build-single.mjs
 node build-pages.mjs
 TYPOGRAF_HTML=../../docs/index.html node test-app.mjs
 node test-evaluation.mjs
@@ -90,12 +88,22 @@ node work/spell-build/evaluate-safety.mjs --dataset work/spell-build/safety-hold
 После изменения исходников выполните из `work/spell-build` (Node.js 20+):
 
 ```sh
-node build-review-sheet.mjs
-node build-single.mjs
 node build-pages.mjs
 ```
 
-Скрипты обновляют однофайловую версию, `docs/index.html`, `docs/editorial-review.html` и `.nojekyll`. Результат нужно закоммитить и отправить в `main`. Исходники сохраняются в `outputs/typograf-prototype`, однофайловая версия — в `outputs/typograf-single-file-v20`, код сборки — в `work/spell-build`.
+Единственная готовая сборка находится в `docs/`: `index.html`, вспомогательная форма `editorial-review.html` и `.nojekyll`. Команда сразу собирает их из модульных исходников, без промежуточной копии HTML. Результат нужно закоммитить и отправить в `main`. Исходники и словарь сохраняются в `outputs/typograf-prototype`, код сборки — в `work/spell-build`.
+
+## Архивы в GitHub Releases
+
+Готовый архив для скачивания размещается только в [GitHub Releases](https://github.com/NomadMisha/Typograf/releases/latest). ZIP не хранится в дереве репозитория. В архиве находится та же сборка, что в `docs/`, и инструкция по запуску; исходники, модели, ключи и пользовательские документы туда не включаются.
+
+После сборки `docs/` создайте архив из корня проекта (Python 3, стандартная библиотека):
+
+```sh
+python3 work/spell-build/package-release.py v2026.10.19
+```
+
+Команда создаёт `dist/typograf-v2026.10.19.zip` и файл `.zip.sha256`. Папка `dist/` исключена из Git. Для следующего выпуска укажите новый тег. После коммита и push создайте Release для этого коммита и прикрепите ZIP и контрольную сумму. Пользователь распаковывает ZIP и открывает `index.html` в браузере; установка моделей не нужна.
 
 ## Проверка на статическом хостинге
 

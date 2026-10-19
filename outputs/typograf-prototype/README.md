@@ -1,6 +1,6 @@
 # Типограф — учебный прототип
 
-Текущая модульная версия находится в `index.html` (метка «Прототип · 20»). Однофайловая версия для передачи преподавателю: `../typograf-single-file-v20/index.html`. Она запускается локально в браузере без установки. Для более полноценной онлайн-проверки используйте локальный сервис из `../../work/typograf-service/README.md`.
+Модульные исходники находятся в `index.html` и `spellcheck.js` (метка «Прототип · 20»). Единственная готовая сборка сайта — `../../docs/index.html`. Архив для передачи преподавателю доступен в [GitHub Releases](https://github.com/NomadMisha/Typograf/releases/latest); распакуйте его и откройте `index.html` в браузере без установки. Для более полноценной онлайн-проверки используйте локальный сервис из `../../work/typograf-service/README.md`.
 
 ## История и JSON
 
@@ -29,6 +29,6 @@
 
 Воспроизводимый сценарий с намеренно испорченным текстом: `node deep-qa.mjs` из `work/spell-build`, без внешних запросов. Отчёт с исходником, автоматическим результатом и ручными предложениями находится в [DEEP_QA_REPORT.md](DEEP_QA_REPORT.md).
 
-Свежие метрики, отложенная диагностика и оставшиеся пропуски — в [BROWSER_QUALITY_REPORT.md](BROWSER_QUALITY_REPORT.md). Для человеческой проверки подготовлена [форма редакторских эталонов](editorial-review.html): карточки не одобрены заранее, JSON экспортируется только после явного выбора и подписи редактора. Данные источников и условия лицензии указаны в [TECHNICAL_CORPUS_LICENSE.md](../../work/spell-build/TECHNICAL_CORPUS_LICENSE.md).
+Свежие метрики, отложенная диагностика и оставшиеся пропуски — в [BROWSER_QUALITY_REPORT.md](BROWSER_QUALITY_REPORT.md). Для человеческой проверки подготовлена [форма редакторских эталонов](../../docs/editorial-review.html): карточки не одобрены заранее, JSON экспортируется только после явного выбора и подписи редактора. Данные источников и условия лицензии указаны в [TECHNICAL_CORPUS_LICENSE.md](../../work/spell-build/TECHNICAL_CORPUS_LICENSE.md).
 
 Яндекс.Спеллер: [документация](https://yandex.ru/dev/speller/doc/ru/). LanguageTool: [HTTP API](https://dev.languagetool.org/public-http-api), [локальный сервер](https://dev.languagetool.org/http-server). Для использования публичного LanguageTool действуют его ограничения доступности и частоты запросов.
