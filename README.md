@@ -42,7 +42,9 @@ TYPOGRAF_HTML=../../docs/index.html node quality-gate.mjs
 node deep-qa.mjs
 ```
 
-`quality-gate.mjs` завершится с ошибкой при изменении исходных контролей или ухудшении обнаружения по сравнению с зафиксированным состоянием. `--pilot` дополнительно требует редакторский набор. Подготовлен workflow GitHub Actions; для его первой публикации текущей авторизации GitHub требуется право `workflow`.
+`quality-gate.mjs` завершится с ошибкой при изменении исходных контролей или ухудшении обнаружения по сравнению с зафиксированным состоянием. `--pilot` дополнительно требует редакторский набор. Workflow [Test and deploy Pages](.github/workflows/check.yml) запускается на каждый push в `main`, для pull request и вручную. Он собирает `docs/`, запускает `test-app.mjs` и `quality-gate.mjs`, затем дополнительные проверки оценивания и сервиса. Только успешное задание проверок разрешает загрузку сборки и отдельное задание публикации. Даже при падении `test-app.mjs` проверка качества запускается, если сборка прошла.
+
+При ошибке текущий опубликованный сайт сохраняется. В [GitHub Actions](https://github.com/NomadMisha/Typograf/actions/workflows/check.yml) откройте красный запуск: причина показана в шагах и разделе Summary, последние строки логов — в отчёте, полные логи проверок — в артефакте `check-failure-*` (хранятся 7 дней). Workflow собирает файлы в `docs/` на временном runner и не делает автоматических коммитов в репозиторий.
 
 Результаты сравнения до и после, происхождение наборов и оставшиеся ошибки описаны в [аудите корректуры](outputs/typograf-prototype/SAFETY_AUDIT.md). 50 примеров использовались для настройки; 16 дополнительных — для отложенной диагностики. Оба набора составлены ИИ и не проверены редактором. Они не заменяют независимую оценку качества на реальных черновиках.
 
@@ -77,9 +79,9 @@ node work/spell-build/evaluate-safety.mjs --dataset work/spell-build/safety-hold
 
 В [настройках Pages](https://github.com/NomadMisha/Typograf/settings/pages) выберите:
 
-1. **Source:** Deploy from a branch.
-2. **Branch:** `main`, папка **`/docs`**.
-3. Нажмите **Save** и дождитесь завершения публикации.
+1. **Source:** GitHub Actions.
+2. Workflow `.github/workflows/check.yml` собирает папку `docs/` на каждый push в `main`.
+3. Публикация выполняется только после успешного завершения проверок. Не включайте параллельную публикацию из ветки: она обходит этот барьер.
 
 Адрес сайта: <https://nomadmisha.github.io/Typograf/>.
 
@@ -91,7 +93,7 @@ node work/spell-build/evaluate-safety.mjs --dataset work/spell-build/safety-hold
 node build-pages.mjs
 ```
 
-Единственная готовая сборка находится в `docs/`: `index.html`, вспомогательная форма `editorial-review.html` и `.nojekyll`. Команда сразу собирает их из модульных исходников, без промежуточной копии HTML. Результат нужно закоммитить и отправить в `main`. Исходники и словарь сохраняются в `outputs/typograf-prototype`, код сборки — в `work/spell-build`.
+Единственная готовая сборка находится в `docs/`: `index.html`, вспомогательная форма `editorial-review.html` и `.nojekyll`. Команда сразу собирает их из модульных исходников, без промежуточной копии HTML. Результат можно проверить локально и закоммитить вместе с исходниками. После push в `main` GitHub Actions заново собирает и проверяет сайт перед публикацией. Исходники и словарь сохраняются в `outputs/typograf-prototype`, код сборки — в `work/spell-build`.
 
 ## Архивы в GitHub Releases
 

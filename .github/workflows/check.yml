@@ -1,0 +1,105 @@
+name: Test and deploy Pages
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    name: Check browser build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: work/spell-build
+        shell: bash
+    env:
+      TYPOGRAF_HTML: ../../docs/index.html
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: '24'
+      - name: Build docs
+        id: build
+        run: node build-pages.mjs 2>&1 | tee ci-build.log
+      - name: Run test-app.mjs
+        id: app
+        run: node test-app.mjs 2>&1 | tee ci-test-app.log
+      - name: Run quality-gate.mjs
+        id: quality
+        # Run both requested checks, even when test-app fails. A failed step still
+        # fails this job; no failure is ignored and no failed build is uploaded.
+        if: ${{ !cancelled() && steps.build.outcome == 'success' }}
+        run: node quality-gate.mjs 2>&1 | tee ci-quality-gate.log
+      - name: Check evaluation and service integration
+        run: |
+          node test-evaluation.mjs 2>&1 | tee ci-evaluation.log
+          cd ../typograf-service
+          node test-service.mjs
+          node test-frontend-mode.mjs
+          TYPOGRAF_STATIC=1 node test-frontend-mode.mjs
+      - name: Show failure and preserve the published site
+        if: ${{ failure() }}
+        env:
+          BUILD_RESULT: ${{ steps.build.outcome }}
+          APP_RESULT: ${{ steps.app.outcome }}
+          QUALITY_RESULT: ${{ steps.quality.outcome }}
+        run: |
+          printf '%s\n' '::error title=Publication blocked::Checks failed. The current Pages site will not be replaced.'
+          {
+            printf '%s\n' '## Публикация заблокирована' '' 'Проверки завершились ошибкой. Действующий сайт не заменяется.' ''
+            printf -- '- Сборка: %s\n- test-app.mjs: %s\n- quality-gate.mjs: %s\n' "$BUILD_RESULT" "$APP_RESULT" "$QUALITY_RESULT"
+            for log in ci-*.log; do
+              [ -f "$log" ] || continue
+              printf '\n### %s\n\n```text\n' "$log"
+              tail -n 40 "$log"
+              printf '\n```\n'
+            done
+          } >> "$GITHUB_STEP_SUMMARY"
+      - name: Upload failure logs
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: check-failure-${{ github.run_id }}-${{ github.run_attempt }}
+          path: work/spell-build/ci-*.log
+          retention-days: 7
+          if-no-files-found: ignore
+      - name: Upload only a passing docs build
+        if: ${{ success() && github.ref == 'refs/heads/main' && github.event_name != 'pull_request' }}
+        uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
+        with:
+          path: docs
+
+  deploy:
+    name: Publish passing build
+    needs: checks
+    if: ${{ needs.checks.result == 'success' && github.ref == 'refs/heads/main' && github.event_name != 'pull_request' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    concurrency:
+      group: github-pages
+      cancel-in-progress: false
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Configure Pages
+        uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6.0.0
+      - name: Deploy checked artifact
+        id: deployment
+        uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5.0.1
+      - name: Show deployment failure
+        if: ${{ failure() }}
+        run: |
+          printf '%s\n' '::error title=Pages deployment failed::Checks passed, but deployment failed. See the failed deployment step.'
+          printf '%s\n' '## Ошибка публикации Pages' '' 'Проверки пройдены, но публикация завершилась ошибкой. Откройте красный шаг этого задания.' >> "$GITHUB_STEP_SUMMARY"
