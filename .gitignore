@@ -38,6 +38,9 @@ __pycache__/
 # Locally bundled JDK and LanguageTool runtime (large, downloadable binaries)
 /work/typograf-service/runtime/
 
+# Downloaded NLP model weights
+/work/nlp-lab/models/
+
 # Build output and test reports
 dist/
 build/
