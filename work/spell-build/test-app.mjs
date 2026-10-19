@@ -102,6 +102,71 @@ test('Russian quotation marks, prose dash and measured numbers are formatted ide
   assert.equal(check(result.text).text,expected);
   assert.equal(check('Он написал: «Название “новый сервис” готово».').text,'Он написал: «Название „новый сервис“ готово».');
 });
+test('a full stop before a capital letter gains a space and remains idempotent',()=>{
+  const result=check('Готово.Начинаем.Ёж спит. Done.Next.');
+  assert.equal(result.text,'Готово. Начинаем. Ёж спит. Done. Next.');
+  assert.equal(check(result.text).text,result.text);
+  assert.equal(result.issues.filter(i=>i.applied && i.note==='После точки перед заглавной буквой добавлен пробел.').length,3);
+});
+test('full stops in abbreviations and initials remain unchanged before capitals',()=>{
+  const input='См.Рис.1, проф.Иванов, т.е.Доклад, т.д.Пример, А.С.Пушкин, Dr.Smith.';
+  assert.equal(check(input).text,input);
+});
+test('decimal points, version numbers and numeric labels remain unchanged',()=>{
+  const input='Значение 2.5, число 12.75, версия 2.5.1, пункт 2.Раздел.';
+  assert.equal(check(input).text,input);
+});
+test('numbers bind to the following word, including words outside the units list',()=>{
+  const result=check('5 новых сообщений и 12 книг.');
+  assert.equal(result.text,'5\u00a0новых сообщений и 12\u00a0книг.');
+  const changes=result.issues.filter(i=>i.note==='Число связано со следующим словом неразрывным пробелом.');
+  assert.equal(changes.length,2);
+  assert.ok(changes.every(i=>i.applied));
+  assert.equal(check(result.text).text,result.text);
+});
+test('decimal and signed numbers bind to Russian and Latin words without changing digits',()=>{
+  assert.equal(check('Объём 2.5 литра и 1,25 метра; -3 пункта, +4 items.').text,
+    'Объём 2.5\u00a0литра и 1,25\u00a0метра; -3\u00a0пункта, +4\u00a0items.');
+});
+test('number-word binding preserves code, URLs, identifiers, dotted versions and line breaks',()=>{
+  for (const input of ['Код `5 новых сообщений`.', 'Данные {"текст":"12 книг"}.',
+    'Ссылка https://example.com/5/new.', 'x12 слов, v2 слова, 2D модель, 2.5.1 версия, 127.0.0.1 адрес.',
+    'Строка 2\nновых сообщения.', 'Уже 5\u00a0новых сообщений.']) {
+    assert.equal(check(input).text,input,input);
+  }
+});
+test('a missing dash before author words is a notice without a replacement',()=>{
+  for (const input of ['«Я приду» сказал он.', '«Я приду», сказала она.', '«Ты придёшь?» спросил он.',
+    '«Стой!» крикнула она.', '«Я вернусь…» прошептал он.', '«Я приду» он сказал.']) {
+    const result=check(input);
+    assert.equal(result.text,input);
+    const notices=result.issues.filter(i=>i.note.startsWith('Возможна прямая речь:'));
+    assert.equal(notices.length,1,input);
+    assert.equal(notices[0].category,'Пунктуация');
+    assert.equal(notices[0].applied,false);
+    assert.equal(notices[0].reviewOnly,true);
+    assert.equal(notices[0].suggestions.length,0);
+    assert.equal(result.text.slice(notices[0].start,notices[0].end),notices[0].before);
+  }
+});
+test('existing speech dashes, ordinary quotations and protected code have no missing-dash notice',()=>{
+  for (const input of ['«Я приду», — сказал он.', '«Стой!» — крикнула она.', '«Ты придёшь?» — спросил он.',
+    'Термин «модуль» означает часть программы.', 'Он сказал: «Я приду».', '«Готово». Он сказал это позже.',
+    '`«Я приду» сказал он.`', '<code>«Я приду» сказал он.</code>']) {
+    assert.ok(!check(input).issues.some(i=>i.note.startsWith('Возможна прямая речь:')),input);
+  }
+});
+test('speech notices keep their positions after protected text restoration and render as manual review',()=>{
+  const result=check('Код `const longIdentifier = "тест";`. «Готово» сказал он.');
+  const issue=result.issues.find(i=>i.note.startsWith('Возможна прямая речь:'));
+  assert.ok(issue);
+  assert.equal(issue.start,result.text.indexOf('» сказал'));
+  assert.equal(result.text.slice(issue.start,issue.end),issue.before);
+  context.speechNoticeResult=result;
+  vm.runInContext('updateResult(speechNoticeResult.text,speechNoticeResult.issues,speechNoticeResult.highlights)',context);
+  assert.ok(elements['issue-list'].innerHTML.includes('Проверьте вручную:'));
+  assert.ok(!elements['issue-list'].innerHTML.includes('data-choice-index'));
+});
 test('code, JSON, filenames, HTML attributes, mathematical minus and identifiers survive typography',()=>{
   for(const input of ['Код: `"текст" - 50%`.','Данные: {"текст": "значение"}.','<code>вообщем - 50%</code>',
     '<pre>подошол  и  упол</pre>','Файл server.mjs и .env.local.',

@@ -925,6 +925,21 @@
         addIssue(issues, 'Типографика', mark + 'слово', mark + ' слово', 'После знака препинания добавлен пробел.');
         return mark + ' ';
       });
+      const dottedAbbreviations = new Set([
+        'гг','вв','ул','пер','просп','пл','наб','бул','корп','кв','оф','стр','рис','табл','см','ср','им',
+        'тов','гр','проф','доц','акад','канд','техн','физ','мат','ист','филол','мед','биол','хим',
+        'долл','руб','коп','тыс','млн','млрд','шт','мин','сек','мес','др','пр','проч','ред','сост',
+        'англ','рус','лат','обл','респ','пос','дер','тел','факс',
+        'dr','mr','mrs','ms','prof','sr','jr','st','vs','etc','approx','fig','vol','pp'
+      ]);
+      // A letter must precede the point: decimal separators and numbered labels
+      // are untouched. Single letters cover initials and parts of «т.е.», «т.д.».
+      replaceTracked(/(?<![\p{L}\p{N}_])([\p{L}]+)\.(?=\p{Lu})/gu, 'format', (found, word) => {
+        if (word.length === 1 || dottedAbbreviations.has(word.toLowerCase())) return found;
+        const after = found + ' ';
+        addIssue(issues, 'Типографика', found, after, 'После точки перед заглавной буквой добавлен пробел.');
+        return after;
+      }, edit => [edit.after.length - 1, edit.after.length]);
       // Formatting changes preserve letters and numbers; technical spans are masked.
       const quoteLines = [];
       let lineOffset = 0;
@@ -957,6 +972,13 @@
         const after = digit + '\u00a0' + unit;
         addIssue(issues,'Типографика',found,after,'Число связано с единицей измерения неразрывным пробелом.'); return after;
       });
+      // Bind an existing horizontal space before any word, without splitting
+      // identifiers, decimal numbers, dotted versions or paragraph boundaries.
+      replaceTracked(/(?<![\p{L}\p{N}_.,])(\d+(?:[.,]\d+)?)[ \t]+(\p{L}[\p{L}\p{M}\p{N}-]*)/gu, 'format', (found,number,word) => {
+        const after = number + '\u00a0' + word;
+        addIssue(issues, 'Типографика', found, after, 'Число связано со следующим словом неразрывным пробелом.');
+        return after;
+      }, edit => [edit.after.indexOf('\u00a0'), edit.after.indexOf('\u00a0') + 1]);
 
       const prepositions = new Set(['в','во','на','к','ко','с','со','у','о','об','обо','от','до','из','за','по','под','над','при','без','для','про']);
       replaceTracked(/(^|[\s(«„])([А-Яа-яЁё]{1,4})([ \t]+)([A-Za-zА-Яа-яЁё0-9][A-Za-zА-Яа-яЁё0-9-]*)/gmu, 'format', (found, prefix, word, gap, next) => {
@@ -964,6 +986,18 @@
         addIssue(issues, 'Висячие предлоги', word + ' ' + next, word + '\u00a0' + next, 'Добавлен неразрывный пробел: предлог останется со следующим словом.');
         return prefix + word + '\u00a0' + next;
       }, edit => [/^[\s(«„]/.test(edit.before) ? 1 : 0, edit.after.length]);
+      // Conditional notice only: quoting a word is not necessarily direct speech.
+      // See https://gramota.ru/uchebnik/pravila/pryamaya-rech .
+      const speechVerbs = '(?:(?:сказал|рассказал|ответил|спросил|добавил|прошептал|воскликнул|заметил|подумал|написал|сообщил|пояснил|уточнил|заявил|крикнул|пробормотал|продолжил)(?:а|и)?|произн[её]с(?:ла|ли)?|говорит|говорят|спрашивает|спрашивают|отвечает|отвечают)';
+      const quoteBeforeAuthor = new RegExp('(«[^«»\\n]+»|„[^„“\\n]+“|“[^“”\\n]+”|"[^"\\n]+")([ \\t\\u00a0]*,?[ \\t\\u00a0]*)((?:(?:он|она|они|я|мы|ты|вы|автор|авторка|редактор|редакторка)[ \\t\\u00a0]+)?' + speechVerbs + ')(?![\\p{L}])', 'giu');
+      for (const match of text.matchAll(quoteBeforeAuthor)) {
+        const start = match.index + match[1].length - 1;
+        const before = match[0].slice(match[1].length - 1);
+        const issue = addIssue(issues, punctuationLabel, before, 'тире перед словами автора',
+          'Возможна прямая речь: после закрывающей кавычки перед словами автора нужно тире. Проверьте оформление вручную; эта подсказка не меняет текст.', false, []);
+        Object.assign(issue, {reviewOnly:true, start, end:start + before.length});
+        highlights.push({start, end:start, kind:'issue-pin', issueId:issue.id}, {start, end:start + before.length, kind:'context'});
+      }
       replaceTracked(/(^|[.!?][ \t\u00a0]+)(приведи)([ \t\u00a0]+)(мой)([ \t\u00a0]+)(дорогой)([ \t\u00a0]+)(друг)(?=[ \t\u00a0]+котор(?:ой|ый)[ \t\u00a0]+маячит)/gimu, 'review', (found, prefix, verb, gap1, possessive, gap2, adjective, gap3, noun) => {
         addIssue(issues, punctuationLabel, verb + ' ' + possessive + ' ' + adjective + ' ' + noun, verb + ', ' + possessive + ' ' + adjective + ' ' + noun, 'Обращение отделено запятой.');
         return prefix + verb + ',' + gap1 + possessive + gap2 + adjective + gap3 + noun;
