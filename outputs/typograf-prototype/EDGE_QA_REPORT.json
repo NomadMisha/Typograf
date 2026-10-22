@@ -1,0 +1,13 @@
+{
+  "provenance": "Synthetic QA fixtures prepared by AI, not an editorial gold set",
+  "cases": 30,
+  "passed": 30,
+  "failed": [],
+  "idempotent": 30,
+  "longText": {
+    "characters": 102400,
+    "elapsedMs": 54,
+    "issues": 3200,
+    "protectedCodePreserved": true
+  }
+}

@@ -696,7 +696,7 @@ is-buffer/index.js:
     ]);
     const ambiguousSpelling = new Map([['крипис', ['крепись', 'кризис']]]);
     const spellingKeys = new Set([...spelling.map(([wrong]) => wrong), ...ambiguousSpelling.keys()]);
-    const protectedPattern = /(\{[^\n{}]*\}|(?<![\p{L}\p{N}])\.(?:env(?:\.[A-Za-z0-9_-]+)?|gitignore|npmrc)(?![\p{L}\p{N}])|```[\s\S]*?```|~~~[\s\S]*?~~~|<pre\b[^>]*>[\s\S]*?<\/pre>|<code\b[^>]*>[\s\S]*?<\/code>|`[^`\n]*`|(?:https?:\/\/|mailto:|www\.)[^\s<>()]+|[A-Za-zА-Яа-яЁё0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}|[A-Za-zА-Яа-яЁё0-9]+(?:_[A-Za-zА-Яа-яЁё0-9]+)+|[A-Za-zА-Яа-яЁё0-9_-]+\.(?:json|js|mjs|cjs|ts|jsx|tsx|py|html|css|md|yaml|yml|sql|txt|csv|xml)(?![A-Za-z0-9])|<[^>\n]+>)/giu;
+    const protectedPattern = /(\{[^\n{}]*\}|(?<![\p{L}\p{N}])\.(?:env(?:\.[A-Za-z0-9_-]+)?|gitignore|npmrc)(?![\p{L}\p{N}])|```[\s\S]*?```|~~~[\s\S]*?~~~|<pre\b[^>]*>[\s\S]*?<\/pre>|<code\b[^>]*>[\s\S]*?<\/code>|`[^`\n]*`|(?:https?:\/\/|mailto:|www\.)[^\s<>]+|[A-Za-zА-Яа-яЁё0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}|[A-Za-zА-Яа-яЁё0-9]+(?:_[A-Za-zА-Яа-яЁё0-9]+)+|[A-Za-zА-Яа-яЁё0-9_-]+\.(?:json|js|mjs|cjs|ts|jsx|tsx|py|html|css|md|yaml|yml|sql|txt|csv|xml)(?![A-Za-z0-9])|<[^>\n]+>)/giu;
     let dictionarySpell;
     function getDictionarySpell() {
       if (!dictionarySpell) {
@@ -1015,13 +1015,19 @@ is-buffer/index.js:
         'гг','вв','ул','пер','просп','пл','наб','бул','корп','кв','оф','стр','рис','табл','см','ср','им',
         'тов','гр','проф','доц','акад','канд','техн','физ','мат','ист','филол','мед','биол','хим',
         'долл','руб','коп','тыс','млн','млрд','шт','мин','сек','мес','др','пр','проч','ред','сост',
-        'англ','рус','лат','обл','респ','пос','дер','тел','факс',
+        'англ','рус','лат','обл','респ','пос','дер','тел','факс','напр','абз',
         'dr','mr','mrs','ms','prof','sr','jr','st','vs','etc','approx','fig','vol','pp'
       ]);
+      // Protect API dots from prose spacing without hiding the identifier from
+      // contextual rules, including the manual end-of-sentence suggestion.
+      const apiDots = new Set();
+      for (const match of text.matchAll(/(?<![\p{L}\p{N}_$])(?:Math|JSON|Object|Array|Promise|Number|String|Boolean|Date|RegExp|Reflect|Symbol|BigInt|Intl|System|Console|document|window|console|process|module|exports)(?:\.[A-Za-z_$][A-Za-z0-9_$]*)+/gu)) {
+        for (let dot=match[0].indexOf('.');dot>=0;dot=match[0].indexOf('.',dot+1)) apiDots.add(match.index+dot);
+      }
       // A letter must precede the point: decimal separators and numbered labels
       // are untouched. Single letters cover initials and parts of «т.е.», «т.д.».
-      replaceTracked(/(?<![\p{L}\p{N}_])([\p{L}]+)\.(?=\p{Lu})/gu, 'format', (found, word) => {
-        if (word.length === 1 || dottedAbbreviations.has(word.toLowerCase())) return found;
+      replaceTracked(/(?<![\p{L}\p{N}_])([\p{L}]+)\.(?=\p{Lu})/gu, 'format', (found, word, offset) => {
+        if (apiDots.has(offset + word.length) || word.length === 1 || dottedAbbreviations.has(word.toLowerCase())) return found;
         const after = found + ' ';
         addIssue(issues, 'Типографика', found, after, 'После точки перед заглавной буквой добавлен пробел.');
         return after;

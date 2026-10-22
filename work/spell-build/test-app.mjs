@@ -135,6 +135,24 @@ test('number-word binding preserves code, URLs, identifiers, dotted versions and
     assert.equal(check(input).text,input,input);
   }
 });
+test('additional common abbreviations are not split by the sentence spacing rule',()=>{
+  assert.equal(check('Напр.Москва, абз.Первый.').text,'Напр.Москва, абз.Первый.');
+});
+test('known dotted API identifiers survive typography while prose still gains a space',()=>{
+  const input='Math.PI и System.Text.Json. Код Object.keys и process.env.NODE_ENV. Готово.Начинаем.';
+  assert.equal(check(input).text,'Math.PI и System.Text.Json. Код Object.keys и process.env.NODE_ENV. Готово. Начинаем.');
+  const end=check('Документ содержит document.defaultView');
+  const point=end.issues.find(i=>!i.applied&&i.before===''&&i.suggestions.includes('.'));
+  assert.ok(point,'API protection must not hide a missing final point');
+  assert.equal(point.start,end.text.length);
+});
+test('URL parentheses and Markdown link destinations are protected from spelling changes',()=>{
+  for(const input of ['https://example.org/страница_(подошол)', '[Пример](https://example.org/(подошол))',
+    'https://example.org/страница_((подошол))', 'Ссылка (https://example.org/(подошол)).']) {
+    assert.equal(check(input).text,input);
+    assert.ok(!check(input).issues.some(i=>i.category==='Орфография'&&i.before==='подошол'));
+  }
+});
 test('a missing dash before author words is a notice without a replacement',()=>{
   for (const input of ['«Я приду» сказал он.', '«Я приду», сказала она.', '«Ты придёшь?» спросил он.',
     '«Стой!» крикнула она.', '«Я вернусь…» прошептал он.', '«Я приду» он сказал.']) {

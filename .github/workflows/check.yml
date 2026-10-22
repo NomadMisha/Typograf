@@ -40,6 +40,7 @@ jobs:
       - name: Check evaluation and service integration
         run: |
           node test-evaluation.mjs 2>&1 | tee ci-evaluation.log
+          node test-edge-cases.mjs 2>&1 | tee ci-edge-cases.log
           cd ../typograf-service
           node test-service.mjs 2>&1 | tee ../spell-build/ci-service.log
           TYPOGRAF_HTML=../../outputs/typograf-prototype/index.html node test-frontend-mode.mjs 2>&1 | tee ../spell-build/ci-local-frontend.log

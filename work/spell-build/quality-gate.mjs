@@ -1,13 +1,15 @@
 import fs from 'node:fs';
 import {summary as regression} from './evaluate-corpus.mjs';
 import {evaluateGold} from './evaluate-gold.mjs';
-import {evaluateTechnical} from './evaluate-technical.mjs';
+import {evaluateTechnical,findTechnicalRegressions} from './evaluate-technical.mjs';
 
 const gold = evaluateGold();
 const technical = evaluateTechnical({html:process.env.TYPOGRAF_HTML});
 const baseline = JSON.parse(fs.readFileSync(new URL('../../outputs/typograf-prototype/TECHNICAL_BASELINE.json',import.meta.url),'utf8'));
 if (technical.corpusDigest !== baseline.corpusDigest) throw new Error('Изменён зафиксированный корпус. Нужны отдельный новый набор и исходный отчёт.');
-const regressed = technical.cases.filter(c=>baseline.cases.find(b=>b.id===c.id)?.detected && !c.detected).map(c=>c.id);
+const accepted = JSON.parse(fs.readFileSync(new URL('../../outputs/typograf-prototype/TECHNICAL_CURRENT.json',import.meta.url),'utf8'));
+if (technical.corpusDigest !== accepted.corpusDigest) throw new Error('Контрольный снимок относится к другому корпусу.');
+const regressed = findTechnicalRegressions(technical.cases,[baseline,accepted]);
 const technicalPass = technical.summary.sourceControlsUnchanged === technical.summary.fragments && regressed.length === 0;
 const regressionPass = regression.cleanUnchanged === regression.corpusSize &&
   regression.reviewUnchanged === regression.reviewSize && regression.injectedSilentMisses === 0;

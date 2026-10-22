@@ -23,6 +23,10 @@ export function matchesTechnicalTarget(issue, mutation) {
     return issue.start+prefix===m.start && issue.start+before.length-suffix===m.start && after.slice(prefix,after.length-suffix)===m.before;
   });
 }
+export function findTechnicalRegressions(current, references) {
+  return current.filter(item=>references.some(reference=>reference.cases.some(previous=>previous.id===item.id &&
+    ((previous.detected && !item.detected) || (previous.offeredCorrectChoice && !item.offeredCorrectChoice))))).map(item=>item.id);
+}
 export function evaluateTechnical({html,split}={}) {
 const check=loadChecker(html);
 const selected=corpus.fragments.filter(f=>!split||f.split===split);

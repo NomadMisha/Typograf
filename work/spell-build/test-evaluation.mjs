@@ -3,7 +3,7 @@ import os from 'node:os';
 import path from 'node:path';
 import assert from 'node:assert/strict';
 import {evaluateGold} from './evaluate-gold.mjs';
-import {matchesTechnicalTarget} from './evaluate-technical.mjs';
+import {matchesTechnicalTarget,findTechnicalRegressions} from './evaluate-technical.mjs';
 import {buildReviewedGold} from './review-data.mjs';
 
 const folder=fs.mkdtempSync(path.join(os.tmpdir(),'typograf-evaluation-'));
@@ -49,3 +49,10 @@ assert.equal(reviewed.cases[0].category,'clean');
 assert.notEqual(reviewed.cases[0].input,reviewed.cases[1].input);
 assert.equal(corpus.reviewedBy,null);
 console.log('PASS review export requires a signature and explicit per-fragment approval, without altering the draft corpus');
+
+const oldReference={cases:[{id:'improved-case',detected:false,offeredCorrectChoice:false}]};
+const acceptedReference={cases:[{id:'improved-case',detected:true,offeredCorrectChoice:true}]};
+assert.deepEqual(findTechnicalRegressions([{id:'improved-case',detected:false,offeredCorrectChoice:false}],[oldReference,acceptedReference]),['improved-case']);
+assert.deepEqual(findTechnicalRegressions([{id:'improved-case',detected:true,offeredCorrectChoice:false}],[oldReference,acceptedReference]),['improved-case']);
+assert.deepEqual(findTechnicalRegressions(acceptedReference.cases,[oldReference,acceptedReference]),[]);
+console.log('PASS quality gate retains accepted improvements and catches loss of a correct suggestion');
