@@ -1616,6 +1616,14 @@ is-buffer/index.js:
     }
 
     source.addEventListener('input', () => { resetIntroDescription(); updateCount(); });
+    function blurTextFieldOnEscape(event) {
+      if (event.key !== 'Escape' || event.isComposing) return;
+      event.preventDefault();
+      event.stopPropagation();
+      event.currentTarget.blur();
+    }
+    source.addEventListener('keydown', blurTextFieldOnEscape);
+    resultEditor.addEventListener('keydown', blurTextFieldOnEscape);
     function closeOnlineTooltip() { onlineTooltip.classList.remove('is-open'); }
     function syncOnlineToggle() {
       onlineInfo.classList.toggle('hidden', !onlineToggle.checked);
